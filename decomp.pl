@@ -4,9 +4,23 @@ undef $/;
 $prog = <>;
 $prog =~ s/\n /;/g;
 
+$/=chr(10);
+
+# Normalizing offsets
+
+$prog =~ s/,;/,0;/g;
+
+# Recognizing "convert to Boolean" sequences (before normalizing labels)
+$prog =~ s@,UZA,([^;]+);,XTA,0;,UJ,([^;]+);\1:1,XTA,8;\2:@isUZACond;@g;
+$prog =~ s@,U1A,([^;]+);,XTA,0;,UJ,([^;]+);\1:1,XTA,8;\2:@isU1ACond;@g;
+$prog =~ s@,UZA,([^;]+);1,XTA,8;,UJ,([^;]+);\1:,XTA,0;\2:@isU1ACond;@g;
+$prog =~ s@,U1A,([^;]+);1,XTA,8;,UJ,([^;]+);\1:,XTA,0;\2:@isUZACond;@g;
+
 # Normalising labels
 
 $prog =~ s/;([^:']+:)/;\1,BSS,;/g;
+
+# Now BSS is the only case with no "offset"
 
 # Recognizing subroutines
 
@@ -23,7 +37,7 @@ $prog =~ s@,BSS,;15,ATX,3;14,VJM,P/(\d) *;15,UTM,(\d+);@": Level $1 procedure wi
 
 $prog =~ s@,BSS,;15,ATX,4;14,VJM,P/(\d) *;15,UTM,(\d+);@": Level $1 function with 1 parameter and ".($2-3)." locals;"@eg;
 
-$prog =~ s@,BSS,;15,ATX,;15,UTM,-(\d+);14,VJM,P/(\d) *;15,UTM,(\d+);@": Level $2 procedure with ".($1-3)." parameters and ".($3-$1+2)." locals (or a func with ".($1-4)." parameters);"@eg;
+$prog =~ s@,BSS,;15,ATX,0;15,UTM,-(\d+);14,VJM,P/(\d) *;15,UTM,(\d+);@": Level $2 procedure with ".($1-3)." parameters and ".($3-$1+2)." locals (or a func with ".($1-4)." parameters);"@eg;
 
 $prog =~ s@,BSS,;,NTR,7; :,BSS,;13,MTJ,(\d);@: Level \1 procedure with no frame;@g;
 
@@ -33,6 +47,7 @@ $prog =~ s@13,VTM,([^;]+);,UJ,([^;]+);@13,VJM,\2;,UJ,\1;@g;
 
 
 # Converting global variables addressed via index register 1
+# avoiding register-register intructions.
 
 $prog =~ s@;1,([^M][^M][^M]),(\d+)@;,$1,glob$2z@g;
 
@@ -52,82 +67,34 @@ $prog =~ s@glob18z@p77777@g;
 $prog =~ s@glob19z@half@g;
 $prog =~ s@glob20z@vseed@g;
 
+# Also
+$prog =~ s@=74000@NIL@g;
+
 # Known globals
 
-$prog =~ s@glob50z@inStringLit@g;
-$prog =~ s@glob55z@SY@g;
-$prog =~ s@glob65z@maxLineLen@g;
-$prog =~ s@glob86z@CH@g;
-$prog =~ s@glob66z@linePos@g;
-$prog =~ s@glob74z@lineCnt@g;
-$prog =~ s@glob89z@lineNesting@g;
-$prog =~ s@glob598z@lineBufBase@g;
-$prog =~ s@glob729z@errMapBase@g;
-$prog =~ s@glob4761z@FCST@g;
-$prog =~ s@glob58z@FcstCnt@g;
-$prog =~ s@glob68z@errsInLine@g;
-$prog =~ s@glob151z@litExternal@g;
-$prog =~ s@glob152z@litForward@g;
-$prog =~ s@glob153z@litFortran@g;
-$prog =~ s@glob3650z@objBufBase@g;
-$prog =~ s@glob78z@dynMemSize@g;
-$prog =~ s@glob91z@objBufIdx@g;
-$prog =~ s@glob96z@charEncoding@g;
-$prog =~ s@glob99z@checkTypes@g;
-$prog =~ s@glob108z@fuzzReals@g;
-$prog =~ s@glob109z@fixMult@g;
-$prog =~ s@glob80z@stmtName@g;
-$prog =~ s@glob112z@allowCompat@g;
-$prog =~ s@glob113z@checkFortran@g;
-$prog =~ s@glob1477z@helperProcNameBase@g;
-$prog =~ s@glob1378z@helperProcMapBase@g;
-$prog =~ s@glob59z@symTabPos@g;
-$prog =~ s@glob2470z@longSymTabBase@g;
-$prog =~ s@glob2560z@longSymsBase@g;
-$prog =~ s@glob1123z@symHashTabBase@g;
-$prog =~ s@glob142z@hashMask@g;
+if (open(GLOBALS, "globals.txt")) {
+    while (<GLOBALS>) {
+        chop;
+        my ($offset, $name) = split;
+        $prog =~ s@glob${offset}z@$name@g || print STDERR "Global $offset not found\n";
+    }
+    close(GLOBALS);
+} else {
+    print STDERR "File globals.txt not found, no names replaced\n";
+}
+# Recognizing known subroutine names
 
-#Recognizing known routines
-$prog =~ s@\*0362B@putToSymTab@g;
-$prog =~ s@\*0375B@allocExternal@g;
-$prog =~ s@\*1046B@endOfLine@g;
-$prog =~ s@\*1232B@nextCH@g;
-$prog =~ s@\*1314B@parseComment@g;
-$prog =~ s@\*1275B@readOptFlag@g;
-$prog =~ s@\*1247B@readOptVal@g;
-$prog =~ s@\*1377B@optionA@g;
-$prog =~ s@\*1410B@optionB@g;
-$prog =~ s@\*1402B@optionC@g;
-$prog =~ s@\*1324B@optionD@g;
-$prog =~ s@\*1335B@optionE@g;
-$prog =~ s@\*1366B@optionF@g;
-$prog =~ s@\*1413B@optionK@g;
-$prog =~ s@\*1370B@optionL@g;
-$prog =~ s@\*1406B@optionM@g;
-$prog =~ s@\*1373B@optionP@g;
-$prog =~ s@\*1404B@optionR@g;
-$prog =~ s@\*1346B@optionS@g;
-$prog =~ s@\*1375B@optionT@g;
-$prog =~ s@\*1337B@optionU@g;
-$prog =~ s@\*1333B@optionY@g;
-$prog =~ s@\*1416B@optionZ@g;
-
-$prog =~ s@\*0123B@printTextWord@g;
-$prog =~ s@\*0207B@storeObjWord@g;
-$prog =~ s@\*0223B@form1Insn@g;
-$prog =~ s@\*0270B@form2Insn@g;
-$prog =~ s@\*0277B@form3Insn@g;
-$prog =~ s@\*0445B@toFCST@g;
-$prog =~ s@\*1464B@inSymbol@g;
-$prog =~ s@\*2476B@error@g;
-$prog =~ s@\*2534B@skip@g;
-$prog =~ s@\*2543B@test1@g;
-$prog =~ s@\*2556B@errAndSkip@g;
-$prog =~ s@\*24024@initOptions@g;
-$prog =~ s@\*15220@forStatement@g;
-$prog =~ s@\*15406@withStatement@g;
-$prog =~ s@\*17157@writeProc@g;
-$prog =~ s@\*17517@standProc@g;
+if (open(ROUTINES, "routines.txt")) {
+    while (<ROUTINES>) {
+        chop;
+        my ($offset, $name) = split;
+        my $suffix = length($offset) == 5 ? '' : 'B';
+        $prog =~ s@\*${offset}$suffix@$name@g || print STDERR "Offset $offset not found\n";
+    }
+    close(ROUTINES);
+} else {
+    print STDERR "File routines.txt not found, no labels replaced\n";
+}
 
 # Converting local variables avoiding insns accessing registers
 # (with M in their names)
@@ -138,7 +105,8 @@ $prog =~ s@;([2-6]),([^M][^M][^M]),(\d+)@";,$2,l$1var".($3-3)."z"@eg;
 
 # Converting indirect addressing
 
-$prog =~ s@;,WTC,([^;]+);([^;]+)@;\2\[\1\]@g;
+while ($prog =~ s@;,WTC,([^;]+);([^;]+)@;\2\[\1\]@g) { }
+
 $prog =~ s@;,UTC,([^;]+);([^;]+)@;\2+(\1)@g;
 
 # Reading the address of a variable
@@ -146,8 +114,11 @@ $prog =~ s@14,VTM,([^;]+);,ITA,14@,XTA,&\1@g;
 
 # Recognizing a variety of write routines
 
-$prog =~ s@12,VTM,.OUTPUT.;13,VJM,P/6A *@writeAlfa@g;
-$prog =~ s@12,VTM,.OUTPUT.;13,VJM,P/7A *@writeString@g;
+$prog =~ s@10,VTM,(\d+);(12,VTM,.OUTPUT.;)?13,VJM,P/6A *@writeAlfa\1@g;
+$prog =~ s@(12,VTM,.OUTPUT.;)?13,VJM,P/7A *@writeString@g;
+$prog =~ s@(12,VTM,.OUTPUT.;)?13,VJM,P/WI *@writeInt@g;
+$prog =~ s@(12,VTM,.OUTPUT.;)?13,VJM,P/CW *@writeChar@g;
+$prog =~ s@(12,VTM,.OUTPUT.;)?13,VJM,P/WC *@writeCharWide@g;
 
 $prog =~ s@12,VTM,([^;]+);13,VJM,P/EO *@eof(\1)@g;
 $prog =~ s@12,VTM,([^;]+);13,VJM,P/EL *@eoln(\1)@g;
@@ -169,7 +140,41 @@ $prog =~ s@13,VJM,([^;]+)(;7,MTJ,\d)?@CALL \1@g;
 
 $prog =~ s@\d,MTJ,13;14,VTM,([^;]+);,UJ,P/RC *@GOTO \1@g;
 
-$prog =~ s@,NTR,;,AVX,@toReal@g;
+$prog =~ s@,NTR,0;,AVX,0@toReal@g;
+
+# Converting common conditional branches
+
+$prog =~ s@;(\d+)?,AAX,([^;]+);,UZA,@;\1,AAX,\2;ifnot @g;
+$prog =~ s@;(\d+)?,AEX,([^;]+);,UZA,@;\1,CEQ,\2;ifgoto @g;
+$prog =~ s@;(\d+)?,A-X,([^;]+);,UZA,@;\1,CGE,\2;ifgoto @g;
+$prog =~ s@;(\d+)?,X-A,([^;]+);,UZA,@;\1,CLE,\2;ifgoto @g;
+
+$prog =~ s@;(\d+)?,AAX,([^;]+);,U1A,@;\1,AAX,\2;ifgoto @g;
+$prog =~ s@;(\d+)?,AEX,([^;]+);,U1A,@;\1,CNE,\2;ifgoto @g;
+$prog =~ s@;(\d+)?,A-X,([^;]+);,U1A,@;\1,CLT,\2;ifgoto @g;
+$prog =~ s@;(\d+)?,X-A,([^;]+);,U1A,@;\1,CGT,\2;ifgoto @g;
+
+$prog =~ s@;(\d+)?,AAX,([^;]+);isUZACond@;\1,AAX,\2;toNotl@g;
+$prog =~ s@;(\d+)?,AEX,([^;]+);isUZACond@;\1,CEQ,\2;toBool@g;
+$prog =~ s@;(\d+)?,A-X,([^;]+);isUZACond@;\1,CGE,\2;toBool@g;
+$prog =~ s@;(\d+)?,X-A,([^;]+);isUZACond@;\1,CLE,\2;toBool@g;
+
+$prog =~ s@;(\d+)?,AAX,([^;]+);isU1ACond@;\1,AAX,\2;toBool@g;
+$prog =~ s@;(\d+)?,AEX,([^;]+);isU1ACond@;\1,CNE,\2;toBool@g;
+$prog =~ s@;(\d+)?,A-X,([^;]+);isU1ACond@;\1,CLT,\2;toBool@g;
+$prog =~ s@;(\d+)?,X-A,([^;]+);isU1ACond@;\1,CGT,\2;toBool@g;
+
+$prog =~ s@;(\d+)?,XTA,([^;]+);,UZA,@;\1,XTA,\2;,CEQ,0;ifgoto @g;
+$prog =~ s@;(\d+)?,XTA,([^;]+);,U1A,@;\1,XTA,\2;,CNE,0;ifgoto @g;
+
+$prog =~ s@;CALL P/IN *;,UZA,@;CALL P/IN;ifnot @g;
+$prog =~ s@;CALL P/IN *;,U1A,@;CALL P/IN;ifgoto @g;
+
+$prog =~ s@;(eo[^;]+);,UZA,@;\1;ifnot @g;
+$prog =~ s@;(eo[^;]+);,U1A,@;\1;ifgoto @g;
+
+$prog =~ s@;(\d+)?,XTA,([^;]+);isUZACond@;\1,XTA,\2;,CEQ,0;toBool@g;
+$prog =~ s@;(\d+)?,XTA,([^;]+);isU1ACond@;\1,XTA,\2;,CNE,0;toBool@g;
 
 @ops = split /;/, $prog;
 
@@ -178,6 +183,7 @@ print "Got $#ops lines\n";
 # Emulating a simple stack machine starting with XTA
 # and ending with a non-recognized operation or a label. At that point the stack is
 # dumped and reset.
+
 
 $from = 0;
 @stack = ();
@@ -191,13 +197,36 @@ sub dumpStack {
 
 while ($from <= $#ops) {
     my $line = $ops[$from];
-    if (@stack && $line =~ m@13,VJM,P/MI@) {
+
+    if (@stack && $line =~ m@CALL P/MI@) {
         $stack[$#stack] = "mulFix($stack[$#stack])";
         ++$from;
         next;
     }
-    if (@stack && $line eq 'toReal') {
-        $stack[$#stack] = "toReal($stack[$#stack])";
+    if (@stack && $line eq ',YTA,64') {
+        $stack[$#stack] = "nonNeg($stack[$#stack])";
+        ++$from;
+        next;
+    }
+    if (@stack && $line =~ m@CALL P/SS@) {
+        $stack[$#stack] = "toSet($stack[$#stack])";
+        ++$from;
+        next;
+    }
+    if (@stack && $line =~ m@CALL P/TR@) {
+        $stack[$#stack] = "trunc($stack[$#stack])";
+        ++$from;
+        next;
+    }
+    if (@stack && $line =~ m/^to(...l)$/) {
+        # toBool, toReal
+        $stack[$#stack] = "to$1($stack[$#stack])";
+        ++$from;
+        next;
+    }
+    if ($line =~ /^eo[lf]/) {
+        if (@stack) { $stack[$#stack] = $line; }
+        else { $stack[0] = $line; }
         ++$from;
         next;
     }
@@ -207,7 +236,57 @@ while ($from <= $#ops) {
         ++$from;
         next;
     }
-    if (@stack && $line =~ /CALL /) {
+    if (@stack >= 2 && $line =~ m@CALL P/PI@) {
+        $stack[$#stack-1] = "toRange($stack[$#stack-1]..$stack[$#stack])";
+        --$#stack;
+        ++$from;
+        next;
+    }
+    if (@stack >= 2 && $line =~ m@CALL P/DI@) {
+        $stack[$#stack-1] = "($stack[$#stack-1] DIV $stack[$#stack])";
+        --$#stack;
+        ++$from;
+        next;
+    }
+    if (@stack >= 2 && $line =~ m@CALL P/IS@) {
+        $stack[$#stack-1] = "($stack[$#stack-1] /int/ $stack[$#stack])";
+        --$#stack;
+        ++$from;
+        next;
+    }
+    if (@stack >= 2 && $line =~ m@CALL P/MD@) {
+        $stack[$#stack-1] = "($stack[$#stack-1] MOD $stack[$#stack])";
+        --$#stack;
+        ++$from;
+        next;
+    }
+    if (@stack && $line =~ m@,AVX,int\(-1\)@) {
+        $stack[$#stack] = "neg($stack[$#stack])";
+        ++$from;
+        next;
+    }
+    if (@stack && $line =~ m@,AMX,0@) {
+        $stack[$#stack] = "abs($stack[$#stack])";
+        ++$from;
+        next;
+    }
+    if (@stack && $line =~ m@,ACX,0@) {
+        $stack[$#stack] = "card($stack[$#stack])";
+        ++$from;
+        next;
+    }
+    if (@stack && $line =~ m@,ANX,int\(0\)@) {
+        $stack[$#stack] = "ffs($stack[$#stack])";
+        ++$from;
+        next;
+    }
+    if (@stack && $line =~ m@,ATI,(\d+)@) {
+        $stack[$#stack] = "{R$1=$stack[$#stack]}";
+        ++$from;
+        next;
+    }
+
+    if (@stack && ($line =~ /CALL / || $line =~ /^write/) ) {
         # This is not always correct; some values are put on the stack
         # to be consumed after the return from a subroutine.
         push @to, "$line( ".join(', ', @stack)." )";
@@ -215,11 +294,36 @@ while ($from <= $#ops) {
         @stack = ();
         next;
     }
-    if (@stack >= 2 && $line =~ m@15,A([-/EROA+*])X,$@) {
+    if (@stack >= 2 && $line =~ m@15,A([-/EROA+*])X,0?$@) {
         $op = $1;
         $op =~ tr/EROA/^$|&/;
         $stack[$#stack-1] = "($stack[$#stack] $op $stack[$#stack-1])";
         --$#stack;
+        ++$from;
+        next;
+    }
+
+    if (@stack >= 2 && $line =~ m@15,C(..),0?$@) {
+        $op = $1;
+        $stack[$#stack-1] = "($stack[$#stack] $op $stack[$#stack-1])";
+        --$#stack;
+        ++$from;
+        next;
+    } elsif (@stack && $line =~ m@^,C(..),(.*)@) {
+        $op = $1;
+        $stack[$#stack] = "($stack[$#stack] $op $2)";
+        ++$from;
+        next;
+    } elsif (@stack && $line =~/^ifgoto (.*)/) {
+        push @to, "if $stack[$#stack] goto $1";
+        # If there was just one element on the stack, consider it consumed
+        @stack = () if @stack == 1;
+        ++$from;
+        next;
+    } elsif (@stack && $line =~/^ifnot (.*)/) {
+        push @to, "if not $stack[$#stack] goto $1";
+        # If there was just one element on the stack, consider it consumed
+        @stack = () if @stack == 1;
         ++$from;
         next;
     }
@@ -228,7 +332,11 @@ while ($from <= $#ops) {
         push @to, $ops[$from++];
         next;
     }
-    if ($line =~ /^,XTA,(.*)/) {
+    if ($line eq '15,XTA,3') {
+        if (@stack) { $stack[$#stack] = 'FUNCRET'; }
+        else { $stack[0] = 'FUNCRET'; }
+        ++$from;
+    } elsif ($line =~ /^,XTA,(.*)/) {
         if (@stack) { $stack[$#stack] = $1; }
         else { $stack[0] = $1; }
         ++$from;
@@ -267,7 +375,9 @@ $prog = join ';', @to;
 # Converting simple ops
 
 $prog =~ s@,UJ,P/E *;@RETURN;@g;
-$prog =~ s@,AVX,int\(-1\)@NEGATE@g;
+
+# Removing stack corrections after calls
+$prog =~ s@15,UTM,[34];@@g;
 
 #Restoring line feeds
 

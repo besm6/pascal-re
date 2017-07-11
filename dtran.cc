@@ -1,3 +1,18 @@
+/*
+ * A disassembler for the BESM-6 object files in the Dubna
+ * Monitor System format.
+ *
+ * Compile with "make dtran"; it requires only a C++ compiler.
+ * To produce assembly code that can be re-assembled
+ * with *MADLEN (not *ASSEMBLER!):
+ * dtran -e -l pascompl.o > pascompl.asm
+ *
+ * To produce pseudo-code that can be given to the "decompiler":
+ * dtran -d pascompl.o > pascompl.out
+ *
+ * Copyright 2017 Leonid Broukhis
+ */
+
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -354,11 +369,10 @@ std::string get_literal(uint32 addr) {
     return ret;
 }
     
-void prconst (uint32 addr, uint32 len)
-{
+void prconst (uint32 addr, uint32 len, bool litconst) {
     for (uint cur = addr; cur < addr + len; ++cur) {
         uint64 val = memory[cur+3];
-        if (1) {
+        if (litconst) {
             printf(" /%d:", cur-cmd_len);                  
         } else if (labels[cur].empty()) {
             printf(" ");
@@ -388,8 +402,6 @@ void prsets() {
         uint from = (word >> 24) & 03777;
         uint cnt = (word >> 12) & 07777;
         uint to = word & 03777;
-        // If the source is in the form *octalB+decimal
-        // and length is 1, replace it with the literal.
         std::string src = symtab[from];
         if (len == 1 && src[0] == '*') {
             char * end;
@@ -412,13 +424,71 @@ void prsets() {
                 }
                 break;
             } while (1);
-            if (off != ~0u)
-                src = get_literal(off);
         }
         printf(" %d,SET,%s\n", len, src.c_str());
         printf(" %d,   ,%s\n", cnt, symtab[to].c_str());
-    }
-    
+    }    
+}
+
+void prdata() {
+    /*
+     * Print data initializations in the form of assignments
+     * if the source reference allows it.
+     */
+    for (uint cur = table_off - set_len; cur < table_off; ++cur) {
+        uint64 word = memory[cur];
+        uint len = word >> 36;
+        uint from = (word >> 24) & 03777;
+        uint cnt = (word >> 12) & 07777;
+        uint to = word & 03777;
+        std::string src = symtab[from];
+        uint off = ~0;
+
+        if (src[0] == '*') {
+            char * end;
+            off = strtol(src.c_str()+1, &end, 8);
+            do {
+                switch (*end) {
+                case '\0': break;
+                case '+':
+                    if (isdigit(end[1]))
+                        off += atoi(end+1);
+                    else
+                        off = ~0;
+                    break;
+                case 'B':
+                    ++end;
+                    continue;
+                default:
+                    off = ~0;
+                    break;
+                }
+                break;
+            } while (1);
+        }
+        if (off != ~0u) {
+            for (uint tocnt = 0; tocnt < cnt; ++tocnt) {
+                for (uint fromcnt = 0; fromcnt < len; ++fromcnt) {
+                    printf(" ,XTA,%s\n", get_literal(off+fromcnt).c_str());
+                    std::string temp;
+                    size_t plus = symtab[to].find('+'); 
+                    if (plus != std::string::npos && (tocnt || fromcnt)) {
+                        uint was = atoi(symtab[to].c_str() + plus + 1);
+                        temp = strprintf("%.*s+%d", plus, symtab[to].c_str(),
+                                         was+ tocnt*len+fromcnt);
+                    } else if (tocnt || fromcnt) {
+                        temp = symtab[to] + strprintf("%+d", tocnt*len+fromcnt);
+                    } else {
+                        temp = symtab[to];
+                    }
+                    printf(" ,ATX,%s\n", temp.c_str());
+                }
+            }
+        } else {
+            printf(" %d,SET,%s\n", len, src.c_str());
+            printf(" %d,   ,%s\n", cnt, symtab[to].c_str());
+        }
+    }    
 }
 
     
@@ -436,6 +506,9 @@ prtext (bool litconst)
         uint64 & opcode = memory[cur+3];
         mklabels(cur, opcode >> 24, litconst);
         mklabels(cur, opcode & 0xffffff, litconst);
+    }
+    if (nolabels) {
+        puts(" /:,BSS,");
     }
     for (; addr < limit; ++addr) {
         uint64 opcode;
@@ -729,11 +802,15 @@ main (int argc, char **argv)
     Dtran dtr(argv[optind], basereg, nolabels, noequs, nooctal);
     dtr.dump_symtab();
     dtr.prtext(litconst);
-    dtr.prconst(dtr.cmd_len, dtr.const_len);
+    dtr.prconst(dtr.cmd_len, dtr.const_len, litconst);
     if (dtr.data_len) {
         printf(" ,DATA,\n");
-        dtr.prconst(dtr.cmd_len + dtr.const_len, dtr.data_len);
-        dtr.prsets();
+        if (litconst) {
+            dtr.prdata();
+        } else {
+            dtr.prconst(dtr.cmd_len + dtr.const_len, dtr.data_len, false);
+            dtr.prsets();
+        }
     }
     printf(" ,END,\n");
     return 0;
