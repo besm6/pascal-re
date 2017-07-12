@@ -379,11 +379,65 @@ $prog =~ s@,UJ,P/E *;@RETURN;@g;
 # Removing stack corrections after calls
 $prog =~ s@15,UTM,[34];@@g;
 
+# Converting small literals to enums based on context
+$context = 'SY |checkSymAndRead|requiredSymErr';
+
+$prog =~ s@(($context)[^;]+)=0([^0-7])@\1IDENT\3@g;
+$prog =~ s@(($context)[^;]+)=1([^0-7])@\1INTCONST\3@g;
+$prog =~ s@(($context)[^;]+)=2([^0-7])@\1REALCONST\3@g;
+$prog =~ s@(($context)[^;]+)=3([^0-7])@\1CHARCONST\3@g;
+$prog =~ s@(($context)[^;]+)=4([^0-7])@\1LTOP\3@g;
+$prog =~ s@(($context)[^;]+)=5([^0-7])@\1GTOP\3@g;
+$prog =~ s@(($context)[^;]+)=7([^0-7])@\1LPAREN\3@g;
+$prog =~ s@(($context)[^;]+)=10([^0-7])@\1LBRACK\3@g;
+$prog =~ s@(($context)[^;]+)=11([^0-7])@\1MULOP\3@g;
+$prog =~ s@(($context)[^;]+)=12([^0-7])@\1ADDOP\3@g;
+$prog =~ s@(($context)[^;]+)=13([^0-7])@\1RELOP\3@g;
+$prog =~ s@(($context)[^;]+)=14([^0-7])@\1RPAREN\3@g;
+$prog =~ s@(($context)[^;]+)=15([^0-7])@\1RBRACK\3@g;
+$prog =~ s@(($context)[^;]+)=16([^0-7])@\1COMMA\3@g;
+$prog =~ s@(($context)[^;]+)=17([^0-7])@\1SEMICOLON\3@g;
+$prog =~ s@(($context)[^;]+)=20([^0-7])@\1PERIOD\3@g;
+$prog =~ s@(($context)[^;]+)=21([^0-7])@\1ARROW\3@g;
+$prog =~ s@(($context)[^;]+)=22([^0-7])@\1COLON\3@g;
+$prog =~ s@(($context)[^;]+)=23([^0-7])@\1BECOMES\3@g;
+$prog =~ s@(($context)[^;]+)=24([^0-7])@\1LABELSY\3@g;
+$prog =~ s@(($context)[^;]+)=25([^0-7])@\1CONSTSY\3@g;
+$prog =~ s@(($context)[^;]+)=26([^0-7])@\1TYPESY\3@g;
+$prog =~ s@(($context)[^;]+)=27([^0-7])@\1VARSY\3@g;
+$prog =~ s@(($context)[^;]+)=30([^0-7])@\1FUNCSY\3@g;
+$prog =~ s@(($context)[^;]+)=31([^0-7])@\1PROCSY\3@g;
+$prog =~ s@(($context)[^;]+)=32([^0-7])@\1SETSY\3@g;
+$prog =~ s@(($context)[^;]+)=33([^0-7])@\1PACKEDSY\3@g;
+$prog =~ s@(($context)[^;]+)=34([^0-7])@\1ARRAYSY\3@g;
+$prog =~ s@(($context)[^;]+)=35([^0-7])@\1RECORDSY\3@g;
+$prog =~ s@(($context)[^;]+)=36([^0-7])@\1FILESY\3@g;
+$prog =~ s@(($context)[^;]+)=37([^0-7])@\1BEGINSY\3@g;
+$prog =~ s@(($context)[^;]+)=40([^0-7])@\1IFSY\3@g;
+$prog =~ s@(($context)[^;]+)=41([^0-7])@\1CASESY\3@g;
+$prog =~ s@(($context)[^;]+)=42([^0-7])@\1REPEATSY\3@g;
+$prog =~ s@(($context)[^;]+)=43([^0-7])@\1WHILESY\3@g;
+$prog =~ s@(($context)[^;]+)=44([^0-7])@\1FORSY\3@g;
+$prog =~ s@(($context)[^;]+)=45([^0-7])@\1WITHSY\3@g;
+$prog =~ s@(($context)[^;]+)=46([^0-7])@\1GOTOSY\3@g;
+$prog =~ s@(($context)[^;]+)=47([^0-7])@\1ENDSY\3@g;
+$prog =~ s@(($context)[^;]+)=50([^0-7])@\1ELSESY\3@g;
+$prog =~ s@(($context)[^;]+)=51([^0-7])@\1UNTILSY\3@g;
+$prog =~ s@(($context)[^;]+)=52([^0-7])@\1OFSY\3@g;
+$prog =~ s@(($context)[^;]+)=53([^0-7])@\1DOSY\3@g;
+$prog =~ s@(($context)[^;]+)=54([^0-7])@\1TOSY\3@g;
+$prog =~ s@(($context)[^;]+)=55([^0-7])@\1DOWNTOSY\3@g;
+$prog =~ s@(($context)[^;]+)=56([^0-7])@\1THENSY\3@g;
+$prog =~ s@(($context)[^;]+)=57([^0-7])@\1SELECTSY\3@g;
+$prog =~ s@(($context)[^;]+)=60([^0-7])@\1PROGRAMSY\3@g;
+$prog =~ s@(($context)[^;]+)=61([^0-7])@\1OTHERSY\3@g;
+$prog =~ s@(($context)[^;]+)=62([^0-7])@\1NOSY\3@g;
+
+# Converting chars based on context
+$prog =~ s@(CH [^;]+)=([0-7][0-7])@"$1char('".chr(oct($2))."')"@ge;
+
 #Restoring line feeds
 
 $prog =~ s/;/\n /g;
 
 print $prog;
-
-
-

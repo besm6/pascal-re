@@ -1,4 +1,5 @@
 50	inStringLit 
+54	charClass 
 55	SY 
 58	FcstCnt 
 59	symTabPos 
@@ -6,6 +7,7 @@
 66	linePos 
 67	prevErrPos 
 68	errsInLine 
+69	moduleOffset
 71	level 
 73	totalErrors 
 74	lineCnt 
@@ -30,12 +32,15 @@
 127     realType
 128     charType
 129     alfaType
+134     curToken
+141	isLeftInsn
 142	hashMask 
 149	optSflags
 150     litOct
 151	litExternal 
 152	litForward 
 153	litFortran
+155     curExpr
 532     absInsn
 533     addInt0Insn
 534     andE1Insn
@@ -45,6 +50,8 @@
 538     subE1Insn
 598	lineBufBase 
 729	errMapBase 
+739	charClassTabBase
+995	charSymTabBase
 1123	symHashTabBase 
 1378	helperProcMapBase 
 1477	helperProcNameBase 

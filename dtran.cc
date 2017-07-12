@@ -359,9 +359,7 @@ std::string get_literal(uint32 addr) {
         ret = strprintf("iso('%s')", get_iso_word(val).c_str());
     } else if (is_likely_text(val)) {
         ret = strprintf("text('%s')", get_text_word(val).c_str());
-    } else if (val == 040) {
-        ret = "space";
-    } else if (val >= 041 && val < 96) {
+    } else if (val >= 060 && val < 96) {
         ret = strprintf("char('%c')", char(val));
     } else {
         ret = strprintf("=%llo", val);
