@@ -39,7 +39,7 @@ $prog =~ s@,BSS,;15,ATX,4;14,VJM,P/(\d) *;15,UTM,(\d+);@": Level $1 function wit
 
 $prog =~ s@,BSS,;15,ATX,0;15,UTM,-(\d+);14,VJM,P/(\d) *;15,UTM,(\d+);@": Level $2 procedure with ".($1-3)." parameters and ".($3-$1+2)." locals (or a func with ".($1-4)." parameters);"@eg;
 
-$prog =~ s@,BSS,;,NTR,7; :,BSS,;13,MTJ,(\d);@: Level \1 procedure with no frame;@g;
+$prog =~ s@,BSS,;,NTR,7; :,BSS,;13,MTJ,(\d);@": Level ".($1-1)." procedure with no frame;"@eg;
 
 # Converting shortcuts to standard subroutine calls
 
@@ -54,6 +54,59 @@ $prog =~ s@;1,([^M][^M][^M]),(\d+)@;,$1,glob$2z@g;
 # Converting global variable references (block P/1D) in the data setting section
 
 $prog =~ s@P/1D *\+(\d+)@glob\1z@g;
+
+# Converting local variables avoiding insns accessing registers
+# (with M in their names)
+# This should be recognized and conversion suppressed.
+
+sub processprocs {
+    
+my @ops = split /;/, $prog;
+my @knownregs;
+my $curlev = -1;
+my $funcname = '';
+for ($i = 0; $i <= $#ops; ++$i) {
+    $line = $ops[$i];
+    if ($line =~ m/^(.*?):: Level (\d)/) {
+        $funcname = $1;
+        $curlev = $2;
+        $funcname = '' unless $line =~ m/function with/;
+        @knownregs = ();
+        next;
+    }
+    if ($curlev != -1 && $line =~ m@^([2-$curlev]),([^M][^M][^M]),(\d+)$@) {
+        $ops[$i] = ",$2,l$1var".($3-3)."z";
+        $ops[$i] =~ s/l${curlev}var0z/$funcname/ if $funcname ne '';
+        next;
+    }
+
+    # Faking assignment to a register "variable"
+    if ($line =~ m/^([$curlev-69]),VTM,(.*)/) {
+        $ops[$i] = ",XTA,$2;,ATX,R$1";
+        $knownregs[$1] = 1;
+        next;
+    }
+    # Replacing known references via registers
+    if ($line =~ m@^([$curlev-69]),([^M][^M][^M]),(\d+)$@ && $knownregs[$1]) {
+        $ops[$i] = ",$2,R$1->$3";
+        next;
+    }
+    # Faking reading of a register "variable"
+    if ($line =~ m/,ITA,([$curlev-69])$/ && $knownregs[$1]) {
+        $ops[$i] = ",XTA,R$1";
+        next;
+    }
+    # Recognizing return from frameless procedures
+    $avail = $curlev+1;
+    $ops[$i] =~ s@$avail,UJ,0@RETURN@;
+}
+
+$prog = join ';', @ops;
+
+}
+
+processprocs();
+
 
 # Recognizing known pre-seeded constants in the global area
 
@@ -96,12 +149,6 @@ if (open(ROUTINES, "routines.txt")) {
     print STDERR "File routines.txt not found, no labels replaced\n";
 }
 
-# Converting local variables avoiding insns accessing registers
-# (with M in their names)
-# TODO: at level N, higher-numbered registers can be used as scratch.
-# This should be recognized and conversion suppressed.
-
-$prog =~ s@;([2-6]),([^M][^M][^M]),(\d+)@";,$2,l$1var".($3-3)."z"@eg;
 
 # Converting indirect addressing
 
@@ -117,8 +164,10 @@ $prog =~ s@14,VTM,([^;]+);,ITA,14@,XTA,&\1@g;
 $prog =~ s@10,VTM,(\d+);(12,VTM,.OUTPUT.;)?13,VJM,P/6A *@writeAlfa\1@g;
 $prog =~ s@(12,VTM,.OUTPUT.;)?13,VJM,P/7A *@writeString@g;
 $prog =~ s@(12,VTM,.OUTPUT.;)?13,VJM,P/WI *@writeInt@g;
+$prog =~ s@(12,VTM,.OUTPUT.;)?13,VJM,P/WL *@writeLN@g;
 $prog =~ s@(12,VTM,.OUTPUT.;)?13,VJM,P/CW *@writeChar@g;
 $prog =~ s@(12,VTM,.OUTPUT.;)?13,VJM,P/WC *@writeCharWide@g;
+$prog =~ s@13,VJM,P/WOLN *@writeLN@g;
 
 $prog =~ s@12,VTM,([^;]+);13,VJM,P/EO *@eof(\1)@g;
 $prog =~ s@12,VTM,([^;]+);13,VJM,P/EL *@eoln(\1)@g;
@@ -179,6 +228,7 @@ $prog =~ s@;(\d+)?,XTA,([^;]+);isU1ACond@;\1,XTA,\2;,CNE,0;toBool@g;
 @ops = split /;/, $prog;
 
 print "Got $#ops lines\n";
+
 
 # Emulating a simple stack machine starting with XTA
 # and ending with a non-recognized operation or a label. At that point the stack is
@@ -436,8 +486,39 @@ $prog =~ s@(($context)[^;]+)=62([^0-7])@\1NOSY\3@g;
 # Converting chars based on context
 $prog =~ s@(CH [^;]+)=([0-7][0-7])@"$1char('".chr(oct($2))."')"@ge;
 
+if (open(HELPERS, "helpers.txt")) {
+    while (<HELPERS>) {
+        chop;
+        my ($val, $name) = split;
+        $prog =~ s@(getHelperProc[^;]+)int\($val\)@\1"$name"@g;
+# || print STDERR "Helper $val not found\n";
+    }
+    close(HELPERS);
+} else {
+    print STDERR "File helpers.txt not found, no names replaced\n";
+}
+
+# Convert if/then/else (nesting not handled due to label reuse)
+
+# $prog =~ s@;if ([^;]+)goto ([^;]+);(.*),UJ,([^;]+);\2:(.*)\4:@;if \1 {;\2:\5} else {;\3};\4:@g;
+
+# Marking up for loops
+# $prog =~ s@,UJ,([^;]+);([^:]+):(.*)\1:(.*);ifgoto \2@loop {;\3 } while (;\4;)@g;
+
+# Finding case statements (kinda slow)
+
+# $prog =~ s@,UJ,([^;]+);(.*?)\1:,BSS,;15,ATX,1;,CLT,([^;]+);ifgoto ([^;]+);,CGT,([^;]+);ifgoto \4;15,XTA,1;,ATI,14;14,UJ,([^;]+)@case in [\3 .. \5] else \6; { \2 };@g;
+
+# Finding only bounds (faster)
+# $prog =~ s@:,BSS,;15,ATX,1;,CLT,([^;]+);ifgoto ([^;]+);,CGT,([^;]+);ifgoto \2@:bounds [\1 .. \3] else \2@g;
+
+# Simplifying function call/returns
+
+$prog =~ s@CALL([^;]+);([^;]+)FUNCRET([^;]*);@\2 FCALL \1 \3;@g;
+
 #Restoring line feeds
 
 $prog =~ s/;/\n /g;
+
 
 print $prog;
