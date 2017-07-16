@@ -4,19 +4,25 @@
 0175 addToHashTab 
 0207 storeObjWord 
 0223 form1Insn
-0270 form2Insn 
-0277 form3Insn 
+0270 form2Insn p
+0277 form3Insn p
 0307 disableNorm
+0316 getObjBufIdxPlus   f
 0325 formJumpOnCond
 0345 formLabel
 0354 formInsnAndLabel
 0362 putToSymTab 
-0375 allocExternal
+0375 allocExtSymbol
 0432 getHelperProc
-0445 toFCST 
+0445 toFCST
+0453 addSomethingToFCST f
+0536 allocSymtabForAbsolute
+0621 getFCSToffset f
 0641 nrOfBits
-0650 definePacked
-1046 endOfLine 
+0650 definePacked p
+0701 getValueOrAllocSymtab
+0715 P0715 p
+1046 endOfLine p
 1206 requiredSymErr 
 1215 readToPos80
 1232 nextCH 
@@ -54,53 +60,95 @@
 2476 error 
 2534 skip 
 2543 test1 
-2556 errAndSkip 
-2772 checkSymAndRead 
+2556 errAndSkip
+2565 parseLiteral p
+2736 isFileType
+2772 checkSymAndRead
+3002 allocWithTypeCheck
 3054 typeCheck
+3324 makeNameWithStars
 3373 addInsnToBuf
 3400 add2InsnsToBuf
-3457 genOneOp
+3457 genOneOp p
+3545 genOp0
+3547 genOp1
+3551 genOp2
+3566 genOp3
+3615 genOp4
+3633 genOp5
+3645 genOp6
+3650 genOp7
+3654 genOp10
+3660 genOp11
+3663 genOp12
+3666 genRoundOp
+3672 genSqrOp
+3675 genSqrIntOp
+3702 genOp16
+3706 genMinelOp
+3711 genOp20
+3714 genOp21
+3720 genOp22
+3725 genOp23
+3613 genOp24
+3544 genOp25
+3731 genOp26
+3541 genOp27
 4274 addToInsnList
+4324 addToInsnList2
 5753 minel
+6416 allocGlobalObject
 7240 startInsnList
 7341 genConstDiv
 7354 genEqComp
 7563 genFullExpr
 10657 formFileInit
 10776 formOperator
+11445 addToTypeHashTab
 11675 parseRecordDecl
 12243 parseTypeRef
 13177 parseDecls
-13447 parseLval
+13436 checkForChar
+13447 parseLval p
 13654 parseCallArgs
-14044 stdCall
+14044 stdCall p
 14250 factor
+14256 factorIDENT
+14402 factorCONST
+14416 factorNOT
+14376 factorLPAREN
+14435 factorLBRACK
 14624 term
-14747 simpleExpression
-15105 expression
-15220 forStatement 
-15406 withStatement 
+14747 simpleExpression p
+15105 expression p
+15220 forStatement p
+15406 withStatement p
 15454 reportStmtType
-15471 gotoStatement
+15471 gotoStatement p
 15575 max 
-15605 caseStatement
-16220 assignStatement
-16357 compoundStatement
-16367 ifWhileStatement
+15605 caseStatement p
+16220 assignStatement p
+16357 compoundStatement p
+16367 ifWhileStatement p
 17072 checkElementForReadWrite
 17157 writeProc 
-17517 standProc 
-20266 statement 
+17517 standProc p
+20266 statement p
 20767 outputObjFile
 21004 defineRoutine
 21263 registerSysType 
 21277 registerSysEnum 
 21315 registerSysProc 
-21332 initScalars 
-22347 programme 
+21332 initScalars
+22076 allocExternFile
+22110 parseParameters p
+22324 exitScope
+22347 programme
+23365 initInsnTemplates p
 23520 registerResWord
 23547 registerKeywords
-23602 initArrays
-23643 initTables 
+23602 initArrays p
+23634 initSets
+23643 initTables p
 23702 finalize 
 24024 initOptions

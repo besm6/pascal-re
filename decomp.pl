@@ -16,6 +16,10 @@ $prog =~ s@,U1A,([^;]+);,XTA,0;,UJ,([^;]+);\1:1,XTA,8;\2:@isU1ACond;@g;
 $prog =~ s@,UZA,([^;]+);1,XTA,8;,UJ,([^;]+);\1:,XTA,0;\2:@isU1ACond;@g;
 $prog =~ s@,U1A,([^;]+);1,XTA,8;,UJ,([^;]+);\1:,XTA,0;\2:@isUZACond;@g;
 
+# Converting for loops to stack-friendly form (takes a few seconds)
+
+while ($prog =~ s@,UJ,([^;]+);(.*?);\1:([^,]*),ATX,([^;]+)@\3,ATX,\4;,UJ,\1;\2;\3,ATX,\4;\1:\3,XTA,\4@g) { }
+
 # Normalising labels
 
 $prog =~ s/;([^:']+:)/;\1,BSS,;/g;
@@ -24,22 +28,46 @@ $prog =~ s/;([^:']+:)/;\1,BSS,;/g;
 
 # Recognizing subroutines
 
-sub nopar {
-my ($l, $n) = @_;
-return $n==1 ? 
-": Level $l procedure with no parameters and no locals;" :
-": Level $l procedure with no parameters and ".($n-1)." locals (or a func with ".($n-2)." locals);";
+if (open(ROUTINES, "routines.txt")) {
+    while (<ROUTINES>) {
+        chop;
+        my ($offset, $name, $rt) = split;
+        my $suffix = length($offset) == 5 ? '' : 'B';
+        $routines{$offset.$suffix} = $name;
+        $rtype{$offset.$suffix} = $rt;
+    }
+    close(ROUTINES);
+} else {
+    print STDERR "File routines.txt not found, no labels will be replaced\n";
 }
 
-$prog =~ s@,BSS,;14,VJM,P/(\d) *;15,UTM,(\d+);@nopar($1,$2)@eg;
 
-$prog =~ s@,BSS,;15,ATX,3;14,VJM,P/(\d) *;15,UTM,(\d+);@": Level $1 procedure with 1 parameter and ".($2-2)." locals;"@eg;
+sub noargs {
+    my ($off, $l, $n) = @_;
+return $n==1 ? 
+    "==========;*$off: Level $l procedure with 0 arguments and 0 locals;" :
+    $rtype{$off} eq 'f' ? "==========;*$off: Level $l function with 0 arguments and ".($n-2)." locals;" :
+    $rtype{$off} eq 'p' ? "==========;*$off: Level $l procedure with 0 arguments and ".($n-1)." locals;" :
+    "==========;*$off: Level $l procedure with no arguments and ".($n-1)." (or a func with ".($n-2).") locals;";
+}
 
-$prog =~ s@,BSS,;15,ATX,4;14,VJM,P/(\d) *;15,UTM,(\d+);@": Level $1 function with 1 parameter and ".($2-3)." locals;"@eg;
+sub manyargs {
+my ($off, $l, $n,$m) = @_;
+return
+    $rtype{$off} eq 'f' ? "==========;*$off: Level $l function with ".($n-4)." arguments and ".($m-$n+2)." locals;" :
+    $rtype{$off} eq 'p' ? "==========;*$off: Level $l procedure with ".($n-3)." arguments and ".($m-$n+2)." locals;" :
+    "==========;*$off: Level $l procedure with ".($n-3)." (or a func with ".($n-4).") arguments and ".($m-$n+2)." locals;";   
+}
 
-$prog =~ s@,BSS,;15,ATX,0;15,UTM,-(\d+);14,VJM,P/(\d) *;15,UTM,(\d+);@": Level $2 procedure with ".($1-3)." parameters and ".($3-$1+2)." locals (or a func with ".($1-4)." parameters);"@eg;
+$prog =~ s@\*([^:,]+):,BSS,;14,VJM,P/(\d) *;15,UTM,(\d+);@noargs($1,$2,$3)@eg;
 
-$prog =~ s@,BSS,;,NTR,7; :,BSS,;13,MTJ,(\d);@": Level ".($1-1)." procedure with no frame;"@eg;
+$prog =~ s@\*([^:,]+):,BSS,;15,ATX,3;14,VJM,P/(\d) *;15,UTM,(\d+);@"==========;*$1: Level $2 procedure with 1 argument and ".($3-2)." locals;"@eg;
+
+$prog =~ s@\*([^:,]+):,BSS,;15,ATX,4;14,VJM,P/(\d) *;15,UTM,(\d+);@"==========;*$1: Level $2 function with 1 argument and ".($3-3)." locals;"@eg;
+
+$prog =~ s@\*([^:,]+):,BSS,;15,ATX,0;15,UTM,-(\d+);14,VJM,P/(\d) *;15,UTM,(\d+);@manyargs($1,$3,$2,$4)@eg;
+
+$prog =~ s@\*([^:,]+):,BSS,;,NTR,7; :,BSS,;13,MTJ,(\d);@"==========;*$1: Level ".($2-1)." procedure with no frame;"@eg;
 
 # Converting shortcuts to standard subroutine calls
 
@@ -65,18 +93,38 @@ my @ops = split /;/, $prog;
 my @knownregs;
 my $curlev = -1;
 my $funcname = '';
+my $args = 0;
+my $unkn = 0;
 for ($i = 0; $i <= $#ops; ++$i) {
     $line = $ops[$i];
-    if ($line =~ m/^(.*?):: Level (\d)/) {
+    if ($line =~ m/^(.*?): Level (\d) ([a-z]+) with (\d+) argument/) {
         $funcname = $1;
         $curlev = $2;
-        $funcname = '' unless $line =~ m/function with/;
+        $args = $4;
+        $funcname = '' unless $3 eq 'function';
+        $unkn = 1 if $line =~ m/ or /;
         @knownregs = ();
         next;
     }
     if ($curlev != -1 && $line =~ m@^([2-$curlev]),([^M][^M][^M]),(\d+)$@) {
-        $ops[$i] = ",$2,l$1var".($3-3)."z";
-        $ops[$i] =~ s/l${curlev}var0z/$funcname/ if $funcname ne '';
+        my $idx = $3-3;
+        if ($unkn || $1 ne $curlev) {
+            $ops[$i] = ",$2,l$1loc${idx}z";
+            $ops[$i] =~ s/l${curlev}loc0z/$funcname/ if $funcname ne '';
+        } elsif ($funcname ne '') {
+            if ($idx <= $args) {
+                $ops[$i] = ",$2,l$1arg${idx}z";
+            } else {
+                $ops[$i] = ",$2,l$1var".($idx-$args)."z";
+            }
+            $ops[$i] =~ s/l${curlev}arg0z/$funcname/;
+        } else {
+            if ($idx < $args) {
+                $ops[$i] = ",$2,l$1arg".($idx+1)."z";
+            } else {
+                $ops[$i] = ",$2,l$1var".($idx-$args+1)."z";
+            }
+        }
         next;
     }
 
@@ -122,6 +170,9 @@ $prog =~ s@glob20z@vseed@g;
 
 # Also
 $prog =~ s@=74000@NIL@g;
+$prog =~ s@int\(122944\)@ASN64template@g;
+$prog =~ s@int\(131086\)@ATI14template@g;
+$prog =~ s@int\(126983\)@NTR7template@g;
 
 # Known globals
 
@@ -137,27 +188,18 @@ if (open(GLOBALS, "globals.txt")) {
 }
 # Recognizing known subroutine names
 
-if (open(ROUTINES, "routines.txt")) {
-    while (<ROUTINES>) {
-        chop;
-        my ($offset, $name) = split;
-        my $suffix = length($offset) == 5 ? '' : 'B';
-        $prog =~ s@\*${offset}$suffix@$name@g || print STDERR "Offset $offset not found\n";
-    }
-    close(ROUTINES);
-} else {
-    print STDERR "File routines.txt not found, no labels replaced\n";
-}
+$pattern = join '|', keys %routines;
 
+$prog =~ s@\*($pattern)@$routines{$1}@ge;
 
 # Converting indirect addressing
-
 while ($prog =~ s@;,WTC,([^;]+);([^;]+)@;\2\[\1\]@g) { }
 
-$prog =~ s@;,UTC,([^;]+);([^;]+)@;\2+(\1)@g;
+$prog =~ s@;,UTC,([^;]+);([^;]*?),([^,;]+);@;\2,*(&\1+\3);@g;
+# $prog =~ s@;14,UTC,([^;]+);([^;]*?),([^,;]+);@;\2,\3[R14+\1];@g;
 
 # Reading the address of a variable
-$prog =~ s@14,VTM,([^;]+);,ITA,14@,XTA,&\1@g;
+$prog =~ s@14,VTM,([^;]+);,IT([AS]),14@,XT\2,&\1@g;
 
 # Recognizing a variety of write routines
 
@@ -224,6 +266,7 @@ $prog =~ s@;(eo[^;]+);,U1A,@;\1;ifgoto @g;
 
 $prog =~ s@;(\d+)?,XTA,([^;]+);isUZACond@;\1,XTA,\2;,CEQ,0;toBool@g;
 $prog =~ s@;(\d+)?,XTA,([^;]+);isU1ACond@;\1,XTA,\2;,CNE,0;toBool@g;
+
 
 @ops = split /;/, $prog;
 
@@ -405,6 +448,9 @@ while ($from <= $#ops) {
     } elsif (@stack && $line =~/^,XTS,(.*)/) {
         $stack[++$#stack] = $1;
         ++$from;
+    } elsif (@stack && $line eq '15,ATX,0') {
+        push @stack, $stack[$#stack];
+        ++$from;
     } elsif (@stack && $line =~ /^,ATX,(.*)/) {
         push @to, "$1 := $stack[$#stack]";
         # If there was just one element on the stack, consider it consumed
@@ -429,59 +475,63 @@ $prog =~ s@,UJ,P/E *;@RETURN;@g;
 # Removing stack corrections after calls
 $prog =~ s@15,UTM,[34];@@g;
 
-# Converting small literals to enums based on context
-$context = 'SY |checkSymAndRead|requiredSymErr';
 
-$prog =~ s@(($context)[^;]+)=0([^0-7])@\1IDENT\3@g;
-$prog =~ s@(($context)[^;]+)=1([^0-7])@\1INTCONST\3@g;
-$prog =~ s@(($context)[^;]+)=2([^0-7])@\1REALCONST\3@g;
-$prog =~ s@(($context)[^;]+)=3([^0-7])@\1CHARCONST\3@g;
-$prog =~ s@(($context)[^;]+)=4([^0-7])@\1LTOP\3@g;
-$prog =~ s@(($context)[^;]+)=5([^0-7])@\1GTOP\3@g;
-$prog =~ s@(($context)[^;]+)=7([^0-7])@\1LPAREN\3@g;
-$prog =~ s@(($context)[^;]+)=10([^0-7])@\1LBRACK\3@g;
-$prog =~ s@(($context)[^;]+)=11([^0-7])@\1MULOP\3@g;
-$prog =~ s@(($context)[^;]+)=12([^0-7])@\1ADDOP\3@g;
-$prog =~ s@(($context)[^;]+)=13([^0-7])@\1RELOP\3@g;
-$prog =~ s@(($context)[^;]+)=14([^0-7])@\1RPAREN\3@g;
-$prog =~ s@(($context)[^;]+)=15([^0-7])@\1RBRACK\3@g;
-$prog =~ s@(($context)[^;]+)=16([^0-7])@\1COMMA\3@g;
-$prog =~ s@(($context)[^;]+)=17([^0-7])@\1SEMICOLON\3@g;
-$prog =~ s@(($context)[^;]+)=20([^0-7])@\1PERIOD\3@g;
-$prog =~ s@(($context)[^;]+)=21([^0-7])@\1ARROW\3@g;
-$prog =~ s@(($context)[^;]+)=22([^0-7])@\1COLON\3@g;
-$prog =~ s@(($context)[^;]+)=23([^0-7])@\1BECOMES\3@g;
-$prog =~ s@(($context)[^;]+)=24([^0-7])@\1LABELSY\3@g;
-$prog =~ s@(($context)[^;]+)=25([^0-7])@\1CONSTSY\3@g;
-$prog =~ s@(($context)[^;]+)=26([^0-7])@\1TYPESY\3@g;
-$prog =~ s@(($context)[^;]+)=27([^0-7])@\1VARSY\3@g;
-$prog =~ s@(($context)[^;]+)=30([^0-7])@\1FUNCSY\3@g;
-$prog =~ s@(($context)[^;]+)=31([^0-7])@\1PROCSY\3@g;
-$prog =~ s@(($context)[^;]+)=32([^0-7])@\1SETSY\3@g;
-$prog =~ s@(($context)[^;]+)=33([^0-7])@\1PACKEDSY\3@g;
-$prog =~ s@(($context)[^;]+)=34([^0-7])@\1ARRAYSY\3@g;
-$prog =~ s@(($context)[^;]+)=35([^0-7])@\1RECORDSY\3@g;
-$prog =~ s@(($context)[^;]+)=36([^0-7])@\1FILESY\3@g;
-$prog =~ s@(($context)[^;]+)=37([^0-7])@\1BEGINSY\3@g;
-$prog =~ s@(($context)[^;]+)=40([^0-7])@\1IFSY\3@g;
-$prog =~ s@(($context)[^;]+)=41([^0-7])@\1CASESY\3@g;
-$prog =~ s@(($context)[^;]+)=42([^0-7])@\1REPEATSY\3@g;
-$prog =~ s@(($context)[^;]+)=43([^0-7])@\1WHILESY\3@g;
-$prog =~ s@(($context)[^;]+)=44([^0-7])@\1FORSY\3@g;
-$prog =~ s@(($context)[^;]+)=45([^0-7])@\1WITHSY\3@g;
-$prog =~ s@(($context)[^;]+)=46([^0-7])@\1GOTOSY\3@g;
-$prog =~ s@(($context)[^;]+)=47([^0-7])@\1ENDSY\3@g;
-$prog =~ s@(($context)[^;]+)=50([^0-7])@\1ELSESY\3@g;
-$prog =~ s@(($context)[^;]+)=51([^0-7])@\1UNTILSY\3@g;
-$prog =~ s@(($context)[^;]+)=52([^0-7])@\1OFSY\3@g;
-$prog =~ s@(($context)[^;]+)=53([^0-7])@\1DOSY\3@g;
-$prog =~ s@(($context)[^;]+)=54([^0-7])@\1TOSY\3@g;
-$prog =~ s@(($context)[^;]+)=55([^0-7])@\1DOWNTOSY\3@g;
-$prog =~ s@(($context)[^;]+)=56([^0-7])@\1THENSY\3@g;
-$prog =~ s@(($context)[^;]+)=57([^0-7])@\1SELECTSY\3@g;
-$prog =~ s@(($context)[^;]+)=60([^0-7])@\1PROGRAMSY\3@g;
-$prog =~ s@(($context)[^;]+)=61([^0-7])@\1OTHERSY\3@g;
-$prog =~ s@(($context)[^;]+)=62([^0-7])@\1NOSY\3@g;
+# Converting small literals to enums based on context
+$context = 'SY |checkSymAndRead|requiredSymErr|ifWhileStatement';
+
+sub convertSymbolSet {
+    my $bitset = oct($_[0]);
+    my $pos = 47;
+    my @set = ();
+    while ($bitset) {
+        unshift @set, $symbol[$pos] if $bitset & 1;
+        $bitset >>= 1;
+        --$pos;
+    }
+    return '['.join(',', @set).']';
+}
+
+if (open(SYMBOL, "symbol.txt")) {
+    while (<SYMBOL>) {
+        my ($val, $name) = split;
+        $symbol[oct($val)] = $name;
+    }
+    close(SYMBOL);
+    
+    $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$symbol[oct($3)]$4"@ge;
+
+    $prog =~ s@SY IN ([^;]*?)=([0-7]+)@"SY IN $1".convertSymbolSet($2)@ge;
+    $prog =~ s@(skipToSet|statBegSys|statEndSys|blockBegSys) ([^;]*?)=([0-7]+)@"$1 $2".convertSymbolSet($3)@ge;
+} else {
+    print STDERR "symbol.txt not found, SY enums not replaced\n";
+}
+
+sub convertOperatorSet {
+    my $bitset = oct($_[0]);
+    my $pos = 47;
+    my @set = ();
+    while ($bitset) {
+        unshift @set, $oper[$pos] if $bitset & 1;
+        $bitset >>= 1;
+        --$pos;
+    }
+    return '['.join(',', @set).']';
+}
+
+if (open(OPERATOR, "operator.txt")) {
+    while (<OPERATOR>) {
+        my ($val, $name) = split;
+        $oper[oct($val)] = $name;
+    }
+    close(OPERATOR);
+    $context = 'charClass';
+    
+    $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$oper[oct($3)]$4"@ge;
+    $prog =~ s@charClass IN ([^;]*?)=([0-7]+)@"charClass IN $1".convertOperatorSet($2)@ge;
+
+} else {
+    print STDERR "symbol.txt not found, SY enums not replaced\n";
+}
 
 # Converting chars based on context
 $prog =~ s@(CH [^;]+)=([0-7][0-7])@"$1char('".chr(oct($2))."')"@ge;
@@ -490,8 +540,9 @@ if (open(HELPERS, "helpers.txt")) {
     while (<HELPERS>) {
         chop;
         my ($val, $name) = split;
-        $prog =~ s@(getHelperProc[^;]+)int\($val\)@\1"$name"@g;
-# || print STDERR "Helper $val not found\n";
+#        $prog =~ s@(getHelperProc[^;]+)int\($val\)@\1"$name"@g;
+         $prog =~ s@(getHelperProc[^;]+)int\($val\)@\1"$name"@g;
+         $prog =~ s@(P0715[^;,]+?,[^;]+?)int\($val\)@\1"$name"@g;
     }
     close(HELPERS);
 } else {

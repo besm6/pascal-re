@@ -1,9 +1,16 @@
-40      secretOctalMode
-50	inStringLit 
+40      octalMode
+41      bigSkipSet
+42      statEndSys
+43      blockBegSys
+44      statBegSys
+45      skipToSet
+50	inStringLit
+52      jumpTarget?
 54	charClass 
 55	SY 
 58	FcstCnt 
 59	symTabPos
+60      entryPtCnt
 64      curInsnTemplate?
 65	maxLineLen 
 66	linePos 
@@ -20,7 +27,8 @@
 81      keywordHashPtr
 83      curExternFile
 86	CH 
-89	lineNesting 
+89	lineNesting
+90      FcstCountTo500
 91	objBufIdx 
 96	charEncoding 
 98	atEOL
@@ -30,9 +38,14 @@
 109	fixMult 
 112	allowCompat 
 113	checkFortran
-118     dummyProc
+114     outputFile
+115     inputFile
+116     programObj
+117     hashTravPtr
+118     uProcPtr
 119     externFileList
 122     pointerType
+123     setType
 124     booleanType
 125     textType
 126     integerType
@@ -41,17 +54,22 @@
 129     alfaType
 134     curToken
 135     curVal
+136     O77777
+137     intZero
 140     halfWord
 141	isLeftInsn
-142	hashMask 
+142	hashMask
+143     curIdent
 149	optSflags
 150     litOct
 151	litExternal 
 152	litForward 
 153	litFortran
-154     dummyVar
+154     uVarPtr
 155     curExpr
 156     insnList
+166     symTabCntTo80 + array[80]
+340     entryPtTableBase
 532     absInsn
 533     addInt0Insn
 534     andE1Insn
@@ -106,18 +124,20 @@
 594     UJtemplate
 596     frameRegTemplate
 597     constRegTemplate
-598	lineBufBase 
+598	lineBufBase [130]
 729	errMapBase 
-739	charClassTabBase
-867     keywordHashTabBase
-995	charSymTabBase
-1123	symHashTabBase 
-1251    hash2TabBase
-1378	helperProcMapBase 
-1477	helperProcNameBase 
+739	charClassTabBase [128]
+867     keywordHashTabBase [128]
+995	charSymTabBase [128]
+1123	symHashTabBase  [128]
+1251    typeHashTabBase [128]
+1378	helperProcMapBase [99] base=1
+1477	helperProcNameBase [99] base=1
 2410	systemProcNameBase 
 2440	resWordNameBase 
 2470	longSymTabBase 
-2560	longSymsBase 
-3650	objBufBase 
+2560	longSymsBase
+2650    constValsTabBase [500]
+3150    constNumTabBase [500]
+3650	objBufBase [1024]
 4761	FCST 
