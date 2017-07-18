@@ -69,7 +69,7 @@
 155     curExpr
 156     insnList
 166     symTabCntTo80 + array[80]
-340     entryPtTableBase
+340     entryPtTableBase [40]
 532     absInsn
 533     addInt0Insn
 534     andE1Insn

@@ -23,12 +23,12 @@
 0701 getValueOrAllocSymtab
 0715 P0715 p
 1046 endOfLine p
-1206 requiredSymErr 
+1206 requiredSymErr
 1215 readToPos80
-1232 nextCH 
-1247 readOptVal 
+1232 nextCH
+1247 readOptVal p 
 1275 readOptFlag 
-1314 parseComment 
+1314 parseComment p
 1324 optionD 
 1333 optionY 
 1335 optionE 
@@ -45,7 +45,7 @@
 1410 optionB 
 1413 optionK 
 1416 optionZ 
-1464 inSymbol
+1464 inSymbol p
 1533 symIDENT
 1722 symINTCONST
 1705 symREALCONST
@@ -56,19 +56,22 @@
 2365 symLPAREN
 2401 symPERIOD
 2372 symCOLON
-2455 skipToEnd
-2476 error 
-2534 skip 
-2543 test1 
-2556 errAndSkip
+2455 skipToEnd p
+2476 error
+2534 skip
+2543 test1 p
+2556 errAndSkip p
 2565 parseLiteral p
+2672 P2672 p
 2736 isFileType
 2772 checkSymAndRead
 3002 allocWithTypeCheck
-3054 typeCheck
+3020 F3020 f
+3054 typeCheck f
 3324 makeNameWithStars
 3373 addInsnToBuf
-3400 add2InsnsToBuf
+3400 add2InsnsToBuf p
+3413 F3413 f
 3457 genOneOp p
 3545 genOp0
 3547 genOp1
@@ -95,60 +98,85 @@
 3731 genOp26
 3541 genOp27
 4274 addToInsnList
+4315 addInsnAndModify p
 4324 addToInsnList2
+4343 P4343 p
+4755 P4755 p
+5142 F5142 f
+5170 P5170 p
+5314 P5314 p
+5531 P5531 p
 5753 minel
+5757 P5757 p
 6416 allocGlobalObject
+6470 P6470 p
 7240 startInsnList
+7272 P7272 p
 7341 genConstDiv
-7354 genEqComp
+7354 genEqComp p
 7563 genFullExpr
-10657 formFileInit
+10427 evalSqrt
+10452 evalOdd
+10454 evalOrd
+10460 evalSucc
+10462 evalPred
+10466 evalSqrI
+10474 evalCard
+10477 evalMinel
+10502 evalAbs
+10471 evalRound
+10504 evalSqrR
+10657 formFileInit p
 10776 formOperator
 11445 addToTypeHashTab
-11675 parseRecordDecl
-12243 parseTypeRef
+11460 P11460 p
+11675 parseRecordDecl p
+12243 parseTypeRef p
+13044 P13044 p
 13177 parseDecls
 13436 checkForChar
 13447 parseLval p
 13654 parseCallArgs
 14044 stdCall p
-14250 factor
+14250 factor p
 14256 factorIDENT
 14402 factorCONST
 14416 factorNOT
 14376 factorLPAREN
 14435 factorLBRACK
-14624 term
+14624 term p
 14747 simpleExpression p
 15105 expression p
 15220 forStatement p
 15406 withStatement p
 15454 reportStmtType
 15471 gotoStatement p
-15575 max 
+15575 max f
 15605 caseStatement p
 16220 assignStatement p
 16357 compoundStatement p
 16367 ifWhileStatement p
-17072 checkElementForReadWrite
-17157 writeProc 
+16517 P16517 p
+17072 checkElementForReadWrite p
+17157 writeProc
+17541 P17451 p
 17517 standProc p
 20266 statement p
-20767 outputObjFile
-21004 defineRoutine
-21263 registerSysType 
-21277 registerSysEnum 
+20767 outputObjFile p
+21004 defineRoutine p
+21263 registerSysType p
+21277 registerSysEnum p
 21315 registerSysProc 
-21332 initScalars
+21332 initScalars p
 22076 allocExternFile
 22110 parseParameters p
 22324 exitScope
-22347 programme
+22347 programme p
 23365 initInsnTemplates p
 23520 registerResWord
 23547 registerKeywords
 23602 initArrays p
-23634 initSets
+23634 initSets p
 23643 initTables p
-23702 finalize 
-24024 initOptions
+23702 finalize p
+24024 initOptions p

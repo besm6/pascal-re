@@ -201,6 +201,9 @@ $prog =~ s@;,UTC,([^;]+);([^;]*?),([^,;]+);@;\2,*(&\1+\3);@g;
 # Reading the address of a variable
 $prog =~ s@14,VTM,([^;]+);,IT([AS]),14@,XT\2,&\1@g;
 
+# Setting a register in an indirect way
+$prog =~ s@,XTA,int\((\d+)\);,ATI,(\d+)@\2,VTM,\1@g;
+
 # Recognizing a variety of write routines
 
 $prog =~ s@10,VTM,(\d+);(12,VTM,.OUTPUT.;)?13,VJM,P/6A *@writeAlfa\1@g;
@@ -220,18 +223,30 @@ $prog =~ s@12,VTM,([^;]+);13,VJM,P/TF *@rewrite(\1)@g;
 
 # Converting NEW
 
-$prog =~ s@14,VTM,(\d+);13,VJM,P/NW *;,ATX,([^;]+)@\2 := malloc(\1)@g;
+$prog =~ s@14,VTM,(\d+);13,VJM,P/NW *;,ATX,([^;]+)@new(\2=\1)@g;
 
 # Converting calls (including scope-crossing calls)
 
 $prog =~ s@13,VJM,([^;]+);13,VJM,P/\d\d@CALL \1@g;
 $prog =~ s@13,VJM,([^;]+)(;7,MTJ,\d)?@CALL \1@g;
 
+# Removing base register resetting after external calls
+$prog =~ s@8,BASE,([^;]+);@@g;
+
 # Converting non-local GOTO
 
 $prog =~ s@\d,MTJ,13;14,VTM,([^;]+);,UJ,P/RC *@GOTO \1@g;
 
+# Recognizing casts and conversions 
 $prog =~ s@,NTR,0;,AVX,0@toReal@g;
+$prog =~ s@,APX,p77777;,ASN,64\+33;,AEX,int\(0\)@mapAI@g;
+$prog =~ s@,A\+X,half;,NTR,7;,A\+X,int\(0\)@round@g;
+
+# Simplifying code for case statements
+
+$prog =~ s@15,ATX,1;,UJ,@caseto @g;
+
+$prog =~ s@,BSS,;15,XTA,1;,A-X,([^;]+);,U1A,([^;]+);,X-A,([^;]+);,U1A,\2;15,XTA,1;,ATI,14@Case decoder from \1 to \1+\3, otherwise goto \2@g;
 
 # Converting common conditional branches
 
@@ -245,7 +260,7 @@ $prog =~ s@;(\d+)?,AEX,([^;]+);,U1A,@;\1,CNE,\2;ifgoto @g;
 $prog =~ s@;(\d+)?,A-X,([^;]+);,U1A,@;\1,CLT,\2;ifgoto @g;
 $prog =~ s@;(\d+)?,X-A,([^;]+);,U1A,@;\1,CGT,\2;ifgoto @g;
 
-$prog =~ s@;(\d+)?,AAX,([^;]+);isUZACond@;\1,AAX,\2;toNotl@g;
+$prog =~ s@;(\d+)?,AAX,([^;]+);isUZACond@;\1,AAX,\2;invBool@g;
 $prog =~ s@;(\d+)?,AEX,([^;]+);isUZACond@;\1,CEQ,\2;toBool@g;
 $prog =~ s@;(\d+)?,A-X,([^;]+);isUZACond@;\1,CGE,\2;toBool@g;
 $prog =~ s@;(\d+)?,X-A,([^;]+);isUZACond@;\1,CLE,\2;toBool@g;
@@ -311,9 +326,8 @@ while ($from <= $#ops) {
         ++$from;
         next;
     }
-    if (@stack && $line =~ m/^to(...l)$/) {
-        # toBool, toReal
-        $stack[$#stack] = "to$1($stack[$#stack])";
+    if (@stack && $line =~ m/^(toBool|toReal|invBool|mapAI|round)$/) {
+        $stack[$#stack] = "$1($stack[$#stack])";
         ++$from;
         next;
     }
@@ -419,7 +433,14 @@ while ($from <= $#ops) {
         @stack = () if @stack == 1;
         ++$from;
         next;
+    } elsif (@stack && $line =~/^caseto (.*)/) {
+        push @to, "case $stack[$#stack] at $1";
+        # If there was just one element on the stack, consider it consumed
+        @stack = () if @stack == 1;
+        ++$from;
+        next;
     }
+    
     if ($line !~ /,[ASX].[ASX],/ || (@stack && $line =~ /:/)) {
         dumpStack() if @stack;
         push @to, $ops[$from++];
