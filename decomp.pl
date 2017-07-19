@@ -500,12 +500,14 @@ $prog =~ s@15,UTM,[34];@@g;
 # Converting small literals to enums based on context
 $context = 'SY |checkSymAndRead|requiredSymErr|ifWhileStatement';
 
-sub convertSymbolSet {
+sub convertEnumSet {
     my $bitset = oct($_[0]);
+    my $enum = $_[1];
     my $pos = 47;
     my @set = ();
+
     while ($bitset) {
-        unshift @set, $symbol[$pos] if $bitset & 1;
+        unshift @set, ${$enum}[$pos] if $bitset & 1;
         $bitset >>= 1;
         --$pos;
     }
@@ -521,22 +523,10 @@ if (open(SYMBOL, "symbol.txt")) {
     
     $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$symbol[oct($3)]$4"@ge;
 
-    $prog =~ s@SY IN ([^;]*?)=([0-7]+)@"SY IN $1".convertSymbolSet($2)@ge;
-    $prog =~ s@(skipToSet|statBegSys|statEndSys|blockBegSys) ([^;]*?)=([0-7]+)@"$1 $2".convertSymbolSet($3)@ge;
+    $prog =~ s@SY IN ([^;]*?)=([0-7]+)@"SY IN $1".convertEnumSet($2, \ \@symbol)@ge;
+    $prog =~ s@(skipToSet|statBegSys|statEndSys|blockBegSys) ([^;]*?)=([0-7]+)@"$1 $2".convertEnumSet($3, \ \@symbol)@ge;
 } else {
     print STDERR "symbol.txt not found, SY enums not replaced\n";
-}
-
-sub convertOperatorSet {
-    my $bitset = oct($_[0]);
-    my $pos = 47;
-    my @set = ();
-    while ($bitset) {
-        unshift @set, $oper[$pos] if $bitset & 1;
-        $bitset >>= 1;
-        --$pos;
-    }
-    return '['.join(',', @set).']';
 }
 
 if (open(OPERATOR, "operator.txt")) {
@@ -548,10 +538,26 @@ if (open(OPERATOR, "operator.txt")) {
     $context = 'charClass';
     
     $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$oper[oct($3)]$4"@ge;
-    $prog =~ s@charClass IN ([^;]*?)=([0-7]+)@"charClass IN $1".convertOperatorSet($2)@ge;
+    $prog =~ s@charClass IN ([^;]*?)=([0-7]+)@"charClass IN $1".convertEnumSet($2, \ \@oper)@ge;
+    $prog =~ s@(lvalOpSet) ([^;]*?)=([0-7]+)@"$1 $2".convertEnumSet($3, \ \@oper)@ge;
 
 } else {
-    print STDERR "symbol.txt not found, SY enums not replaced\n";
+    print STDERR "operator.txt not found, OP enums not replaced\n";
+}
+
+if (open(OPTIONS, "options.txt")) {
+    while (<OPTIONS>) {
+        my ($val, $name) = split;
+        $opts[oct($val)] = $name;
+    }
+    close(OPTIONS);
+    # $context = 'optSflags';
+    
+    # $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$oper[oct($3)]$4"@ge;
+    $prog =~ s@optSflags ([^;]*?)=([0-7]+)@"optSflags $1".convertEnumSet($2, \ \@opts)@ge;
+
+} else {
+    print STDERR "operator.txt not found, OP enums not replaced\n";
 }
 
 # Converting chars based on context

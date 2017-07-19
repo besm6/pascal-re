@@ -4,6 +4,7 @@
 43      blockBegSys
 44      statBegSys
 45      skipToSet
+46      lvalOpSet
 50	inStringLit
 52      jumpTarget?
 54	charClass 
@@ -11,6 +12,7 @@
 58	FcstCnt 
 59	symTabPos
 60      entryPtCnt
+61      fileBufSize
 64      curInsnTemplate?
 65	maxLineLen 
 66	linePos 
@@ -21,11 +23,14 @@
 73	totalErrors 
 74	lineCnt 
 75      bucket
-78	dynMemSize
+77      heapCallsCnt
+78	heapSize
 79      arithMode
 80	stmtName
 81      keywordHashPtr
+82      curVarKind
 83      curExternFile
+84      commentModeCH
 86	CH 
 89	lineNesting
 90      FcstCountTo500
@@ -34,8 +39,12 @@
 98	atEOL
 99	checkTypes 
 103	errors 
+104     declExternal
+106	doPMD
+107	checkBounds
 108	fuzzReals 
 109	fixMult 
+111	pseudoZ
 112	allowCompat 
 113	checkFortran
 114     outputFile
@@ -52,6 +61,8 @@
 127     realType
 128     charType
 129     alfaType
+130     arg1Type
+131     arg2Type
 134     curToken
 135     curVal
 136     O77777
@@ -68,6 +79,7 @@
 154     uVarPtr
 155     curExpr
 156     insnList
+160     extSymAdornment
 166     symTabCntTo80 + array[80]
 340     entryPtTableBase [40]
 532     absInsn

@@ -116,26 +116,29 @@
 7354 genEqComp p
 7563 genFullExpr
 10427 evalSqrt
+10445 evalAbsR
 10452 evalOdd
 10454 evalOrd
 10460 evalSucc
 10462 evalPred
-10466 evalSqrI
+10466 evalSqrR
 10474 evalCard
 10477 evalMinel
-10502 evalAbs
+10502 evalAbsI
 10471 evalRound
-10504 evalSqrR
+10504 evalSqrI
 10657 formFileInit p
 10776 formOperator
 11445 addToTypeHashTab
-11460 P11460 p
+11460 computeFieldOffsets p
 11675 parseRecordDecl p
 12243 parseTypeRef p
-13044 P13044 p
+13044 formPMD p
 13177 parseDecls
 13436 checkForChar
 13447 parseLval p
+13612 castToReal
+13624 areTypesCompatible f
 13654 parseCallArgs
 14044 stdCall p
 14250 factor p
@@ -157,10 +160,33 @@
 16357 compoundStatement p
 16367 ifWhileStatement p
 16517 P16517 p
+16667 P16667
+16713 startReadOrWrite
+17003 parseWidthSpecifier
 17072 checkElementForReadWrite p
 17157 writeProc
-17541 P17451 p
+17334 readProc
+17417 P17417
+17451 P17451 p
 17517 standProc p
+17562 procFILE
+17614 procNEWDISPOSE
+17727 procHALT
+17731 procSTOP
+17733 procSETUPROLLUP
+17752 procWRITE
+17753 procWRITELN
+17763 procREAD
+17764 procREADLN
+17774 procEXIT
+20022 procDEBUG
+20031 procBESM
+20037 procMAPIA
+20071 procMAPAI
+20074 procPCKUNPCK
+20122 procPACK
+20132 procUNPACK
+20142 procMARS
 20266 statement p
 20767 outputObjFile p
 21004 defineRoutine p
