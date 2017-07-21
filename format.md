@@ -50,11 +50,18 @@ where NNNN is the volume number used to run the batch,and LLL is the number repo
 
 The first three words contain lengths of the object module blocks.
 
-    +-----------------------------------------------+
-    | 48 debug 37|36     25|24 symtab 13|12 symhdr 1|
-    | 48 46|45 longsym  31|30  data  16|15    set  1|
-    | 48 46|45   const  31|30   bss  16|15   insn  1|
-    +-----------------------------------------------+
+Word 0:
+
+|  Bits 48-37 | Bits 36-25| Bits 24-13|Bits 12-1|
+|-------------|-----------|-----------|---------|
+|   debug     |    ???    |  symtab   |  symhdr |
+
+Words 1-2:
+
+| Bits 48-46 | Bits 45-31   | Bits 30-16 | Bits 15-1  |
+|------------|--------------|------------|------------|
+|            |   longsym    |    data    |      set   |
+|            |    const     |     bss    |     insn   |
 
 ### Section order
 
@@ -92,9 +99,9 @@ Not copied to the executable image; considered during processing of the `set` se
 
 Each word of this section has the format
 
-    +-------------------------------------------------+
-    |48 length 37|36 source 25|24 count 13|12 target 1|
-    +-------------------------------------------------+
+| Bits 48-37 | Bits 36-25 | Bits 24-13| Bits 12-1 |
+|------------|------------|-----------|-----------|
+|   length   |   source   |   count   |   target  |
 
 `length` words starting from the word referred to by the symbol table entry `source`
 are copied `count` times to the memory location referred to by the symbol table entry `target`.
@@ -110,47 +117,66 @@ using symtab reference numbers less than `symhdr` is nonsensical.)
 
 As discovered so far, the meaning of symbol table entries is (all literal values are octal):
 
-    +-----------------------------------------+
-    |48 0000 0000 400 16|15 absolute address 1|
-    +-----------------------------------------+
+#### Literal values
 
-    +-----------------------------------------+
-    |48 0000 0000 410 16|15 relative address 1|
-    +-----------------------------------------+
+|  Bits 48-24  | Bits 24-1   |
+|--------------|-------------|
+|   0000 0000  |  400x xxxx  |
 
-    +-----------------------------------------+
-    |48 nonzero 43|42 text 25|24   ....      1|
-    +-----------------------------------------+
+xxxxx is an absolute address
+
+---
+
+|  Bits 48-24  | Bits 24-1   |
+|--------------|-------------|
+|   0000 0000  |  410x xxxx  |
+
+xxxxx is a relative address
+
+#### External names
+
+|     Bits 48-25       |  Bits 24-1       |
+|----------------------|------------------|
+|   Left-aligned name  |  bit 23 not set  |
 
 If the upper 6 bits of the word are non-zero (not a space character in the TEXT encoding),
-the bits 48-25 contain a literal short name of an external symbol.
+the bits 48-25 contain a literal short name (up to 4 characters) of an external symbol.
 
-    +-----------------------------------------+
-    |48 0000 XXXX 25|24  bit 23 is set ....  1|
-    +-----------------------------------------+
+---
 
-If XXXX > 04000, the (XXXX & 03777) is the number of a symbol table entry (within the LONGSYM area) containing a long name 
+|  Bits 48-25   |  Bits 24-1       |
+|---------------|------------------|
+|   0000 XXXX   |   bit 23 is set  |
+    
+If XXXX > 04000, the value of (XXXX & 03777) is the number of a symbol table entry 
+(within the LONGSYM area) containing a long name 
 (up to 8 characters) of an external object in the TEXT encoding. 
 
-    +-----------------------------------------+
-    |24 4300 0000 or 6300 0000:  subroutine  1|
-    +-----------------------------------------+
+#### External reference types
+
+|        Bits 24-1          |
+|---------------------------|
+|   4300 0000 or 6300 0000  |
 
 This lower halfword pattern defines an external symbol that must be present in the library during linking,
 typically a subroutine. Bit 23 determines whether the symbol name is short or long.
 
-    +-----------------------------------------+
-    |24 470x xxxx or 670x xxxx: common block 1|
-    +-----------------------------------------+
+---
+
+|        Bits 24-1           |
+|----------------------------|
+|   470x xxxx or 670x xxxx   |
 
 This lower halfword pattern defines a common block in the sense of FORTRAN. `xxxxx` specifies its length. 
 
-    +-----------------------------------------+
-    |48 0000 XXXX 25|24  000Y YYYY - offset  1|
-    +-----------------------------------------+
+#### Expressions
+
+|   Bits 48-25  |     Bits 24-1  |
+|---------------|----------------|
+|   0000 XXXX   |    000Y YYYY   |
     
 If XXXX > 4000, this word defines a reference to an external object
-referred to by the symbol table entry (XXXX & 03777) plus `offset`.
+referred to by the symbol table entry (XXXX & 03777) plus YYYYY.
 
 ### LONGSYM section
 
