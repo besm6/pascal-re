@@ -117,6 +117,7 @@
 7563 genFullExpr
 10427 evalSqrt
 10445 evalAbsR
+10450 evalTrunc
 10452 evalOdd
 10454 evalOrd
 10460 evalSucc
@@ -129,6 +130,23 @@
 10504 evalSqrI
 10657 formFileInit p
 10776 formOperator
+11110 form0
+11116 form1
+11173 form2
+11120 form3
+11015 form4
+11124 form5
+11132 form6
+11014 form7
+11145 form10
+11147 form11
+11154 form12
+11157 form13_14
+11166 form15
+11172 form16
+11175 form17
+11302 form20
+11357 form21
 11445 addToTypeHashTab
 11460 computeFieldOffsets p
 11675 parseRecordDecl p

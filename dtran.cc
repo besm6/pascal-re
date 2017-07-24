@@ -186,7 +186,7 @@ struct Dtran {
             fprintf(stderr, "BSS section not supported yet\n");
             exit(1);
         }
-        const_len = (memory[2] >> 30) & 77777;
+        const_len = (memory[2] >> 30) & 077777;
         table_off = 3 + cmd_len + const_len + data_len + set_len;
         long_off = table_off + head_len + sym_len;
         debug_off = long_off + long_len;
@@ -595,7 +595,7 @@ Dtran(const char * fname, uint b, bool n, bool e, bool o) :
     std::string get_iso_char (unsigned char ch) {
         ch &= 0177;
         if (ch < 0140) { std::string ret; return ret=ch; }
-        return std::string("ЮАБЦДЕФГХИЙКЛМНОПЯРСТУЖВЬЫЗШЭЩЧ\177"[2*(ch-0140)], 2);
+        return std::string(&"ЮАБЦДЕФГХИЙКЛМНОПЯРСТУЖВЬЫЗШЭЩЧ\177"[2*(ch-0140)], 2);
     }
 
     std::string get_text_word(uint64 word) {

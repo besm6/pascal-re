@@ -19,7 +19,9 @@
 67	prevErrPos 
 68	errsInLine 
 69	moduleOffset
-71	curFrameRegTemplate 
+70      lineStartOffset
+71	curFrameRegTemplate
+72      curProcNesting
 73	totalErrors 
 74	lineCnt 
 75      bucket
@@ -79,6 +81,7 @@
 154     uVarPtr
 155     curExpr
 156     insnList
+159     someTypeArrayBase
 160     extSymAdornment
 166     symTabCntTo80 + array[80]
 340     entryPtTableBase [40]
@@ -152,4 +155,6 @@
 2650    constValsTabBase [500]
 3150    constNumTabBase [500]
 3650	objBufBase [1024]
+4633    pasInforIndexed
+4675    pasInforCopy?
 4761	FCST 

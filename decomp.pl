@@ -11,14 +11,20 @@ $/=chr(10);
 $prog =~ s/,;/,0;/g;
 
 # Recognizing "convert to Boolean" sequences (before normalizing labels)
-$prog =~ s@,UZA,([^;]+);,XTA,0;,UJ,([^;]+);\1:1,XTA,8;\2:@isUZACond;@g;
-$prog =~ s@,U1A,([^;]+);,XTA,0;,UJ,([^;]+);\1:1,XTA,8;\2:@isU1ACond;@g;
-$prog =~ s@,UZA,([^;]+);1,XTA,8;,UJ,([^;]+);\1:,XTA,0;\2:@isU1ACond;@g;
-$prog =~ s@,U1A,([^;]+);1,XTA,8;,UJ,([^;]+);\1:,XTA,0;\2:@isUZACond;@g;
+# Does not work correctly in case of AND/OR of Boolean expressions
+# $prog =~ s@,UZA,([^;]+);,XTA,0;,UJ,([^;]+);\1:1,XTA,8;\2:@isUZACond;@g;
+# $prog =~ s@,U1A,([^;]+);,XTA,0;,UJ,([^;]+);\1:1,XTA,8;\2:@isU1ACond;@g;
+# $prog =~ s@,UZA,([^;]+);1,XTA,8;,UJ,([^;]+);\1:,XTA,0;\2:@isU1ACond;@g;
+# $prog =~ s@,U1A,([^;]+);1,XTA,8;,UJ,([^;]+);\1:,XTA,0;\2:@isUZACond;@g;
 
 # Converting for loops to stack-friendly form (takes a few seconds)
 
 while ($prog =~ s@,UJ,([^;]+);(.*?);\1:([^,]*),ATX,([^;]+)@\3,ATX,\4;,UJ,\1;\2;\3,ATX,\4;\1:\3,XTA,\4@g) { }
+
+# Normalizing references to addresses of globals
+
+$prog =~ s@;1,UTC,0;(\d+),VTM,(\d+)@;1,UTC,\2;\1,VTM,0@g;
+$prog =~ s@;,UTC,(\d+);1,(...),0@;1,\2,\1@g;
 
 # Normalising labels
 
@@ -48,7 +54,7 @@ return $n==1 ?
     "==========;*$off: Level $l procedure with 0 arguments and 0 locals;" :
     $rtype{$off} eq 'f' ? "==========;*$off: Level $l function with 0 arguments and ".($n-2)." locals;" :
     $rtype{$off} eq 'p' ? "==========;*$off: Level $l procedure with 0 arguments and ".($n-1)." locals;" :
-    "==========;*$off: Level $l procedure with no arguments and ".($n-1)." (or a func with ".($n-2).") locals;";
+    "==========;*$off: Level $l procedure with 0 arguments and ".($n-1)." (or a func with ".($n-2).") locals;";
 }
 
 sub manyargs {
@@ -149,6 +155,31 @@ for ($i = 0; $i <= $#ops; ++$i) {
     $ops[$i] =~ s@$avail,UJ,0@RETURN@;
 }
 
+# Bringing procedure headers up
+my $curlev = 2;
+
+for ($i = 0; $i <= $#ops; ++$i) {
+    my $line = $ops[$i];
+    next if $line !~ /Level (\d)/;
+    $level = $1;
+    next if $curlev == $level;
+    if ($curlev > $level) {
+        $ops[$i] .= ' (body)';
+        $curlev = $level;
+        next;
+    }
+    # The current line starts a subroutine at a greater nesting
+    # level; find the header of the routine at the current level
+    # and bring it up.
+    for ($k = $level-1; $k >= $curlev; --$k) {
+        for ($j = $i+1; $j <= $#ops; ++$j) {
+            $l2 = $ops[$j];
+            last if $l2 =~ /Level $k/;
+        }
+        $ops[$i] = "$l2 (header);$ops[$i]";
+    }
+    $curlev = $level;
+}
 $prog = join ';', @ops;
 
 }
@@ -160,13 +191,15 @@ processprocs();
 
 $prog =~ s@glob8z@e1@g;
 $prog =~ s@glob9z@int(0)@g;
-$prog =~ s@glob10z@multmask@g;
-$prog =~ s@glob12z@e40to1@g;
+$prog =~ s@glob10z@multmask@g; # 640... -> 400... 
+$prog =~ s@glob12z@mantissa@g;
 $prog =~ s@glob15z@int(-1)@g;
 $prog =~ s@glob17z@int(1)@g;
 $prog =~ s@glob18z@p77777@g;
-$prog =~ s@glob19z@half@g;
-$prog =~ s@glob20z@vseed@g;
+$prog =~ s@glob19z@real0_5@g;
+$prog =~ s@glob20z@allones@g;
+
+# glob25z is the saved heap state for setup/rollup
 
 # Also
 $prog =~ s@=74000@NIL@g;
@@ -188,9 +221,10 @@ if (open(GLOBALS, "globals.txt")) {
 }
 # Recognizing known subroutine names
 
-$pattern = join '|', keys %routines;
-
-$prog =~ s@\*($pattern)@$routines{$1}@ge;
+if (%routines) {
+    $pattern = join '|', keys %routines;
+    $prog =~ s@\*($pattern)@$routines{$1}@ge;
+}
 
 # Converting indirect addressing
 while ($prog =~ s@;,WTC,([^;]+);([^;]+)@;\2\[\1\]@g) { }
@@ -238,7 +272,7 @@ $prog =~ s@8,BASE,([^;]+);@@g;
 $prog =~ s@\d,MTJ,13;14,VTM,([^;]+);,UJ,P/RC *@GOTO \1@g;
 
 # Recognizing casts and conversions 
-$prog =~ s@,NTR,0;,AVX,0@toReal@g;
+$prog =~ s@,NTR,0(;,AVX,0)?@toReal@g;
 $prog =~ s@,APX,p77777;,ASN,64\+33;,AEX,int\(0\)@mapAI@g;
 $prog =~ s@,A\+X,half;,NTR,7;,A\+X,int\(0\)@round@g;
 
@@ -560,8 +594,23 @@ if (open(OPTIONS, "options.txt")) {
     print STDERR "operator.txt not found, OP enums not replaced\n";
 }
 
+if (open(FORM, "form.txt")) {
+    while (<FORM>) {
+        my ($val, $name) = split;
+        $form[oct($val)] = $name;
+    }
+    close(FORM);
+    $context = 'formOperator';
+    
+    $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$form[oct($3)]$4"@ge;
+    # $prog =~ s@formOperator ([^;]*?)=([0-7]+)@"formOperator $1".convertEnumSet($2, \ \@form)@ge;
+
+} else {
+    print STDERR "operator.txt not found, OP enums not replaced\n";
+}
+
 # Converting chars based on context
-$prog =~ s@(CH [^;]+)=([0-7][0-7])@"$1char('".chr(oct($2))."')"@ge;
+$prog =~ s@(CH [^;]+)=([0-7][0-7][0-7]?)([^0-7])@"$1char('".chr(oct($2))."')$3"@ge;
 
 if (open(HELPERS, "helpers.txt")) {
     while (<HELPERS>) {
@@ -578,7 +627,7 @@ if (open(HELPERS, "helpers.txt")) {
 
 # Convert if/then/else (nesting not handled due to label reuse)
 
-# $prog =~ s@;if ([^;]+)goto ([^;]+);(.*),UJ,([^;]+);\2:(.*)\4:@;if \1 {;\2:\5} else {;\3};\4:@g;
+# while ($prog =~ s@;if ([^;]+)goto ([^;]+);(.*),UJ,([^;]+);\2:(.*)\4:@;if \1 {;\2:\5;\4:;} else {;\3};@g) { }
 
 # Marking up for loops
 # $prog =~ s@,UJ,([^;]+);([^:]+):(.*)\1:(.*);ifgoto \2@loop {;\3 } while (;\4;)@g;
