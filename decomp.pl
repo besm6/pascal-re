@@ -625,6 +625,17 @@ if (open(HELPERS, "helpers.txt")) {
     print STDERR "File helpers.txt not found, no names replaced\n";
 }
 
+if (open(ERRORS, "errors.txt")) {
+    while (<ERRORS>) {
+        chop;
+        my ($val, $name) = split;
+        $prog =~ s@((error|errAndSkip|printErrMsg)[^;]+)int\($val\)@\1$name@g;
+    }
+    close(ERRORS);
+} else {
+    print STDERR "File errors.txt not found, no names replaced\n";
+}
+
 # Convert if/then/else (nesting not handled due to label reuse)
 
 # while ($prog =~ s@;if ([^;]+)goto ([^;]+);(.*),UJ,([^;]+);\2:(.*)\4:@;if \1 {;\2:\5;\4:;} else {;\3};@g) { }
