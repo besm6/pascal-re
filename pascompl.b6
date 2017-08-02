@@ -1,0 +1,474 @@
+user 419900 зс5^
+dis 67(1234-wr)^
+EEB1A3
+*name
+*call ficmemory
+*pascal
+(*=p-,t-,s8,u+,l3,y+*)
+program pascompl(output,child,pasinput,pasinfor);
+type symbol=(IDENT, INTCONST, REALCONST, CHARCONST,
+LTSY, GTSY, NOTSY, LPAREN, LBRACK, MULOP, ADDOP, RELOP,
+RPAREN, RBRACK, COMMA, SEMICOLON, PERIOD, ARROW, COLON,
+BECOMES, LABELSY, CONSTSY, TYPESY, VARSY, FUNCSY, PROCSY,
+SETSY, PACKEDSY, ARRAYSY, RECORDSY, FILESY, BEGINSY,
+IFSY, CASESY, REPEATSY, WHILESY, FORSY, WITHSY, GOTOSY, 
+ENDSY, ELSESY, UNTILSY, OFSY, DOSY, TOSY, DOWNTOSY, THENSY,
+SELECTSY, PROGRAMSY, OTHERSY, NOSY);
+setofsys=set of ident..selectsy;
+dummy=(ii, rr, bb, aa, pp, cc, ss,mm);
+word=record case dummy of
+ii:(i:integer); rr:(r:real); bb:(b:boolean); aa:(a:alfa);
+pp:(p:@word); ss:(s:@struc); cc:(c:char);mm:(m:set of 0..47) end;
+struc=record fields:array[0..100] of word end;
+operator=(MUL, RDIVOP, AMPERS, IDIVOP, IMODOP, PLUSOP, MINUSOP,
+OROP, NEOP, EQOP, LTOP, GEOP, GTOP, LEOP, INOP, IMULOP, IDIVROP,
+SETAND, SETXOR, SETOR, XORALLONES, FIXEDPLUS, FIXEDMINUS,
+badop27, badop30, badop31, badop32, badop33, op34, op35, op36,
+op37, op40, op41, op42, op43, op44, ALNUM, op46,
+op47, op50, op51, NOTOP, INEGOP, RNEGOP, op55, NOOP );
+var (* total size 4791 words *)
+(*40*) octalMode:integer; 
+(*41-46*)bigSkipSet, statEndSys, blockBegSys, statBegSys,
+skipToSet, lvalOpSet: setofsys;
+(*47-49*)dummy1:array[47..49] of word;
+(*50*)	inStringLit:boolean;
+(*51*)  glob51z:word;
+(*52*)  jumpTarget:word;
+(*53*)  glob53z:word;
+(*54*)	charClass:operator; 
+(*55*)	SY:symbol; 
+(*56-57*) glob56z, glob57z:word;
+(*58*)	FcstCnt:integer; 
+(*59*)	symTabPos:integer;
+(*60*)  entryPtCnt:integer;
+(*61*)  fileBufSize:integer;
+(*62-63*)glob62z,glob63z:word;
+(*64*)  curInsnTemplate:word;
+(*65*)	maxLineLen :integer;
+(*66*)	linePos :integer;
+(*67*)	prevErrPos :integer;
+(*68*)	errsInLine :integer;
+(*69*)	moduleOffset:integer;
+(*70*)  lineStartOffset:integer;
+(*71*)	curFrameRegTemplate:integer;
+(*72*)  curProcNesting:integer;
+(*73*)	totalErrors :integer;
+(*74*)	lineCnt :integer;
+(*75*)  bucket:integer;
+(*76*)  glob76z:integer;
+(*77*)  heapCallsCnt:integer;
+(*78*)	heapSize:integer;
+(*79*)  arithMode:integer;
+(*80*)	stmtName:alfa;
+(*81*)  keywordHashPtr:@word;
+(*82*)  curVarKind:word;
+(*83*)  curExternFile:word;
+(*84*)  commentModeCH:char;
+(*85*)  glob85z:word;
+(*86*)	CH:char; 
+(*87-88*)glob87z,glob88z:word;
+(*89*)	lineNesting:integer;
+(*90*)  FcstCountTo500:integer;
+(*91*)	objBufIdx :integer;
+(*92-94*) dummy2:array[92..94] of word;
+(*95*) glob95z: word;
+(*96*)	charEncoding :integer;
+(*97*) glob97z:integer;
+(*98*)	atEOL:boolean;
+(*99*)	checkTypes:boolean; 
+(*100-102*) glob100z,glob101z,glob102z: word;
+(*103*)	errors :integer;
+(*104*) declExternal:boolean;
+(*105*) glob105z:boolean;
+(*106*)	doPMD:boolean;
+(*107*)	checkBounds:boolean;
+(*108*)	fuzzReals:boolean; 
+(*109*)	fixMult :boolean;
+(*110*) glob110z: boolean;
+(*111*)	pseudoZ:boolean;
+(*112*)	allowCompat:boolean; 
+(*113*)	checkFortran:boolean;
+(*114*) outputFile:@word;
+(*115*) inputFile:@word;
+(*116*) programObj:word;
+(*117*) hashTravPtr:@word;
+(*118*) uProcPtr:@word;
+(*119*) externFileList:@word;
+(*120-121*)glob120z,glob121z:word;
+(*122*) pointerType:@word;
+(*123*) setType:@word;
+(*124*) booleanType:@word;
+(*125*) textType:@word;
+(*126*) integerType:@word;
+(*127*) realType:@word;
+(*128*) charType:@word;
+(*129*) alfaType:@word;
+(*130*) arg1Type:@word;
+(*131*) arg2Type:@word;
+(*132-133*)glob132z,glob133z:word;
+(*134*) curToken:word;
+(*135*) curVal:word;
+(*136*) O77777:word;
+(*137*) intZero:integer;
+(*138-139*)glob138z,glob139z:word;
+(*140*) halfWord:word;
+(*141*)	isLeftInsn:word;
+(*142*)	hashMask:word;
+(*143*) curIdent:word;
+(*144-148*)dummy4:array[144..148] of word;
+(*149*)	optSflags:word;
+(*150*) litOct:word;
+(*151*)	litExternal :word;
+(*152*)	litForward :word;
+(*153*)	litFortran:word;
+(*154*) uVarPtr:@word;
+(*155*) curExpr:@word;
+(*156*) insnList:@word;
+(*157-158*)glob157z,glob158z:word;
+(*159*) someTypeArrayBase:integer;
+(*160*) extSymAdornment:integer;
+(*161-165*)dummy5:array[2..6]of @struc;
+(*166*) symTabCnt:integer;
+(*167-246*)symtabarray:array[1..80] of word;
+(*247-339*)dummy6:array[247..339]of word;
+(*340-379*) entryPtTableBase:array[0..39]of word;
+(*380-531*) dummy7:array[380..531]of word;
+(*532*) absInsn:word;
+(*533*) addInt0Insn:word;
+(*534*) andE1Insn:word;
+(*535*) orInt0Insn:word;
+(*536*) andE40to1Insn:word;
+(*537*) cyclAddE1Insn:word;
+(*538*) subE1Insn:word;
+(*539-548*)dummy8:array[539..548]of word;
+(*549-594*) insnTemplateBase:array[0..45] of word;
+(*595*) glob595z:word;
+(*596*) frameRegTemplate:word;
+(*597*) constRegTemplate:word;
+(*598*) disNormTemplate:word;
+(*599-728*) lineBufBase:array[1..130]of char;
+(*729*)	errMapBase:array[0..9]of integer; 
+(*739*)	chrClassTabBase:array [0..127]of operator;
+(*867*) kwordHashTabBase:array[0..127]of @word;
+(*995*)	charSymTabBase:array[0..127]of word;
+(*1123*) symHashTabBase:array[0..127]of word;
+(*1251*) typeHashTabBase:array[0..127] of word;
+(*1378*) helperMapBase:array [1..99] of integer;
+(*1477*) helperNameBase:array [1..99] of word;
+(*1577-2409*)symTab:array[74000B..75500B]of word;
+(*2410*) systemProcNameBase:array[1..30] of word; 
+(*2440*) resWordNameBase:array[1..30] of word; 
+(*2470*) longSymCnt:integer; 
+(*2471*) longSymTabBase:array[1..90] of integer; 
+(*2560*) longSymsBase:array[1..90]of word;
+(*2651*) constValsTabBase:array[1..500]of word;
+(*3151*) constNumTabBase:array [1..500]of integer;
+(*3651*) objBufBase:array [1..1024]of word;
+(*4675*) psInfrCopy:array[1..86]of word;
+(*4761*) fcst:file of word; (* last *)
+pasinput:text;
+child:file of word;
+pasinfor:array[1..19]of word;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              PROGRAMME                 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure programme(l2arg1z, l2arg2z: word);
+var l2vars:array[1..22] of word;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              PrintErrMsg               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure printErrMsg(errno:integer);
+type errtxt=packed array[0..100] of 0..63;
+var errptr:@errtxt;
+errtext:array [0..100] of 0..63;
+i:integer;c:char;
+function pasmitxt(errno:integer):@errtxt;fortran;
+function pasisoxt(txtchar:0..63):char;fortran;
+begin
+write(' ');
+if errno >= 200 then 
+	write('system=', errno:0)
+else begin
+	if (errno > 88) then
+		printErrMsg(86)
+	else if errno in [16..18,20] then begin 
+		if errno = 20 then
+			errno := ord(sy = ident)*2 + 1
+		else write(curToken.i:0,' ');
+	end else;
+	errptr := pasmitxt(errno);
+	unpack(errptr@, errtext, 0);
+	(loop) for i:=0 to 100 do begin
+		c := pasisoxt(errtext[i]);
+		if c = '*' then exit loop;
+		write(c);
+	end;
+	write(' ');
+	if errno in [17,22] then 
+		if errno = 17 then
+			write(glob97z:0)
+		else
+			write(stmtName);
+end;
+if errno <> 86 then writeln;
+end; (* printErrMsg *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              printTextWord             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure printTextWord(val:word);
+procedure PASTPR(val:word);external;
+begin 
+	write(' '); PASTPR(val)
+end; (* printTextWord *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              assignType                %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure assignType(res:@struc);
+var l3var1z:@struc;
+begin
+if someTypeArrayBase >= glob76z then
+	res@.fields[0].s := dummy5[glob76z]
+else begin
+new(l3var1z=7); (* XTA =7; ATI 14 instead of 14, VTM, 7 *)
+new(res@.fields[0].p=8);
+with l3var1z@ do begin
+fields[0].i := 1;
+fields[4].i := 0;
+fields[1].i := 12;
+fields[2].c := chr(2);
+fields[3].p := integerType;
+fields[5].i := 1;
+fields[6].i := glob76z;
+end;
+with res@.fields[0].s@ do begin
+fields[0].i := (glob76z + 5) div 6;
+if fields[0].i = 1 then
+	fields[1].i := glob76z * 8
+else
+	fields[1].i := 0;
+fields[2].c := chr(5);
+fields[3].p := charType;
+fields[4].s := l3var1z;
+fields[5].c := chr(1);
+fields[6].i := 6;
+fields[7].i := 8;
+end
+end
+end; (* assignType *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              addToHashTab              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure addToHashTab(l3arg1z:@struc);
+begin
+curVal.m := l3arg1z@.fields[0].m * hashMask.m;
+mapai(curval.a, curval.i);
+l3arg1z@.fields[2] :=symHashTabBase[curval.i];
+symHashTabBase[curval.i].s := l3arg1z;
+end; (* addToHashTab *)
+procedure error(errno: integer); forward;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              storeObjWord              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure storeObjWord(l3arg1z:set of 0..47);
+begin
+objBufBase[objBufIdx].m := l3arg1z;
+moduleOffset := moduleOffset + 1;
+if objBufIdx = 1024 then begin 
+	error(49);
+	objBufIdx := 1
+end else objBufIdx := objBufIdx + 1;
+end; (* storeObjWord *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              form1Insn                 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure form1Insn(l3arg1z: word);
+var l3var1z, l3var2z, l3var3z, l3var4z: word;
+l3var5z: integer;
+begin
+l3var1z := l3arg1z;
+l3var2z.m := l3var1z.m * [0,1,3,24..32];
+if l3var2z = insnTemplateBase[45] then begin
+   if glob95z = l3var2z then exit;
+   if glob101z.b and (glob95z.i = 1) then begin
+      l3var5z := objBufIdx - 1;
+      if objBufBase[l3var5z].m * [0..8] = [0,1,3..5,8] then begin
+         glob95z := l3var2z;
+         l3var3z.m := l3var1z.m * [33..47];
+         besm(360050B);
+         l3var3z:=;
+         l3var4z.m := objBufBase[l3var5z].m * [9..23];
+         besm(360130B);
+         l3var4z :=;    
+         objBufBase[l3var5z].m := [0,1,3,4,6,28,29] +
+         l3var3z.m + l3var4z.m;
+         exit;
+      end
+   end
+end;
+glob95z := l3var2z;
+if (glob101z.b) then begin
+    isLeftInsn.m := l3var1z.m * halfWord.m;
+    besm(360050B);
+    isLeftInsn :=;
+    glob101z.b := false
+end else begin
+    glob101z.b := true;
+    storeObjWord(isLeftInsn.m + (l3var1z.m * halfWord.m))
+end
+end; (* form1Insn *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure form2Insn(i1, i2: word);
+begin
+    form1Insn( i1 );
+    form1Insn( i2 );
+end; (* form2Insn *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure form3Insn(i1, i2, i3: word);
+begin
+    form2Insn(i1, i2);
+    form1Insn(i3);
+end; (* form3Insn *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure disableNorm;
+begin
+    if arithMode <> 1 then begin
+        form1Insn(disNormTemplate);
+        arithMode := 1;
+    end
+end; (* disableNorm *)
+function getObjBufIdxPlus:integer;
+begin
+   if glob101z.b then
+       getObjBufIdxPlus := objBufIdx + 4096
+   else
+       getObjBufIdxPlus := objBufIdx
+end; (* getObjBufIdxPlus *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure formJumpOnCond(var l3arg1z:integer);
+var l3var1z:integer; l3var2z: word;
+begin
+ if glob95z <> insnTemplateBase[45] then begin
+ l3var1z := getObjBufIdxPlus; 
+ l3var2z := glob101z;
+ (*=c-*)form1Insn(glob51z.i + l3arg1z);(*=c+*)
+ if glob101z = l3var2z then
+     l3var1z := l3var1z - 1;
+ l3arg1z := l3var1z;
+ end
+end; (* formJumpOnCond *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure formLabel;
+begin
+ if not glob101z.b then
+    form1Insn( insnTemplateBase[39] );
+ glob95z.i := 0;
+end; (* formLabel *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure formInsnAndLabel(l3arg1z:word);
+begin
+ form1Insn( l3arg1z);
+ formLabel;
+ glob95z.i := 1;
+end; (* formInsnAndLabel *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure putToSymTab(l3arg1z: word);
+begin
+ symTab[symTabPos] := l3arg1z;
+ if symTabPos = 75500B then begin
+    error( 50 );
+    symTabPos := 74000B;
+ end else
+    symTabPos := symTabPos + 1;
+end; (* putToSymTab *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function allocExtSymbol(l3arg1z:word):integer;
+var l3var1z:word; l3var2z:integer;
+begin
+ allocExtSymbol := symTabPos;
+ if (curVal.m * halfWord.m <> []) then begin 
+ for l3var2z := 1 to longSymCnt do
+   if (curVal = longSymsBase[l3var2z]) then begin
+     allocExtSymbol := longSymTabBase[l3var2z];
+     exit
+   end;
+ longSymCnt := longSymCnt + 1;
+ if (longSymCnt >= 90) then begin
+     error( 51 );
+     longSymCnt := 1;
+ end;
+ longSymTabBase[longSymCnt] := symTabPos;
+ longSymsBase[longSymCnt] := curVal;
+ l3arg1z.m := l3arg1z.m + [25];
+ end else
+     l3arg1z.m := l3arg1z.m + curVal.m;
+ putToSymTab( l3arg1z );
+end; (* allocExtSymbol *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function getHelperProc(l3arg1z:integer):integer;
+begin
+ if (helperMapBase[l3arg1z] = 0) then begin
+     curVal := helperNameBase[l3arg1z];
+     helperMapBase[l3arg1z] := allocExtSymbol( glob139z ); 
+ end;
+ getHelperProc := helperMapBase[l3arg1z] + 67100000B;
+end; (*getHelperProc *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure toFCST;
+begin
+write(FCST, curVal);
+FcstCnt := FcstCnt + 1;
+end; (* toFCST *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function addSomethingToFCST:integer;
+var l3var1z,l3var2z, l3var3z:integer; 
+begin
+ l3var1z := 1;
+ if (FcstCountTo500 = 0) then begin
+     addSomethingToFCST := FcstCnt;
+     FcstCountTo500 := 1;
+     constValsTabBase[1] := curVal;
+     constNumTabBase[1] := FcstCnt;
+     toFCST;
+ end else begin
+     l3var2z := FcstCountTo500;
+     repeat
+       l3var3z := (l3var1z + l3var2z) div 2;
+       if (curVal = constValsTabBase[l3var3z]) then begin
+           addSomethingToFCST := constNumTabBase[l3var3z];
+           exit
+       end;
+       if curval.a < constValsTabBase[l3var3z].a then
+           l3var2z := l3var3z - 1
+       else
+           l3var1z := l3var3z + 1
+     until l3var2z < l3var1z;
+     addSomethingToFCST := FcstCnt;
+     if FcstCountTo500 <> 500 then begin
+         if curval.a < constValsTabBase[l3var3z].a then
+             l3var2z := l3var3z
+         else
+             l3var2z := l3var3z + 1;
+         for l3var3z := FcstCountTo500 downto l3var2z do begin
+             l3var1z := l3var3z + 1;
+             constValsTabBase[l3var1z] := constValsTabBase[l3var3z];
+             constNumTabBase[l3var1z] := constNumTabBase[l3var3z];
+         end;
+         FcstCountTo500 := FcstCountTo500 + 1;
+         constValsTabBase[l3var2z] := curVal;
+         constNumTabBase[l3var2z] := FcstCnt;
+     end;
+     toFCST;
+ end
+end; (* addSomethingToFCST *)
+procedure error;
+begin end;
+begin (* programme *)
+end;
+begin (* main *)
+end.
+*to perso:670000
+*end file
+``````
+ЕКОНЕЦ
