@@ -629,9 +629,60 @@ goto 1;
 end; (* P0715 *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure endOfLine;
-var locals:array[1..20] of word;
+var dummy:array[1..14] of integer;
+    l3var15z, l3var16z, l3var17z, l3var18z,
+    l3var19z, l3var20z:integer;
+procedure OBPROG(var start, fin: word); external;
 begin
-%%%%%%%%%%% TODO
+l3var18z := pasinfor[1].i;
+if (l3var18z <> 0) or (errsInLine <> 0) then
+begin
+    write(' ', (lineStartOffset + PASINFOR[4].i):5 oct,
+          lineCnt:5, lineNesting:3, commentModeCH);
+    l3var19z := 13;
+    if (1 in optSflags.m)
+       and (maxLineLen = 72)
+       and (linePos >= 80) then begin
+       for l3var15z := 73 to 80 do write(lineBufBase[l3var15z]);
+       write(' ');
+       linePos := 73;
+       l3var19z := 22;
+    end; (* 1106 *)
+    repeat linePos := linePos-1 
+    until (lineBufBase[linePos]  <> ' ') or (linePos = 0);
+    for l3var15z := 1 to linePos do begin
+        output@ := lineBufBase[l3var15z];
+        put(output);
+    end;
+    writeln;
+    if errsInLine <> 0 then begin
+        write('*****':l3var19z, ' ':errMapBase[0], '0');
+        l3var20z := errsInLine - 1;
+        for l3var15z := 1 to l3var20z do begin
+            l3var16z := errMapBase[l3var15z];
+            l3var17z := errMapBase[l3var15z-1];
+            if l3var16z <> l3var17z then begin
+                if l3var17z + 1 <> l3var16z then
+                    write(' ':(l3var16z-l3var17z-1));
+                write(chr(l3var15z + 48));
+            end
+        end;
+        writeln;
+        errsInLine := 0;
+        prevErrPos := 0;
+    end
+end; (* 1160 *)
+if (l3var18z = 2) and (moduleOffset <> lineStartOffset) then begin
+    OBPROG(objBufBase[objBufIdx - moduleOffset + lineStartOffset],
+           objBufBase[objBufIdx-1]);
+end; (* 1174 *)
+lineStartOffset := moduleOffset;
+linePos := 0;
+lineCnt := lineCnt + 1;
+if eof (pasinput) then begin
+error(52);
+goto 9999;
+end
 end; (* endOfLine *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure requiredSymErr(l3arg1z:word);
