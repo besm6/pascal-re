@@ -17,17 +17,18 @@ IFSY, CASESY, REPEATSY, WHILESY, FORSY, WITHSY, GOTOSY,
 ENDSY, ELSESY, UNTILSY, OFSY, DOSY, TOSY, DOWNTOSY, THENSY,
 SELECTSY, PROGRAMSY, OTHERSY, NOSY);
 setofsys=set of ident..selectsy;
-dummy=(ii, rr, bb, aa, pp, cc, ss,mm);
-word=record case dummy of
-ii:(i:integer); rr:(r:real); bb:(b:boolean); aa:(a:alfa);
-pp:(p:@word); ss:(s:@struc); cc:(c:char);mm:(m:set of 0..47) end;
-struc=record fields:array[0..100] of word end;
 operator=(MUL, RDIVOP, AMPERS, IDIVOP, IMODOP, PLUSOP, MINUSOP,
 OROP, NEOP, EQOP, LTOP, GEOP, GTOP, LEOP, INOP, IMULOP, IDIVROP,
 SETAND, SETXOR, SETOR, XORALLONES, FIXEDPLUS, FIXEDMINUS,
 badop27, badop30, badop31, badop32, badop33, op34, op35, op36,
 op37, op40, op41, op42, op43, op44, ALNUM, op46,
 op47, op50, op51, NOTOP, INEGOP, RNEGOP, op55, NOOP );
+dummy=(ii, rr, bb, aa, pp, cc, ss,mm,yy,oo);
+word=record case dummy of
+ii:(i:integer); rr:(r:real); bb:(b:boolean); aa:(a:alfa);
+pp:(p:@word); ss:(s:@struc); cc:(c:char);oo:(o:operator);
+yy:(y:symbol);mm:(m:set of 0..47) end;
+struc=record fields:array[0..100] of word end;
 var (* total size 4791 words *)
 (*40*) octalMode:integer; 
 (*41-46*)bigSkipSet, statEndSys, blockBegSys, statBegSys,
@@ -38,13 +39,13 @@ skipToSet, lvalOpSet: setofsys;
 (*52*)  jumpTarget:word;
 (*53*)  glob53z:word;
 (*54*)	charClass:operator; 
-(*55*)	SY:symbol; 
-(*56-57*) glob56z, glob57z:word;
+(*55-56*) SY,glob56z:symbol; 
+(*57*) glob57z:word;
 (*58*)	FcstCnt:integer; 
 (*59*)	symTabPos:integer;
 (*60*)  entryPtCnt:integer;
 (*61*)  fileBufSize:integer;
-(*62-63*)glob62z,glob63z:word;
+(*62-63*)glob62z,glob63z:@struc;
 (*64*)  curInsnTemplate:word;
 (*65*)	maxLineLen :integer;
 (*66*)	linePos :integer;
@@ -62,7 +63,7 @@ skipToSet, lvalOpSet: setofsys;
 (*78*)	heapSize:integer;
 (*79*)  arithMode:integer;
 (*80*)	stmtName:alfa;
-(*81*)  keywordHashPtr:@word;
+(*81*)  keywordHashPtr:@struc;
 (*82*)  curVarKind:word;
 (*83*)  curExternFile:word;
 (*84*)  commentModeCH:char;
@@ -72,13 +73,14 @@ skipToSet, lvalOpSet: setofsys;
 (*89*)	lineNesting:integer;
 (*90*)  FcstCountTo500:integer;
 (*91*)	objBufIdx :integer;
-(*92-94*) dummy2:array[92..94] of word;
-(*95*) glob95z: word;
+(*92-93*)  glob92z,glob93z:integer;
+(*94-95*) glob94z,glob95z: word;
 (*96*)	charEncoding :integer;
 (*97*) glob97z:integer;
 (*98*)	atEOL:boolean;
 (*99*)	checkTypes:boolean; 
-(*100-102*) glob100z,glob101z,glob102z: word;
+(*100-102*) glob100z: boolean;
+(*101-102*) glob101z,glob102z: word;
 (*103*)	errors :boolean;
 (*104*) declExternal:boolean;
 (*105*) glob105z:boolean;
@@ -93,7 +95,7 @@ skipToSet, lvalOpSet: setofsys;
 (*114*) outputFile:@word;
 (*115*) inputFile:@word;
 (*116*) programObj:word;
-(*117*) hashTravPtr:@word;
+(*117*) hashTravPtr:@struc;
 (*118*) uProcPtr:@word;
 (*119*) externFileList:@word;
 (*120-121*)glob120z,glob121z:word;
@@ -151,11 +153,11 @@ skipToSet, lvalOpSet: setofsys;
 (*598*) disNormTemplate:word;
 (*599-728*) lineBufBase:array[1..130]of char;
 (*729*)	errMapBase:array[0..9]of integer; 
-(*739*)	chrClassTabBase:array [0..127]of operator;
-(*867*) kwordHashTabBase:array[0..127]of @word;
-(*995*)	charSymTabBase:array[0..127]of word;
-(*1123*) symHashTabBase:array[0..127]of word;
-(*1251*) typeHashTabBase:array[0..127] of word;
+(*739*)	chrClassTabBase:array ['_000'..'_177']of operator;
+(*867*) kwordHashTabBase:array[0..127]of @struc;
+(*995*)	charSymTabBase:array['_000'..'_177']of symbol;
+(*1123*) symHashTabBase:array[0..127]of @struc;
+(*1251*) typeHashTabBase:array[0..127] of @struc;
 (*1378*) helperMapBase:array [1..99] of integer;
 (*1477*) helperNameBase:array [1..99] of word;
 (*1577-2409*)symTab:array[74000B..75500B]of word;
@@ -167,7 +169,7 @@ skipToSet, lvalOpSet: setofsys;
 (*2651*) constValsTabBase:array[1..500]of word;
 (*3151*) constNumTabBase:array [1..500]of integer;
 (*3651*) objBufBase:array [1..1024]of word;
-(*4675*) psInfrCopy:array[1..86]of word;
+(*4675*) psInfrCopy:array['_052'..'_177']of word;
 (*4761*) fcst:file of word; (* last *)
 pasinput:text;
 child:file of word;
@@ -177,7 +179,10 @@ pasinfor:array[1..19]of word;
 %              PROGRAMME                 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure programme(l2arg1z, l2arg2z: word);
-var l2vars:array[1..22] of word;
+var l2var1z,l2var2z,l2var3z,l2var4z,l2var5z,l2var6z,l2var7z,l2var8z,
+l2var9z,l2var10z,l2var11z,l2var12z,l2var13z,l2var14z,l2var15z,
+l2var16z,l2var17z,l2var18z,l2var19z:word;
+l2var20z,l2var21z,l2var22z:integer;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %              PrintErrMsg               %
@@ -200,7 +205,7 @@ else begin
 		if errno = 20 then
 			errno := ord(sy = ident)*2 + 1
 		else write(curToken.i:0,' ');
-	end else;
+	end else; (*workaround*)
 	errptr := pasmitxt(errno);
 	unpack(errptr@, errtext, 0);
 	(loop) for i:=0 to 100 do begin
@@ -267,8 +272,8 @@ procedure addToHashTab(l3arg1z:@struc);
 begin
 curVal.m := l3arg1z@.fields[0].m * hashMask.m;
 mapai(curval.a, curval.i);
-l3arg1z@.fields[2] :=symHashTabBase[curval.i];
-symHashTabBase[curval.i].s := l3arg1z;
+l3arg1z@.fields[2].s :=symHashTabBase[curval.i];
+symHashTabBase[curval.i] := l3arg1z;
 end; (* addToHashTab *)
 procedure error(errno: integer); forward;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -700,6 +705,229 @@ while linePos < 81 do begin
  end;
  endOfLine
 end; (* readToPos80 *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure inSymbol; label 0525, 1, 2;
+var l3vars:array[1..131] of word;
+l3var132z,l3var133z,l3var134z:integer;
+l3var135z:@struc;
+l3vars1:array [136..161]of word;
+l3var162z:word;
+chord:integer; l3var164z: word;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure nextCH;
+begin
+  repeat
+    atEOL := eoln(PASINPUT);
+    CH := PASINPUT@;
+    get(PASINPUT);
+    linePos := linePos + 1;
+    lineBufBase[linePos] := CH;
+  until (maxLineLen >= linePos) or atEOL;
+end; (* nextCH *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure parseComment; label 1; (*workaround*)
+var l4var1z, l4var2z: boolean; l4var3z: char;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure readOptVal(var l5arg1z:integer; l5arg2z: integer);
+begin
+    nextCH;
+    l5arg1z := 0;
+    while ('9' >= CH) and (CH >= '0') do begin
+        l5arg1z := 10 * l5arg1z + ord(CH) - ord('0');
+        nextCH;
+        l4var1z := false;
+    end;
+    if l5arg2z < l5arg1z then l4var1z := true;
+end; (* readOptVal *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure readOptFlag(var l5arg1z:boolean);
+begin
+    nextCH;
+    if (CH = '-') or (CH = '+') then begin
+        l5arg1z := CH = '+';
+        l4var1z := false;
+    end;
+    nextCH
+end; (* readOptFlag *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+begin (* parseComment *)
+    nextCH;
+    if CH = '=' then begin
+        repeat nextCH;
+        l4var1z := true;
+        case CH of
+        'D': begin
+             readOptVal(curVal.i, 15);
+             optSflags.m := optSflags.m * [0..40] + curVal.m * [41..47];
+             end;
+        'Y': readOptFlag(allowCompat);
+        'E': readOptFlag(declExternal);
+        'U': begin
+             readOptFlag(l4var2z);
+             if l4var2z then maxLineLen := 72 else maxLineLen := 120;
+             end;
+        'S': begin
+             readOptVal(curVal.i, 9);
+             if curVal.i = 3 then lineCnt := 1
+             else if curVal.i in [4..9] then
+                 optSflags.m := optSflags.m + [curVal.i-3]
+             else begin
+                 extSymAdornment := curVal.i;
+                 goto 1
+             end; 1:; end;
+        'F': readOptFlag(checkFortran);
+        'L': readOptVal(PASINFOR[1].i, 3);
+        'P': readOptFlag(doPMD);
+        'T': readOptFlag(checkBounds);
+        'A': readOptVal(charEncoding, 3);
+        'C': readOptFlag(checkTypes);
+        'R': readOptFlag(fuzzReals);
+        'M': readOptFlag(fixMult);
+        'B': readOptVal(fileBufSize, 4);
+        'K': readOptVal(heapSize, 23);
+        'Z': readOptFlag(pseudoZ);
+        end;
+        if l4var1z then error(54);
+        until CH <> ',';
+    end; (* 1446 *)
+    repeat while CH <> '*' do begin
+        l4var3z := commentModeCH;
+        commentModeCH := '*';
+        if atEOL then endOfLine;
+        nextCH;
+        commentModeCH := l4var3z;
+    end; nextCH until CH = ')';
+    nextCH;
+end; (* parseComment *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+begin (again) begin (* inSymbol *)
+    if inStringLit then begin
+        error(52);
+        readToPos80;
+        goto 9999;
+    end;
+    0525: while (CH = ' ') and not atEOL do nextCH;
+    if '_200' < CH then begin
+        lineBufBase[linePos] := ' ';
+        chord := ord(CH);
+        for l2var22z := 130 to chord do begin
+            linePos := linePos + 1;
+            lineBufBase[linePos] := ' ';
+        end;
+        nextCH;
+        goto 0525;
+    end;
+    if atEOL then begin
+        endOfLine;
+        nextCH;
+        if CH = '%' then while not atEOL do nextCH;
+        goto 0525;
+    end;
+    hashTravPtr := NIL;
+    SY := charSymTabBase[CH];
+    charClass := chrClassTabBase[CH];
+    (lexer) if SY <> NOSY then begin
+    case SY of
+        IDENT: begin 1:
+            curToken.m := [];
+            l3var132z := 1;
+            repeat
+                curVal := psInfrCopy[CH];
+                nextCH;
+                if 8 >= l3var132z then begin
+                    l3var132z := l3var132z + 1;
+                    curToken := curToken;
+                    besm(360072B);
+                    curToken:=;
+                    curToken.m := curToken.m + curVal.m;
+                end;
+            until chrClassTabBase[CH] <> ALNUM;
+            curVal.m := curToken.m * hashMask.m;
+            mapAI(curVal.a, bucket);
+            curIdent := curToken;
+            keywordHashPtr := kwordHashTabBase[bucket];
+            while keywordHashPtr <> NIL do begin
+                if keywordHashPtr@.fields[0] = curToken then begin
+                    SY := keywordHashPtr@.fields[1].y;
+                    charClass := keywordHashPtr@.fields[2].o;
+                    exit lexer;
+                end;
+                keywordHashPtr := keywordHashPtr@.fields[3].s;
+                besm(2200000B);(*workaround*)
+            end;
+            glob100z := false;
+            SY := IDENT;
+            case glob93z of
+            0: begin
+               hashTravPtr := symHashTabBase[bucket];
+               while hashTravPtr <> NIL do begin
+                  if hashTravPtr@.fields[1].i = curFrameRegTemplate then
+                  begin
+                      if hashTravPtr@.fields[0] <> curIdent then
+                         hashTravPtr := hashTravPtr@.fields[2].s
+                      else begin
+                         glob100z := true;
+                         exit lexer;
+                      end
+                  end else exit lexer; 
+               end;
+            end;
+            1: begin 2:
+                hashTravPtr := symHashTabBase[bucket];
+                while hashTravPtr <> NIL do begin
+                    if hashTravPtr@.fields[0] <> curIdent then
+                      hashTravPtr := hashTravPtr@.fields[2].s
+                    else
+                      exit lexer;
+                end;
+            end;
+            2: begin
+                if glob63z = NIL then goto 2;
+                glob62z := glob63z;
+                l3var135z := typeHashTabBase[bucket];
+                if l3var135z <> NIL then begin
+                  while glob62z <> NIL do begin
+                    l3var162z := glob62z@.fields[3].p@;
+                    hashTravPtr := l3var135z;
+                    while hashTravPtr <> NIL do begin
+                        if (hashTravPtr@.fields[0] = curIdent)
+                        and (hashTravPtr@.fields[6] = l3var162z) then
+                            exit lexer;
+                        hashTravPtr := hashTravPtr@.fields[2].s;
+                        besm(2200000B);
+                    end;
+                    glob62z := glob62z@.fields[2].s;
+                  end;
+                end; goto 2; besm(3041704B); (* workaround *)
+            end;
+            3: begin
+               hashTravPtr := typeHashTabBase[bucket];
+               while hashTravPtr <> NIL do begin
+                   with hashTravPtr@ do begin
+                       if (fields[0] = curIdent) and
+                          (glob121z = fields[6]) then exit lexer;
+                       hashTravPtr := fields[2].s;
+                   end
+               end
+            end;
+            end;
+        end; (* IDENT *)
+        REALCONST: begin
+            nextCH;
+            if charSymTabBase[CH] = IDENT then goto 1;
+        end; (* REALCONST *)
+    end (* case *)
+    end else begin (* 2444 *)
+        nextCH;
+    end;
+    glob56z := SY;
+    if not pseudoZ and not (4 in optSflags.m) then begin
+        commentModeCH := '=';
+        goto again;
+    end;
+    commentModeCH := ' ';
+    glob93z := glob92z;
+end end; (* inSymbol *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure error;
 begin end;
