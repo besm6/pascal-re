@@ -99,7 +99,7 @@
 3541 genOp27
 4274 addToInsnList
 4315 addInsnAndModify p
-4324 addToInsnList2
+4324 addxToInsnList
 4343 P4343 p
 4755 P4755 p
 5142 F5142 f

@@ -150,7 +150,7 @@ for ($i = 0; $i <= $#ops; ++$i) {
 
     # Faking assignment to a register "variable"
     if ($line =~ m/^([$curlev-69]),VTM,(.*)/) {
-        $ops[$i] = ",XTA,$2;,ATX,R$1";
+        $ops[$i] = ",XTA,&$2;,ATX,R$1";
         $knownregs[$1] = 1;
         next;
     }
@@ -683,6 +683,10 @@ if (open(ERRORS, "errors.txt")) {
 # Simplifying function call/returns
 
 $prog =~ s@CALL([^;]+);([^;]+)FUNCRET([^;]*);@\2 FCALL \1 \3;@g;
+
+# Converting structure field access
+
+$prog =~ s/(\d+)\[([^][]+)\]/\2@.f[\1]/g;
 
 #Restoring line feeds
 

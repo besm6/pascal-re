@@ -1760,7 +1760,7 @@ procedure P3436(l5arg1z:integer);
  glob51z.i := insnTemp[UJ];
  exit iter
 }
-    }; (* 4256 *)
+    }; (* loop *)
     insnList := NIL;
 
  while (l4var6z <> NIL) do { 
@@ -1773,6 +1773,84 @@ procedure P3436(l5arg1z:integer);
  };
  glob146z.m := glob146z.m - glob145z.m;
 }; (* genOneOp *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure addToInsnList(l4arg1z:integer);
+var l4var1z:@struc;
+{
+ new(l4var1z=4);
+ with l4var1z@ do {
+     f[0].s := NIL; f[1].i := 0;
+     f[2].i := l4arg1z; f[3].i := 0;
+ };
+ with insnList@ do {
+     if f[0].s = NIL then f[1].s := l4var1z
+     else f[0].s@.f[0].s := l4var1z;
+     f[0].s := l4var1z
+ }
+}; (* addToInsnList *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure addInsnAndModify(l4arg1z:integer; l4arg2z: word);
+{
+ addToInsnList(l4arg1z);
+ insnlist@.f[0].s@.f[3] := l4arg2z
+}; (* addInsnAndModify *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure addxToInsnList(l4arg1z: word);
+var l4var1z:@struc;
+{
+ new(l4var1z=4);
+ with l4var1z@ do {
+ f[0] := insnList@.f[1];
+ f[1].i := 0;
+ f[2] := l4arg1z;
+ f[3].i := 0;
+ };
+ if (insnList@.f[1].s = NIL) then {
+     insnList@.f[0].s := l4var1z;
+ };
+ insnList@.f[1].s := l4var1z;
+}; (* addxToInsnList *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure P4343;
+label 4602;
+var l4var1z,l4var2z,l4var3z,l4var4z,l4var5z,
+l4var6z,l4var7z,l4var8z,l4var9z:word;
+{
+l4var4z := insnList@.f[2];
+with insnList@ do {
+ case f[4].c of
+ '_000':{
+     curVal := f[5];
+     if (l4var4z.s@.f[0].i = 1) then
+         curVal.i := getFCSToffset;
+     addToInsnList(constRegTemplate.i + curInsnTemplate.i + curVal.i);
+ };
+ '_001':{
+     l4var1z := insnList@.f[7];
+     l4var2z := insnList@.f[5];
+     l4var3z := insnList@.f[6];
+     if (15 < l4var1z.i) then { } else {
+       if (l4var1z.i = 15) then {
+              addToInsnList(100000006B );
+       } else {
+          l4var1z.i := glob398z[insnList@.f[7].i];
+          if (l4var2z.i = 0) and (insnList@.f[8].c = '_000') then {
+             addInsnAndModify(l4var1z.i + curInsnTemplate.i, l4var3z);
+             goto 4602;
+          } else {
+             addToInsnList(l4var1z.i + insnTemp[UTC]);
+             (a) besm(3044411B);
+          }
+       }
+     };
+     l4var6z := insnList@.f[8];
+ };
+ '_002':;
+ '_003':;
+ end; (* case *) 4602:;
+} (* with*)
+}; (* P4343 *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 { (* formOperator *)
 }; (* formOperator *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

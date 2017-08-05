@@ -35,7 +35,7 @@
 84      commentModeCH
 86	CH 
 89	lineNesting
-90      FcstCountTo500
+90      FcstCount
 91	objBufIdx 
 96	charEncoding 
 98	atEOL
@@ -83,7 +83,7 @@
 156     insnList
 159     someTypeArrayBase
 160     extSymAdornment
-166     symTabCntTo80 + array[80]
+166     symTabCnt + array[80]
 340     entryPtTableBase [40]
 532     absInsn
 533     addInt0Insn
