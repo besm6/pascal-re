@@ -93,6 +93,20 @@ $prog =~ s@P/1D *\+(\d+)@glob\1z@g;
 # (with M in their names)
 # This should be recognized and conversion suppressed.
 
+my @isfunc, @nargs, @nlocs;
+
+sub renameLocRef {
+    my ($lev, $idx) = @_;
+    if ($isfunc[$lev]) {
+        return $procname[$lev] if $idx == 0;
+        return "l${lev}arg${idx}z" if $idx <= $nargs[$lev];
+        return "l${lev}var".($idx-$nargs[$lev])."z";
+    } else {
+        return "l${lev}arg".($idx+1)."z" if $idx < $nargs[$lev];
+        return "l${lev}var".($idx-$nargs[$lev]+1)."z";
+    }
+}
+
 sub processprocs {
     
 my @ops = split /;/, $prog;
@@ -176,10 +190,26 @@ for ($i = 0; $i <= $#ops; ++$i) {
             $l2 = $ops[$j];
             last if $l2 =~ /Level $k/;
         }
-        $ops[$i] = "$l2 (header);$ops[$i]";
+         splice(@ops, $i, 0, "$l2 (header)");
     }
+    $i += $level-$curlev;
     $curlev = $level;
 }
+
+# Rename references to variables of upper level routines
+
+for ($i = 0; $i <= $#ops; ++$i) {
+    if ($ops[$i] =~ /([^:]+): Level (\d) ([^ ]+) with (\d+).* and (\d+)/) {
+        # printf STDERR "Recording $1 $2 $3 $4 $5\n";
+        $procname[$2] = $1;
+        $isfunc[$2] = $3 eq "function";
+        $nargs[$2] = $4;
+        $nlocs[$2] = $5;
+    } else {
+        $ops[$i] =~ s@l(\d)loc(\d+)z@renameLocRef($1, $2)@ge;
+    }
+}
+
 $prog = join ';', @ops;
 
 }
@@ -198,8 +228,6 @@ $prog =~ s@glob17z@int(1)@g;
 $prog =~ s@glob18z@p77777@g;
 $prog =~ s@glob19z@real0_5@g;
 $prog =~ s@glob20z@allones@g;
-
-# glob25z is the saved heap state for setup/rollup
 
 # Also
 $prog =~ s@=74000@NIL@g;
@@ -526,6 +554,8 @@ $prog = join ';', @to;
 # Converting simple ops
 
 $prog =~ s@,UJ,P/E *;@RETURN;@g;
+$prog =~ s@;([^;:]+) := glob23z@;setup(\1)@g;
+$prog =~ s@;glob23z := ([^;]+)@;rollup(\1)@g;
 
 # Removing stack corrections after calls
 $prog =~ s@15,UTM,[34];@@g;
