@@ -124,8 +124,8 @@ skipToSet, lvalOpSet: setofsys;
 (*140*) halfWord:word;
 (*141*)	isLeftInsn:word;
 (*142*)	hashMask:word;
-(*143-145*) curIdent,glob144z,glob145z:word;
-(*146-148*)dummy4:array[146..148] of word;
+(*143-146*) curIdent,glob144z,glob145z,glob146z:word;
+(*147-148*)dummy4:array[147..148] of word;
 (*149*)	optSflags:word;
 (*150*) litOct:word;
 (*151*)	litExternal :word;
@@ -143,7 +143,8 @@ skipToSet, lvalOpSet: setofsys;
 (*247-326*)symtbidx:array[1..80]of integer;
 (*327-339*)dummy6:array[327..339] of word;
 (*340-379*) entryPtTableBase:array[0..39]of word;
-(*380-531*) dummy7:array[380..531]of word;
+(*380-397*) dummy7:array[380..397]of word;
+(*398-531*) glob398z:array[0..133]of integer;
 (*532*) absInsn:word;
 (*533*) addInt0Insn:word;
 (*534*) andE1Insn:word;
@@ -1490,10 +1491,10 @@ var l3vars: array [1..14] of word;
 procedure  genOneOp;
 label 3556;
 var l4var1z:integer;
-l4vars: array [2..3] of word;l4var4z:integer;l4var5z:word;
+l4var2z,l4var3z,l4var4z:integer;l4var5z:word;
 l4var6z, l4var7z, l4var8z: @struc;  l4var9z: integer;
 insnBuf: array[1..200] of word;
-l4var210z:integer; l4var211z:word; l4var212z: @struc;
+l4var210z:word; l4var211z:word; l4var212z: @struc;
 l4var213z: boolean;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P3363;
@@ -1521,7 +1522,7 @@ function F3413:boolean;
 {
  l4var7z := l4var6z;
  while l4var7z <> NIL do {
-     if (l4var7z@.f[1].i = l4var210z) then {
+     if (l4var7z@.f[1].i = l4var210z.i) then {
          F3413 := true;
          while (l4var7z@.f[2].i = 100000000B) do {
              l4var7z := ptr(l4var7z@.f[3].i);
@@ -1539,7 +1540,7 @@ procedure P3436(l5arg1z:integer);
  if not F3413 then {
      new(l4var7z=4);
      l4var7z@.f[0].s := l4var6z;
-     l4var7z@.f[1].i := l4var210z;
+     l4var7z@.f[1].i := l4var210z.i;
      l4var7z@.f[2].i := 0;
      l4var7z@.f[3].i := 0;
      l4var6z := l4var7z;
@@ -1558,7 +1559,7 @@ procedure P3436(l5arg1z:integer);
     while l4var212z <> NIL do {
         l4var211z.i := l4var212z@.f[2].i;
         l4var4z := l4var211z.i - 100000000B;
-        l4var210z := l4var212z@.f[3].i;
+        l4var210z.i := l4var212z@.f[3].i;
         case l4var212z@.f[1].i of
         0:;
         1: if arithMode <> 1 then {
@@ -1575,33 +1576,33 @@ procedure P3436(l5arg1z:integer);
         l4var212z := l4var212z@.f[0].s;
         if l4var4z >= 0 then {
             case l4var4z of
-            27: add2InsnsToBuf(00220000B, 04120011B);
-            25: goto 3556;
+            23: add2InsnsToBuf(00220000B, 04120011B);
+            21: goto 3556;
             0: P3436(insnTemp[UZA]);
             1: P3436(insnTemp[U1A]);
             2: {
-                l4var211z.i := l4var210z mod 4096;
-                l4var210z := l4var210z div 4096;
+                l4var211z.i := l4var210z.i mod 4096;
+                l4var210z.i := l4var210z.i div 4096;
                 P3436(insnTemp[UJ]);
-                l4var210z := l4var211z.i;
+                l4var210z.i := l4var211z.i;
                 3556:
                     if F3413 then
                         addInsnToBuf(ord(l4var7z) + 200000000B)
                     else error(206);
             };
             3: {
-                 l4var211z.i := l4var210z mod 4096;
-                 l4var210z := l4var210z div 4096;
+                 l4var211z.i := l4var210z.i mod 4096;
+                 l4var210z.i := l4var210z.i div 4096;
                  l4var213z :=  F3413;
                  l4var8z := l4var7z;
-                 l4var210z := l4var211z.i;
+                 l4var210z.i := l4var211z.i;
                  l4var213z := l4var213z & F3413;
                  if l4var213z then with l4var7z@ do {
                      f[2].i := 100000000B;
                      f[3].i := ord(l4var8z);
                  } else error(207);
              };
-            24: addInsnToBuf(300000000B + l4var210z);
+            20: addInsnToBuf(300000000B + l4var210z.i);
             4: {
              if insnBuf[l4var1z-1].m * [21:23,28:35] = []  then 
                  insnBuf[l4var1z-1].m := insnBuf[l4var1z-1].m + [35]
@@ -1619,11 +1620,158 @@ procedure P3436(l5arg1z:integer);
                 };
                 addInsnToBuf(74000000B);
            };
-           6: add2InsnsToBuf( 400016B, 72200000B );
-
+           6: add2InsnsToBuf(400016B, 72200000B );
+           7: addInsnToBuf( getHelperProc(12)); (* P/MI *)
+           8: add2InsnsToBuf(76300000B, 02500000B+
+                             glob398z[l4var210z.i]);
+           9: add2InsnsToBuf(400016B, 70450000B + l4var210z.i);
+           10:add2InsnsToBuf(04110010B, 04120011B);
+           11:{addInsnToBuf(04040023B);(*round*)
+                add2InsnsToBuf(370007B, 04040011B)};
+           12:add2InsnsToBuf(74000000B,74170000B);(*sqr*)
+           13:{add2InsnsToBuf(74000000B, 04120012B);(*sqrint*)
+                add2InsnsToBuf(74170000B, 0310100B)};
+           14:add2InsnsToBuf(glob398z[l4var210z.i] + 02400000B,
+                              0420000B + l4var210z.i);
+           15:add2InsnsToBuf(04230011B, 04050021B); (* minel *)
+           16:add2InsnsToBuf(insnTemp[AMX], 74000000B + l4var210z.i);
+           17:{addInsnToBuf( 0030000B);
+                add2InsnsToBuf(74000001B, 76500000B + l4var210z.i)};
+           18:add2InsnsToBuf(52400000B,getHelperProc(65)); (*P/B7*)
+           19:{addInsnToBuf(72400000B);
+                add2InsnsToBuf(74100000B, 70000000B)};
+           22:{add2InsnsToBuf(72400000B, 70100000B);
+                curVal.i := 40077777C;
+                add2InsnsToBuf(allocSymtabForAbsolute(curVal)+74030000B,
+                               40110000B + l4var210z.i);
+                add2InsnsToBuf(74120000B, 70000000B)};
             end; (* case *)
-        }; (* 4003 *)
+        } else { (* 4003 *)
+            if 28 in l4var211z.m then {
+              addInsnToBuf(getValueOrAllocSymtab(l4var210z)+l4var211z.i);
+            } else {
+              curval.i := l4var210z.i mod 32768;
+              if curVal.i < 2048 then
+                  addInsnToBuf(l4var211z.i + l4var210z.i)
+              else if (curVal.i >= 28672) or (curVal.i < 4096) then {
+              (*=c-*)
+                 addInsnToBuf(
+                   allocSymtabForAbsolute((curVal.m + [24])*halfWord.m)
+                              + l4var211z.i - 28672);
+              (*=c+*)
+              } else {
+                 add2InsnsToBuf(getValueOrAllocSymtab(curVal)
+                                + insnTemp[UTC], l4var211z.i );
+                 besm(3044036B); (*workaround*)
+              }
+            }
+        }
     }; (* 4037 *)
+    l4var1z := l4var1z-1;
+    for l4var4z := l4var1z downto 1 do {
+        l4var210z := insnBuf[l4var4z];
+        if (l4var210z.i = insnTemp[ASN]) or
+           (l4var210z.i = 370007B) then {
+            l4var3z := l4var4z - 1;
+            l4var213z := false;
+            (loop) while l4var3z >= 1 do {
+                l4var211z.m := insnBuf[l4var3z].m * [28:32];
+                if (l4var211z.m # [28,31])and(l4var211z.m # [28,31,32])
+                then exit loop else l4var3z := l4var3z-1;
+            };
+            l4var3z := l4var3z + 1;
+            if (l4var3z <> l4var4z) then {
+                for l4var2z := l4var4z-1 downto l4var3z do {
+                    insnBuf[l4var2z+1] := insnBuf[l4var2z]
+                };
+            };
+            insnBuf[l4var3z] := l4var210z;
+        }; (* 4103 *)
+    };
+    for l4var4z to l4var1z do (iter) {
+        l4var210z := insnBuf[l4var4z];
+        l4var211z.m := l4var210z.m * [0,1,3,23:32];
+        if l4var211z.i = 74000000B then {
+            l4var2z := l4var4z + 1;
+            while l4var1z + 1 <> l4var2z do {
+                curVal.m := insnBuf[l4var2z].m * [0,1,3,23,28:35];
+                l4var211z.m := curVal.m * [0,1,3,23,28:32];
+                if curVal.i = insnTemp[AMX] then {
+                   insnBuf[l4var2z].m :=
+                       insnBuf[l4var2z].m mod [32,34,35];
+                   exit iter;
+                } else if curVal.i = insnTemp[STI] then {
+                    insnBuf[l4var2z].m := insnBuf[l4var2z].m + [35];
+                    exit iter;
+                } else if (curVal.i = insnTemp[ASN]) or
+                    (l4var211z.i = insnTemp[UTC]) or
+                    (l4var211z.i = insnTemp[WTC]) or
+                    (l4var211z.i = insnTemp[VTM]) then
+                        l4var2z := l4var2z + 1
+                    else
+                        l4var2z := l4var1z + 1;
+                    
+            };
+        }; (* 4150 *)
+        if l4var210z.i = insnTemp[UTC] then exit iter;
+        if l4var210z.i < 100000000B then {
+             form1Insn( l4var210z.i );
+             l4var211z.m := l4var210z.m * [28:32];
+              if (l4var211z.m = [28,29,32]) or
+              (l4var211z.m = [30,32]) then {
+                  formLabel;
+                  glob95z.i := 1;
+              };
+              exit iter;
+        };
+        if (l4var210z.i >= 300000000B) then {
+            l4var210z.i := l4var210z.i - 300000000B;
+             if l4var210z.i >= 4096 then {
+                 l4var213z := true;
+                 l4var210z.i := l4var210z.i - 4096;
+             } else {
+                 l4var213z := false;
+             };
+             if (l4var210z.i = 0) then
+                 form1Insn(insnTemp[UZA] + moduleOffset + 2);
+             P3363;
+             form1Insn(insnTemp[UJ] + 2 + moduleOffset);
+             formLabel;
+ if (l4var210z.i <> 0) then {
+     if (not F3413) then error(211);
+     P0715(0, l4var7z@.f[2].i);
+ };
+ l4var213z := not l4var213z;
+ P3363;
+ formLabel;
+ exit iter
+     }; (* 4230 *)
+ if (l4var210z.i >= 200000000B) then {
+    l4var7z := ptr(l4var210z.i - 200000000B);
+    P0715(0, l4var7z@.f[2].i );
+    l4var7z@.f[3].i := moduleOffset;
+  } else {
+ l4var210z.i := l4var210z.i - 100000000B;
+ curVal.m := l4var210z.m * [0,1,3,28:32];
+ glob51z := curVal;
+ curVal.m := [0,1,3,33:47] * l4var210z.m;
+ l4var7z := ptr(curVal.i);
+ formJumpOnCond(l4var7z@.f[2].i );
+ glob51z.i := insnTemp[UJ];
+ exit iter
+}
+    }; (* 4256 *)
+    insnList := NIL;
+
+ while (l4var6z <> NIL) do { 
+    with l4var6z@ do 
+    if (f[3].i = 0) then {
+    jumpTarget := f[2];
+    exit;
+ } else 
+   l4var6z := f[0].s;
+ };
+ glob146z.m := glob146z.m - glob145z.m;
 }; (* genOneOp *)
 { (* formOperator *)
 }; (* formOperator *)
