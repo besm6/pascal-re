@@ -351,10 +351,10 @@ std::string get_literal(uint32 addr) {
     std::string ret;
     if ((val >> 24) == 064000000) {
         uint d = val & 077777777;
-        if (d > 200000)
-            ret = strprintf("int(%08oB)", d);
+        if (d > 10000)
+            ret = strprintf("%08oB", d);
         else
-            ret = strprintf("int(%d)", d);
+            ret = strprintf("(%d)", d);
     } else if (is_likely_iso(val)) {
         ret = strprintf("iso('%s')", get_iso_word(val).c_str());
     } else if (is_likely_text(val)) {
@@ -362,7 +362,7 @@ std::string get_literal(uint32 addr) {
     } else if (val >= 0101 && val < 96) {
         ret = strprintf("char('%c')", char(val));
     } else {
-        ret = strprintf("=%llo", val);
+        ret = strprintf("(%lloC)", val);
     }
     return ret;
 }

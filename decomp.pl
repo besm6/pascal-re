@@ -220,20 +220,20 @@ processprocs();
 # Recognizing known pre-seeded constants in the global area
 
 $prog =~ s@glob8z@e1@g;
-$prog =~ s@glob9z@int(0)@g;
+$prog =~ s@glob9z@00@g;
 $prog =~ s@glob10z@multmask@g; # 640... -> 400... 
 $prog =~ s@glob12z@mantissa@g;
-$prog =~ s@glob15z@int(-1)@g;
-$prog =~ s@glob17z@int(1)@g;
+$prog =~ s@glob15z@-1@g;
+$prog =~ s@glob17z@+1@g;
 $prog =~ s@glob18z@p77777@g;
 $prog =~ s@glob19z@real0_5@g;
 $prog =~ s@glob20z@allones@g;
 
 # Also
-$prog =~ s@=74000@NIL@g;
-$prog =~ s@int\(122944\)@ASN64template@g;
-$prog =~ s@int\(131086\)@ATI14template@g;
-$prog =~ s@int\(126983\)@NTR7template@g;
+$prog =~ s@\(74000C\)@NIL@g;
+$prog =~ s@\(360100B\)@ASN64template@g;
+$prog =~ s@\(400016B\)@ATI14template@g;
+$prog =~ s@\(370007B\)@NTR7template@g;
 
 # Known globals
 
@@ -585,10 +585,10 @@ if (open(SYMBOL, "symbol.txt")) {
     }
     close(SYMBOL);
     
-    $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$symbol[oct($3)]$4"@ge;
+    $prog =~ s@(($context)[^;]+?)\(([0-7][0-7]?)C\)@"$1$symbol[oct($3)]"@ge;
 
-    $prog =~ s@SY IN ([^;]*?)=([0-7]+)@"SY IN $1".convertEnumSet($2, \ \@symbol)@ge;
-    $prog =~ s@(skipToSet|statBegSys|statEndSys|blockBegSys) ([^;]*?)=([0-7]+)@"$1 $2".convertEnumSet($3, \ \@symbol)@ge;
+    $prog =~ s@SY IN ([^;]*?)\(([0-7]+)C\)@"SY IN $1".convertEnumSet($2, \ \@symbol)@ge;
+    $prog =~ s@(skipToSet|statBegSys|statEndSys|blockBegSys) ([^;]*?)\(([0-7]+)C\)@"$1 $2".convertEnumSet($3, \ \@symbol)@ge;
 } else {
     print STDERR "symbol.txt not found, SY enums not replaced\n";
 }
@@ -601,9 +601,9 @@ if (open(OPERATOR, "operator.txt")) {
     close(OPERATOR);
     $context = 'charClass';
     
-    $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$oper[oct($3)]$4"@ge;
-    $prog =~ s@charClass IN ([^;]*?)=([0-7]+)@"charClass IN $1".convertEnumSet($2, \ \@oper)@ge;
-    $prog =~ s@(lvalOpSet) ([^;]*?)=([0-7]+)@"$1 $2".convertEnumSet($3, \ \@oper)@ge;
+    $prog =~ s@(($context)[^;]+?)\(([0-7][0-7]?)C\)@"$1$oper[oct($3)]"@ge;
+    $prog =~ s@charClass IN ([^;]*?)\(([0-7]+)C\)@"charClass IN $1".convertEnumSet($2, \ \@oper)@ge;
+    $prog =~ s@(lvalOpSet) ([^;]*?)\(([0-7]+)C\)@"$1 $2".convertEnumSet($3, \ \@oper)@ge;
 
 } else {
     print STDERR "operator.txt not found, OP enums not replaced\n";
@@ -618,7 +618,7 @@ if (open(OPTIONS, "options.txt")) {
     # $context = 'optSflags';
     
     # $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$oper[oct($3)]$4"@ge;
-    $prog =~ s@optSflags ([^;]*?)=([0-7]+)@"optSflags $1".convertEnumSet($2, \ \@opts)@ge;
+    $prog =~ s@optSflags ([^;]*?)\(([0-7]+)C\)@"optSflags $1".convertEnumSet($2, \ \@opts)@ge;
 
 } else {
     print STDERR "operator.txt not found, OP enums not replaced\n";
@@ -632,7 +632,7 @@ if (open(FORM, "form.txt")) {
     close(FORM);
     $context = 'formOperator';
     
-    $prog =~ s@(($context)[^;]+?)=([0-7][0-7]?)([^0-7])@"$1$form[oct($3)]$4"@ge;
+    $prog =~ s@(($context)[^;]+?)\(([0-7][0-7]?)C\)@"$1$form[oct($3)]"@ge;
     # $prog =~ s@formOperator ([^;]*?)=([0-7]+)@"formOperator $1".convertEnumSet($2, \ \@form)@ge;
 
 } else {
@@ -640,15 +640,15 @@ if (open(FORM, "form.txt")) {
 }
 
 # Converting chars based on context
-$prog =~ s@(CH [^;]+)=([0-7][0-7][0-7]?)([^0-7])@"$1char('".chr(oct($2))."')$3"@ge;
+$prog =~ s@(CH [^;]+)\(([0-7][0-7][0-7]?)C\)@"$1'".chr(oct($2))."'"@ge;
 
 if (open(HELPERS, "helpers.txt")) {
     while (<HELPERS>) {
         chop;
         my ($val, $name) = split;
 #        $prog =~ s@(getHelperProc[^;]+)int\($val\)@\1"$name"@g;
-         $prog =~ s@(getHelperProc[^;]+)int\($val\)@\1"$name"@g;
-         $prog =~ s@(P0715[^;,]+?,[^;]+?)int\($val\)@\1"$name"@g;
+         $prog =~ s@(getHelperProc[^;]+)\($val\)@\1"$name"@g;
+         $prog =~ s@(P0715[^;,]+?,[^;]+?)\($val\)@\1"$name"@g;
     }
     close(HELPERS);
 } else {
@@ -659,7 +659,7 @@ if (open(ERRORS, "errors.txt")) {
     while (<ERRORS>) {
         chop;
         my ($val, $name) = split;
-        $prog =~ s@((error|errAndSkip|printErrMsg)[^;]+)int\($val\)@\1$name@g;
+        $prog =~ s@((error|errAndSkip|printErrMsg)[^;]+)\($val\)@\1$name@g;
     }
     close(ERRORS);
 } else {
@@ -682,15 +682,25 @@ if (open(ERRORS, "errors.txt")) {
 
 # Simplifying function call/returns
 
-$prog =~ s@CALL([^;]+);([^;]+)FUNCRET([^;]*);@\2 FCALL \1 \3;@g;
+$prog =~ s@CALL([^;]+);([^;]+)FUNCRET([^;]*);@\2 \1 \3;@g;
+$prog =~ s@CALL @@g;
 
 # Converting structure field access
 
 $prog =~ s/(\d+)\[([^][]+)\]/\2@.f[\1]/g;
 
+$relop{' EQ '} = ' = ';
+$relop{' NE '} = ' <> ';
+$relop{' LT '} = ' < ';
+$relop{' LE '} = ' <= ';
+$relop{' GT '} = ' > ';
+$relop{' GE '} = ' >= ';
+# Converting relational ops
+$prog =~ s/( EQ | NE | LT | LE | GT | GE )/$relop{$1}/ge;
+
 #Restoring line feeds
 
-$prog =~ s/;/\n /g;
+$prog =~ s/;/;\n /g;
 
 
 print $prog;
