@@ -5,6 +5,9 @@
 44      statBegSys
 45      skipToSet
 46      lvalOpSet
+47	bool47z
+48	bool48z
+49	bool49z
 50	inStringLit
 52      jumpTarget?
 54	charClass 
@@ -13,6 +16,8 @@
 59	symTabPos
 60      entryPtCnt
 61      fileBufSize
+62	strp62z
+63	strp63z
 64      curInsnTemplate?
 65	maxLineLen 
 66	linePos 
@@ -25,6 +30,7 @@
 73	totalErrors 
 74	lineCnt 
 75      bucket
+76	int76z
 77      heapCallsCnt
 78	heapSize
 79      arithMode
@@ -37,15 +43,22 @@
 89	lineNesting
 90      FcstCount
 91	objBufIdx 
+92	int92z
+93	int93z
+94	int94z
 96	charEncoding 
+97	int97z
 98	atEOL
 99	checkTypes 
+100	bool100z
 103	errors 
 104     declExternal
+105	bool105z
 106	doPMD
 107	checkBounds
 108	fuzzReals 
 109	fixMult 
+110	bool110z
 111	pseudoZ
 112	allowCompat 
 113	checkFortran
@@ -55,6 +68,8 @@
 117     hashTravPtr
 118     uProcPtr
 119     externFileList
+120	strp120z
+121	strp121z
 122     pointerType
 123     setType
 124     booleanType
@@ -85,6 +100,9 @@
 160     extSymAdornment
 166     symTabCnt + array[80]
 340     entryPtTableBase [40]
+398	int398ar
+413	int413z
+414	int414ar
 532     absInsn
 533     addInt0Insn
 534     andE1Insn
