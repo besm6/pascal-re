@@ -99,7 +99,8 @@
 159     someTypeArrayBase
 160     extSymAdornment
 166     symTabCnt + array[80]
-340     entryPtTableBase [40]
+340     entryPtTableBase [30]
+370	frameRestore [40]
 398	int398ar
 413	int413z
 414	int414ar

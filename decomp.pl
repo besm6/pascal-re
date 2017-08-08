@@ -565,17 +565,41 @@ $prog =~ s@15,UTM,[34];@@g;
 $context = 'SY |checkSymAndRead|requiredSymErr|ifWhileStatement';
 
 sub convertEnumSet {
-    my $bitset = oct($_[0]);
+    my $bitset = $_[0];
     my $enum = $_[1];
-    my $pos = 47;
+    $bitset =~ s/0/OOO/g;
+    $bitset =~ s/1/OOI/g;
+    $bitset =~ s/2/OIO/g;
+    $bitset =~ s/3/OII/g;
+    $bitset =~ s/4/IOO/g;
+    $bitset =~ s/5/IOI/g;
+    $bitset =~ s/6/IIO/g;
+    $bitset =~ s/7/III/g;
+    $bitset = 'O'x(48-length($bitset)) . $bitset;
+    my @bits = split //, $bitset;
     my @set = ();
-
-    while ($bitset) {
-        unshift @set, ${$enum}[$pos] if $bitset & 1;
-        $bitset >>= 1;
-        --$pos;
-    }
+    for ($i = 0; $i < 48; ++$i) { push @set, ${$enum}[$i] if $bits[$i] eq 'I'; }
     return '['.join(',', @set).']';
+}
+
+sub convertIntSet {
+    my $bitset = $_[0];
+    my $orig = $bitset;
+    $bitset =~ s/0/OOO/g;
+    $bitset =~ s/1/OOI/g;
+    $bitset =~ s/2/OIO/g;
+    $bitset =~ s/3/OII/g;
+    $bitset =~ s/4/IOO/g;
+    $bitset =~ s/5/IOI/g;
+    $bitset =~ s/6/IIO/g;
+    $bitset =~ s/7/III/g;
+    $bitset = 'O'x(48-length($bitset)) . $bitset;
+    my @bits = split //, $bitset;
+    my @set = ();
+    for ($i = 0; $i < 48; ++$i) { push @set, $i if $bits[$i] eq 'I'; }
+    $bitset = '['.join(',', @set).']';
+    printf STDERR "Converting $orig to $bitset\n";
+    return $bitset;
 }
 
 if (open(SYMBOL, "symbol.txt")) {
@@ -641,6 +665,11 @@ if (open(FORM, "form.txt")) {
 
 # Converting chars based on context
 $prog =~ s@(CH [^;]+)\(([0-7][0-7][0-7]?)C\)@"$1'".chr(oct($2))."'"@ge;
+
+# Converting sets based on context
+$prog =~ s@ IN \(([0-7]+)C\)@" IN ".convertIntSet($1)@ge;
+$prog =~ s@ \| \(([0-7]+)C\)@" + ".convertIntSet($1)@ge;
+$prog =~ s@ \& \(([0-7]+)C\)@" * ".convertIntSet($1)@ge;
 
 if (open(HELPERS, "helpers.txt")) {
     while (<HELPERS>) {
