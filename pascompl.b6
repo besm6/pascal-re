@@ -3533,6 +3533,138 @@ var l4var1z, l4var2z, l4var3z, l4var4z, l4var5z:word;
    end; (* case *)
 }; (* formOperator *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure parseTypeRef(l3arg1z: @struc; l3arg2z: set of 0..47);
+type pair=record first, second:integer end;
+var l3var1z, l3var2z, l3var3z, l3var4z: word;
+pairs: array[1..9] of pair;
+l3var23z, l3var24z, l3var25z, l3var26z, l3var27z, l3var28z,
+l3var29z, l3var30z, l3var31z: word; 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure P11423(l4arg1z: @struc);
+{
+   new(l3var29z.s=4);
+   with l3var29z.s@ do {
+      f[0].i := (1);
+      f[1].i := (15);
+      f[2].c := chr(3C);
+      f[3].s := l4arg1z;
+   };
+   new(l3var24z.s=5);
+   with l3var24z.s@ do {
+     f[0] := curIdent;
+     f[1].i := lineCnt;
+     f[2] := l2var2z;
+     f[3] := l3var29z;
+     f[4].c := chr(0C);
+   };
+   l2var2z := l3var24z;
+}; (* P11423 *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure parseRecordDecl(l4arg1z, l4arg2z: word);
+var l4var1z, l4var2z: word; l4vars:array [1..41] of word;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure addToTypeHashTab;
+{
+   (* TODO: The installed compiler doesn't allow using R9 for
+    * register pointers in "with"; the decompiled module
+    * uses R9. To synchronize the offsets, a few operators
+    * are commented out.
+    *)
+   with l3var24z.s@ do {
+      (* TODO f[0] := curIdent; *)
+      f[2].s := typeHashTabBase[0 (* TODO bucket *)];
+      f[4].c := chr(5C);
+      f[5].s := NIL;
+      f[6] := l3var29z;
+      f[7] := l3var1z;
+   };
+   typeHashTabBase[bucket] := l3var24z.s;
+}; (* addToTypeHashTab *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure computeFieldOffsets;
+label 11523, 11622;
+var l5var1z, l5var2z, l5var3z, l5var4z,
+    l5var5z: integer; l5var6z: @struc;
+{
+   parseTypeRef(ref(l4var2z), l3arg2z + [33]);
+   if (l3var29z.s@.f[4].s = NIL) then {
+      l3var29z.s@.f[4] := l3var25z;
+   } else {
+      l3var31z.s@.f[5] := l3var25z;
+   };
+   l3var2z.b := isFileType(l4var2z.s);
+   if (not l4arg2z.b) and l3var2z.b then
+      error(9);
+   l3var29z.s@.f[5].b := l3var2z.b or l3var29z.s@.f[5].b;
+   l3var31z := l3var24z;
+ repeat
+   l3var25z.s@.f[3] := l4var2z;
+   (q) if (l3var1z.b) then {
+      l5var1z := l4var2z.s@.f[1].i;
+      l3var25z.s@.f[9].i := l5var1z;
+      if (l5var1z <> (48)) then {
+         for l5var2z to l3var4z.i do 11523: {
+            l5var6z := ref(pairs[l5var2z]);
+            if (l5var6z@.f[0].i >= l5var1z) then {
+            l3var25z.s@.f[8].i := 48 - l5var6z@.f[0].i;
+            l3var25z.s@.f[1] := l5var6z@.f[1];
+            if not (S6 IN optSflags.m) then
+               l3var25z.s@.f[8].i := 48 - l3var25z.s@.f[9].i
+                                     - l3var25z.s@.f[8].i;
+            l5var6z@.f[0].i := l5var6z@.f[0].i - l5var1z;
+            if (l5var6z@.f[0].i = (0)) then {
+               pairs[l5var2z] := pairs[l3var4z.i];
+               l3var4z.i := (l3var4z.i - (1));
+            }; (* 11562 *)
+            goto 11622;
+         }}; (* 11564 *)
+         if (l3var4z.i <> (7)) then {
+            l3var4z.i := l3var4z.i + 1;
+            l5var2z := l3var4z.i;
+         } else {
+            l5var3z := 48;
+            for l5var4z to 7 do {
+               l5var5z := pairs[l5var4z].first;
+               if (l5var5z < l5var3z) then {
+                  l5var3z := l5var5z;
+                  l5var2z := l5var4z;
+                }
+             }; (* for *)
+          }; (* 11606 *)
+          pairs[l5var2z] := [48, l3var3z];
+          l3var3z.i := (l3var3z.i + (1));
+          goto 11523;
+      }
+   }; (* 11615 *)
+   l3var25z.s@.f[7].c := chr(0C);
+   l3var25z.s@.f[1] := l3var3z;
+   l3var3z.i := (l3var3z.i + l4var2z.s@.f[0].i);
+11622:
+   if (PASINFOR.listMode = (3)) then {
+      write(' ':16);
+      if (l3var25z.s@.f[7].b) then write('PACKED');
+      write(' FIELD ');
+      printTextWord(l3var25z.s@.f[0]);
+      write('.OFFSET=', l3var25z.s@.f[1].i:5 oct, 'B');
+      if (l3var25z.s@.f[7].b) then {
+         write('.<<=SHIFT=', l3var25z.s@.f[8].i:2,
+               '. WIDTH=', l3var25z.s@.f[9].i:2, ' BITS');
+      } else {
+         write('.WORDS=', l4var2z.s@.f[0].i:0);
+      };
+      writeLN;
+   };
+   l3var2z.b := (l3var25z = l3var24z);
+   l3var25z := l3var25z.s@.f[5];
+ until l3var2z.b;
+(* 11674 *) }; (* computeFieldOffsets *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{ (* parseRecordDecl *)
+}; (* parseRecordDecl*)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{ (* parseTypeRef *)
+}; (* parseTypeRef *)
+
 %
 { (* programme *)
 };
