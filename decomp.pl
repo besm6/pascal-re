@@ -598,7 +598,7 @@ sub convertIntSet {
     my @set = ();
     for ($i = 0; $i < 48; ++$i) { push @set, $i if $bits[$i] eq 'I'; }
     $bitset = '['.join(',', @set).']';
-    printf STDERR "Converting $orig to $bitset\n";
+    # printf STDERR "Converting $orig to $bitset\n";
     return $bitset;
 }
 
