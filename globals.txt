@@ -51,6 +51,8 @@
 98	atEOL
 99	checkTypes 
 100	bool100z
+101	bool101z
+102	bool102z
 103	errors 
 104     declExternal
 105	bool105z
