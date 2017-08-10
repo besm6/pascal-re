@@ -159,6 +159,7 @@
 11460 computeFieldOffsets p
 11675 parseRecordDecl p
 12243 parseTypeRef p
+13026 P13026
 13044 formPMD p
 13177 parseDecls
 13436 checkForChar
