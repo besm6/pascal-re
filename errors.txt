@@ -10,7 +10,7 @@
 9   errTypeMustNotBeFile
 10   errConstNotOfADiscreteType
 11   errIdentNotDefined
-12   errWrongSymbol
+12   errBadSymbol
 13   errVarIsNotPointer
 14   errExprIsNotInteger
 15   errUnused
