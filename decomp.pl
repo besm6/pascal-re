@@ -671,6 +671,9 @@ $prog =~ s@ IN \(([0-7]+)C\)@" IN ".convertIntSet($1)@ge;
 $prog =~ s@ \| \(([0-7]+)C\)@" + ".convertIntSet($1)@ge;
 $prog =~ s@ \& \(([0-7]+)C\)@" * ".convertIntSet($1)@ge;
 
+$prog =~ s@(if[^;]*)\(\(\(([0-7]+)C\) \^ allones\) \& ([^()]+)\)@"$1 not ($3 <= ".convertIntSet($2).')'@ge;
+$prog =~ s@\(\(\(([0-7]+)C\) \^ allones\) \& ([^()]+)\)@"($2 - ".convertIntSet($1).')'@ge;
+    
 if (open(HELPERS, "helpers.txt")) {
     while (<HELPERS>) {
         chop;
