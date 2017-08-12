@@ -5098,6 +5098,7 @@ var l4var1z: word;
 }; (* gotoStatement *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure caseStatement;
+label 16211;
 var l4var1z: word;
     l4var2z, l4var3z, l4var4z, l4var5z: word;
     l4var6z: boolean;
@@ -5191,9 +5192,91 @@ function max(a, b: integer):integer;
     reportStmtType(l4var16z);
  } else 
     inSymbol;
-
-
-(* 16217 *) }; (* caseStatement *)
+ if not typeCheck(l4var10z.s, l4var12z) then {
+    error(88); (* errDifferentTypesOfLabelsAndExpr *);
+    exit
+ };
+ formLabel;
+ l4var5z.b := typeCheck(l4var12z, integerType);
+ if (l4var1z.s <> NIL) then {
+ l4var15z := l4var1z.s@.f[1];
+ l4var19z := l4var15z;
+ l4var2z := l4var1z;
+ while (l4var2z.s <> NIL) do {
+    if (l4var15z = l4var2z.s@.f[1]) and
+       (l4var12z@.f[2].c = chr(1C)) then {
+       l4var21z := l4var15z;
+       if (l4var5z.b) then {
+          l4var15z.i := (l4var15z.i + (1));
+       } else {
+          curVal := l4var15z;
+          curVal.c := succ(curVal.c);
+          l4var15z := curVal;
+       };
+       l4var2z := l4var2z.s@.f[0];
+    } else {
+        l4var14z.i := 00102320B;
+        P0715(0, l4var17z);
+        if (l4var10z.s@.f[2].c = chr(2C)) then {
+           l4var14z.i := max(abs(l4var10z.s@.f[5].i), abs(l4var10z.s@.f[6].i));
+        } else {
+           if (l4var10z.s@.f[2].c = chr(1C)) then
+              l4var14z := l4var10z.s@.f[4];
+        };
+        l4var8z.b := (l4var14z.i < 00076400B);
+        if (l4var8z.b) then {
+           form1Insn(00400016B);
+        } else {
+           form1Insn(74000001B);
+        };
+        l4var19z.i := (l4var19z.i - l4var19z.i); (* WTF? *)
+ 
+        while (l4var1z.s <> NIL) do {
+           if (l4var8z.b) then {
+              curVal.i := (l4var19z.i - l4var1z.s@.f[1].i);
+              curVal.m := (curVal.m + intZero);
+              form1Insn(getValueOrAllocSymtab(curVal.i) + 72500000B);
+              form1Insn(73400000B + l4var1z.s@.f[2].i);
+              l4var19z := l4var1z.s@.f[1];
+           } else {
+              form1Insn(74100001B);
+              curVal := l4var1z.s@.f[1];
+              form2Insn((getFCSToffset + 40120000B),
+                        (insnTemp[U1A] + l4var1z.s@.f[2].i));
+           };
+           l4var1z := l4var1z.s@.f[0];
+        };
+        if (l4var6z) then 
+           form1Insn(insnTemp[VJM] + l4var7z);
+        goto 16211;
+    }; (* if 16141 *) 
+ }; (*while 16142*)
+ if (not l4var6z) then {
+    l4var7z := moduleOffset;
+    formJumpOnCond(l4var18z);
+ };
+ P0715(0, l4var17z);
+ curVal := l4var19z;
+ P0715(-(insnTemp[UJ]+l4var7z), l4var21z.i);
+ curVal := l4var19z;
+ curVal.m := (curVal.m + intZero);
+ form1Insn(00400016B);
+ curVal.i := ((moduleOffset + (1)) - curVal.i);
+ if (curVal.i < 00040000B) then {
+    curVal.i := (curVal.i - 00040000B);
+    curVal.i := allocSymtabForAbsolute([24,29] + (curVal.m * O77777.m)) ;
+ };
+ form1Insn(73000000B + curVal.i);
+ while (l4var1z.s <> NIL) do {
+     formLabel;
+     form1Insn(insnTemp[VJM] + l4var1z.s@.f[2].i);
+     l4var1z := l4var1z.s@.f[0];
+ };
+ 16211:
+ P0715(0, l4var18z);
+ if (not l4var9z.b) then 
+    disableNorm;
+(* 16217 *) }}; (* caseStatement *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 { (* statement *)
 8888:;
@@ -5279,6 +5362,14 @@ procedure initOptions;
     hashMask := 203407C;
     statEndSys := [SEMICOLON,ENDSY,ELSESY,UNTILSY];
     lvalOpSet := [op34,op35,op36,op37,op41,op42,op43];
+    charSymTabBase := NOSY:128;
+    chrClassTabBase := NOOP:128;
+    charSymTabBase['0'] := INTCONST:10;
+    chrClassTabBase['0'] := ALNUM:10;
+    charSymTabBase['A'] := IDENT:26;
+    chrClassTabBase['A'] := ALNUM:26;
+    charSymTabBase['Ю'] := IDENT:31;
+    chrClassTabBase['Ю'] := ALNUM:31;
 end
 *to perso:670000
 *end file
