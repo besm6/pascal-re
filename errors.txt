@@ -9,7 +9,7 @@
 8   errNotAnIndexType
 9   errTypeMustNotBeFile
 10   errConstNotOfADiscreteType
-11   errIdentNotDefined
+11   errNotDefined
 12   errBadSymbol
 13   errVarIsNotPointer
 14   errExprIsNotInteger
@@ -71,7 +71,7 @@
 70   errNeitherToNorDownto
 71   errWithOperatorNotOfARecord
 72   errWithOperatorNotOfAVariable
-73   errIdenticalCaseLabels
+73   errCaseLabelsIdentical
 74   errIncompatibleCaseLabelAndExpression
 75   errCannotAssignFiles
 76   errWrongNumberForExternalFile

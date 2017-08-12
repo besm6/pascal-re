@@ -10,6 +10,7 @@
 49	bool49z
 50	inStringLit
 52      jumpTarget?
+53      int53z
 54	charClass 
 55	SY 
 58	FcstCnt 
