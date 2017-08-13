@@ -358,7 +358,7 @@ std::string get_literal(uint32 addr) {
     } else if (is_likely_iso(val)) {
         ret = strprintf("iso('%s')", get_iso_word(val).c_str());
     } else if (is_likely_text(val)) {
-        ret = strprintf("text('%s')", get_text_word(val).c_str());
+        ret = strprintf("%lloC(*\"%s\"*)", val, get_text_word(val).c_str());
     } else if (val >= 0101 && val < 96) {
         ret = strprintf("char('%c')", char(val));
     } else {

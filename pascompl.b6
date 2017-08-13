@@ -236,8 +236,8 @@ var (* total size 4791 words *)
 (*247-326*) symtbidx: array [1..80] of integer;
 (*327-331*) glob327z: array [0..4] of word;
 (*332-333*) glob332z: array [0..1] of word;
-(*334-339*) glob334z: array [0..5] of word;
-(*340-369*) entryPtTableBase: array [0..29] of word;
+(*334-340*) glob334z: array [0..6] of word;
+(*341-369*) entryPtTableBase: array [1..29] of word;
 (*370-397*) frameRestore: array [0..6] of fourwords;
 (*398-412*) int398ar: array [0..14] of integer;
             glob413z: integer;
@@ -6104,6 +6104,38 @@ procedure initOptions;
     hashMask := 203407C;
     statEndSys := [SEMICOLON, ENDSY, ELSESY, UNTILSY];
     lvalOpSet := [op34, op35, op36, op37, op41, op42, op43];
+    resWordNameBase :=
+        5441424554C             (*"   LABEL"*),
+        4357566364C             (*"   CONST"*),
+        64716045C               (*"    TYPE"*),
+        664162C                 (*"     VAR"*),
+        4665564364515756C       (*"FUNCTION"*),
+        6062574345446562C       (*"PROCEDUR"*),
+        634564C                 (*"     SET"*),
+        604143534544C           (*"  PACKED"*),
+        4162624171C             (*"   ARRAY"*),
+        624543576244C           (*"  RECORD"*),
+        46515445C               (*"    FILE"*),
+        4245475156C             (*"   BEGIN"*),
+        5146C                   (*"      IF"*),
+        43416345C               (*"    CASE"*),
+        624560454164C           (*"  REPEAT"*),
+        6750515445C             (*"   WHILE"*),
+        465762C                 (*"     FOR"*),
+        67516450C               (*"    WITH"*),
+        47576457C               (*"    GOTO"*),
+        455644C                 (*"     END"*),
+        45546345C               (*"    ELSE"*),
+        6556645154C             (*"   UNTIL"*),
+        5746C                   (*"      OF"*),
+        4457C                   (*"      DO"*),
+        6457C                   (*"      TO"*),
+        445767566457C           (*"  DOWNTO"*),
+        64504556C               (*"    THEN"*),
+        634554454364C           (*"  SELECT"*),
+        60625747624155C         (*" PROGRAM"*),
+        576450456263C           (*"  OTHERS"*);
+%
     charSymTabBase := NOSY:128;
     chrClassTabBase := NOOP:128;
     charSymTabBase['0'] := INTCONST:10;
@@ -6126,6 +6158,183 @@ procedure initOptions;
     funcInsn[fnPTR] := 04110014B;
     funcInsn[fnABSI] := 00070000B;
     funcInsn[fnSQRI] := 100000015B;
+    glob334z[5] := 25C, 26C;
+    glob334z[3] := 23C, 24C;
+    glob327z := 17C, 20C;
+    glob332z := 21C, 22C;
+    charSymTabBase[chr(27)] := CHARCONST;
+    charSymTabBase[''''] := CHARCONST;
+    charSymTabBase['_'] := REALCONST;
+    charSymTabBase['<'] := LTSY;
+    charSymTabBase['>'] := GTSY;
+    chrClassTabBase['+'] := PLUSOP;
+    chrClassTabBase['-'] := MINUSOP;
+    chrClassTabBase['*'] := MUL;
+    chrClassTabBase['/'] := RDIVOP;
+    chrClassTabBase['='] := EQOP;
+    chrClassTabBase['&'] := AMPERS;
+    chrClassTabBase['÷'] := IDIVOP; 
+    chrClassTabBase['∨'] := OROP;
+    chrClassTabBase['>'] := GTOP;
+    chrClassTabBase['<'] := LTOP;
+    chrClassTabBase['#'] := NEOP;
+    chrClassTabBase['='] := EQOP;
+    chrClassTabBase['×'] := MUL;
+    chrClassTabBase['≤'] := LEOP;
+    chrClassTabBase['≥'] := GEOP;
+    charSymTabBase['≤'] := RELOP;
+    charSymTabBase['≥'] := RELOP;
+    charSymTabBase['+'] := ADDOP;
+    charSymTabBase['-'] := ADDOP;
+    charSymTabBase['∨'] := ADDOP;
+    charSymTabBase['*'] := MULOP;
+    charSymTabBase['/'] := MULOP;
+    charSymTabBase['&'] := MULOP;
+    charSymTabBase['×'] := MULOP;
+    charSymTabBase[','] := COMMA;
+    charSymTabBase['.'] := PERIOD;
+    charSymTabBase[chr(22)] := ARROW;
+    charSymTabBase['@'] := ARROW;
+    charSymTabBase['^'] := ARROW;
+    charSymTabBase['('] := LPAREN;
+    charSymTabBase[')'] := RPAREN;
+    charSymTabBase[';'] := SEMICOLON;
+    charSymTabBase['['] := LBRACK;
+    charSymTabBase[']'] := RBRACK;
+    charSymTabBase['#'] := RELOP;
+    charSymTabBase['='] := RELOP;
+    charSymTabBase[':'] := COLON;
+    charSymTabBase['÷'] := MULOP;
+    charSymTabBase['~'] := NOTSY;
+    helperNameBase :=
+        6017210000000000C      (*"P/1     "*),
+        6017220000000000C      (*"P/2     "*),
+        6017230000000000C      (*"P/3     "*),
+        6017240000000000C      (*"P/4     "*),
+        6017250000000000C      (*"P/5     "*),
+        6017260000000000C      (*"P/6     "*),
+        6017434100000000C      (*"P/CA    "*),
+        6017455700000000C      (*"P/EO    "*),
+        6017636300000000C      (*"P/SS    "*),
+        6017455400000000C      (*"P/EL    "*),
+        6017554400000000C      (*"P/MD    "*),
+        6017555100000000C      (*"P/MI    "*),
+        6017604100000000C      (*"P/PA    "*),
+        6017655600000000C      (*"P/UN    "*),
+        6017436000000000C      (*"P/CP    "*),
+        6017414200000000C      (*"P/AB    "*),
+        6017445100000000C      (*"P/DI    "*),
+        6017624300000000C      (*"P/RC    "*),
+        6017454100000000C      (*"P/EA    "*),
+        6017564100000000C      (*"P/NA    "*),
+        6017424100000000C      (*"P/BA    "*),
+        6017515100000000C      (*"P/II    "*),
+        6017626200000000C      (*"P/RR    "*),
+        6017625100000000C      (*"P/RI    "*),
+        6017214400000000C      (*"P/1D    "*),
+        6017474400000000C      (*"P/GD    "*),
+        6017450000000000C      (*"P/E     "*),
+        6017454600000000C      (*"P/EF    "*),
+        6017604600000000C      (*"P/PF    "*),
+        6017474600000000C      (*"P/GF    "*),
+        6017644600000000C      (*"P/TF    "*),
+        6017624600000000C      (*"P/RF    "*),
+        6017566700000000C      (*"P/NW    "*),
+        6017446300000000C      (*"P/DS    "*),
+        6017506400000000C      (*"P/HT    "*),
+        6017675100000000C      (*"P/WI    "*),
+        6017676200000000C      (*"P/WR    "*),
+        6017674300000000C      (*"P/WC    "*),
+        6017412600000000C      (*"P/A6    "*),
+        6017412700000000C      (*"P/A7    "*),
+        6017677000000000C      (*"P/WX    "*),
+        6017675700000000C      (*"P/WO    "*),
+        6017436700000000C      (*"P/CW    "*),
+        6017264100000000C      (*"P/6A    "*),
+        6017274100000000C      (*"P/7A    "*),
+        6017675400000000C      (*"P/WL    "*),
+        6017624451000000C      (*"P/RDI   "*),
+        6017624462000000C      (*"P/RDR   "*),
+        6017624443000000C      (*"P/RDC   "*),
+        6017624126000000C      (*"P/RA6   "*),
+        6017624127000000C      (*"P/RA7   "*),
+        6017627000000000C      (*"P/RX    "*),
+        6017625400000000C      (*"P/RL    "*),
+        6017675754560000C      (*"P/WOLN  "*),
+        6017625154560000C      (*"P/RILN  "*),
+        6017626200000000C      (*"P/RR    "*),
+        6017434500000000C      (*"P/CE    "*),
+        6017646200000000C      (*"P/TR    "*),
+        6017546600000000C      (*"P/LV    "*),
+        6017724155000000C      (*"P/ZAM   "*),
+        6017605100000000C      (*"P/PI    "*),
+        6017426000000000C      (*"P/BP    "*),
+        6017422600000000C      (*"P/B6    "*),
+        6017604200000000C      (*"P/PB    "*),
+        6017422700000000C      (*"P/B7    "*),
+        6017515600000000C      (*"P/IN    "*),
+        6017516300000000C      (*"P/IS    "*),
+        6017444100000000C      (*"P/DA    "*),
+        6017435700000000C      (*"P/CO    "*),
+        6017516400000000C      (*"P/IT    "*),
+        6017435300000000C      (*"P/CK    "*),
+        6017534300000000C      (*"P/KC    "*),
+        6017545647604162C      (*"P/LNGPAR"*),
+        6017544441620000C      (*"P/LDAR  "*),
+        6017544441625156C      (*"P/LDARIN"*),
+        6017202043000000C      (*"P/00C   "*),
+        6017636441620000C      (*"P/STAR  "*),
+        6017605544634564C      (*"P/PMDSET"*),
+        6017435100000000C      (*"P/CI    "*),
+        6041514200000000C      (*"PAIB    "*),
+        6017674100000000C      (*"P/WA    "*),
+        6361626412000000C      (*"SQRT*   "*),
+        6351561200000000C      (*"SIN*    "*),
+        4357631200000000C      (*"COS*    "*),
+        4162436441561200C      (*"ARCTAN* "*),
+        4162436351561200C      (*"ARCSIN* "*),
+        5456120000000000C      (*"LN*     "*),
+        4570601200000000C      (*"EXP*    "*),
+        6017456100000000C      (*"P/EQ    "*),
+        6017624100000000C      (*"P/RA    "*),
+        6017474500000000C      (*"P/GE    "*),
+        6017554600000000C      (*"P/MF    "*),
+        6017465500000000C      (*"P/FM    "*),
+        6017565600000000C      (*"P/NN    "*),
+        6017634300000000C      (*"P/SC    "*),
+        6017444400000000C      (*"P/DD    "*),
+        6017624500000000C      (*"P/RE    "*);
+    systemProcNameBase := 
+        606564C                (*"     PUT"*),
+        474564C                (*"     GET"*),
+        62456762516445C        (*" REWRITE"*),
+        6245634564C            (*"   RESET"*),
+        564567C                (*"     NEW"*),
+        44516360576345C        (*" DISPOSE"*),
+        50415464C              (*"    HALT"*),
+        63645760C              (*"    STOP"*),
+        6345646560C            (*"   SETUP"*),
+        625754546560C          (*"  ROLLUP"*),
+        6762516445C            (*"   WRITE"*),
+        67625164455456C        (*" WRITELN"*),
+        62454144C              (*"    READ"*),
+        624541445456C          (*"  READLN"*),
+        45705164C              (*"    EXIT"*),
+        4445426547C            (*"   DEBUG"*),
+        42456355C              (*"    BESM"*),
+        5541605141C            (*"   MAPIA"*),
+        5541604151C            (*"   MAPAI"*),
+        604353C                (*"     PCK"*),
+        6556604353C            (*"   UNPCK"*),
+        60414353C              (*"    PACK"*),
+        655660414353C          (*"  UNPACK"*),
+        5760455644C            (*"   OPEND"*),
+        44455444C              (*"    DELD"*),
+        56456744C              (*"    NEWD"*),
+        60656444C              (*"    PUTD"*),
+        47456444C              (*"    GETD"*),
+        55574444C              (*"    MODD"*),
+        46515644C              (*"    FIND"*);
 end
 *to perso:670000
 *end file
