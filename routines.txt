@@ -192,6 +192,8 @@
 16667 P16667
 16713 startReadOrWrite
 17003 parseWidthSpecifier
+17020 P17020
+17037 P17037
 17072 checkElementForReadWrite p
 17157 writeProc
 17334 readProc

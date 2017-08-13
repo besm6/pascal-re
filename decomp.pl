@@ -730,6 +730,12 @@ $relop{' GE '} = ' >= ';
 # Converting relational ops
 $prog =~ s/( EQ | NE | LT | LE | GT | GE )/$relop{$1}/ge;
 
+# Removing extra spaces
+
+$prog =~ s/ +;/;/g;
+$prog =~ s/ +\( +/ (/g;
+$prog =~ s/ +\) +/) /g;
+
 #Restoring line feeds
 
 $prog =~ s/;/;\n /g;
