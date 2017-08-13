@@ -6017,6 +6017,43 @@ procedure P17037;
  }
 }; (* P17037 *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure checkElementForReadWrite;
+var l5var1z: word;
+{
+ glob145z.m := (glob145z.m - [12]);
+ if (l4var3z.s@.f[2].c = chr(2C)) then
+    l4var3z := l4var3z.s@.f[3];
+ curVarKind := l4var3z.s@.f[2];
+ l4var17z.i := (36);
+ if (l4var3z.s = integerType) then
+    l4var15z.i := (10)
+ else if (l4var3z.s = realType) then {
+    l4var17z.i := (37);
+    l4var15z.i := (14);
+ } else if (l4var3z.s = charType) then {
+    l4var17z.i := (38);
+    l4var15z.i := (1);
+ } else if (curVarKind.c = chr(1C)) then {
+    l4var17z.i := (41);
+    P13026 (l4var3z.s);
+    l4var15z.i := (8);
+ } else if (checkForChar(l4var3z.s)) then {
+    l5var1z.s := ref(l4var3z.s@.f[4].s@.f[0]);
+    l4var15z.i := ((l5var1z.s@.f[6].i - l5var1z.s@.f[5].i) + (1));
+    if not (l4var3z.s@.f[5].b) then 
+       l4var17z.i := (81)
+    else if ((6) >= l4var15z.i) then
+       l4var17z.i := (39)
+    else
+       l4var17z.i := (40);
+ } else if (l4var3z.s@.f[0].i = (1)) then {
+    l4var17z.i := (42);
+    l4var15z.i := (17);
+ } else
+ error(34); (* errTypeIsNotAFileElementType *)
+
+}; (* checkElementForReadWrite *)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 { (* standProc *)
 }; (* standProc *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
