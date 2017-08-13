@@ -6112,6 +6112,20 @@ procedure initOptions;
     chrClassTabBase['A'] := ALNUM:26;
     charSymTabBase['Ю'] := IDENT:31;
     chrClassTabBase['Ю'] := ALNUM:31;
+    funcInsn[fnABSR] := 00070000B;
+    funcInsn[fnTRUNC] := 04040011B;
+    funcInsn[fnODD] := 04110010B;
+    funcInsn[fnORD] := 04150011B;
+    funcInsn[fnCHR] := 04110014B;
+    funcInsn[fnSUCC] := 04130010B;
+    funcInsn[fnPRED] := 04050010B;
+    funcInsn[fnSQRR] := 100000014B;
+    funcInsn[fnROUND] := 100000013B;
+    funcInsn[fnCARD] := 100000027B;
+    funcInsn[fnMINEL] := 100000017B;
+    funcInsn[fnPTR] := 04110014B;
+    funcInsn[fnABSI] := 00070000B;
+    funcInsn[fnSQRI] := 100000015B;
 end
 *to perso:670000
 *end file
