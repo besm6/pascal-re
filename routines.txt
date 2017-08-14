@@ -221,17 +221,17 @@
 20266 statement p
 20767 outputObjFile p
 21004 defineRoutine p
-21263 registerSysType p
-21277 registerSysEnum p
-21315 registerSysProc 
+21263 regSysType p
+21277 regSysEnum p
+21315 regSysProc 
 21332 initScalars p
-22076 allocExternFile
+22076 makeExtFile
 22110 parseParameters p
 22324 exitScope
 22347 programme p
 23365 initInsnTemplates p
-23520 registerResWord
-23547 registerKeywords
+23520 regResWord
+23547 regKeywords
 23602 initArrays p
 23634 initSets p
 23643 initTables p

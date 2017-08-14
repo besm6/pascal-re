@@ -14,9 +14,9 @@
 13   errVarIsNotPointer
 14   errExprIsNotInteger
 15   errUnused
-16   errLabelNotDefinedInBlock
-17   errLabelAlreadyDefinedInLine
-18   errLabelNotDefined
+16   errLblNotDefinedInBlock
+17   errLblAlreadyDefinedInLine
+18   errLblNotDefined
 19   errExprMustNotBeOfStructType
 20   errDigitGreaterThan7
 21   errNeedOtherTypesOfOperands
@@ -88,7 +88,7 @@
 87   errTooManyEntryProcs
 88   errDifferentTypesOfLabelsAndExpr
 89   errInteger
-90   errLabelDefinitionInBlock
+90   errLblDefinitionInBlock
 91   errOpenParen
 92   errOpenParen
 93   errOpenParen
