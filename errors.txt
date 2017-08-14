@@ -1,5 +1,5 @@
 0   errBooleanNeeded
-1   errNoCommaNorSemicolon
+1   errCommaOrSemicolonNeeded
 2   errIdentAlreadyDefined
 3   errNoIdent
 4   errIdentNotAType

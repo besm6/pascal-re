@@ -1,6 +1,6 @@
 0 gen0
-1 gen1
-2 gen2
+1 STORE
+2 LOAD
 3 gen3
 4 SETREG
 5 gen5
@@ -15,4 +15,4 @@
 16 LOCFILEINIT
 17 TOBOOL?
 20 gen16
-21 CONSTtoINSN
+21 LITINSN
