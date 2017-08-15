@@ -4024,9 +4024,9 @@ var
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P11423(l4arg1z: @types);
 {
-    new(l3var29z.s=4);
+    new(l3var29z.s = 4);
     l3var29z.s@ := [1, 15, chr(3), l4arg1z];
-    new(l3var24z.s=5);
+    new(l3var24z.s = 5);
     l3var24z.s@ := [curIdent, lineCnt, l2var2z, l3var29z, chr(0C)];
     l2var2z := l3var24z;
 }; (* P11423 *)
@@ -4149,7 +4149,7 @@ var
             } else {
                 if (hashTravPtr <> NIL) then
                     error(errIdentAlreadyDefined);
-                new(l3var24z.s=10);
+                new(l3var24z.s = 10);
                 addToTypeHashTab;
                 if (l4var4z.f[2].s = NIL) then {
                     l3var25z := l3var24z;
@@ -4182,762 +4182,792 @@ var
             error(3);
             skip((l3arg2z + [42]));
         } else { (* 11766 *)
-           l4var4z.f[4] := curIdent;
-           l4var4z.f[5].i := bucket;
-           l3var24z.s := hashTravPtr;
-           inSymbol;
-           if (SY = COLON) then {
-              if (l3var24z.s <> NIL) then
-                 error(errIdentAlreadyDefined);
-              new(l3var24z.s=10);
-              curIdent := l4var4z.f[4];
-              bucket := l4var4z.f[5].i;
-              addToTypeHashTab;
-              inSymbol;
-              l3var25z := l3var24z;
-              computeFieldOffsets;
-           } else {
-              l3var24z.s := symHashTabBase[l4var4z.f[5].i];
-              while (l3var24z.s <> NIL) do {
-                 if (l3var24z.s@.f[0] <> l4var4z.f[4]) then {
-                    l3var24z := l3var24z.s@.f[2];
-                 } else {
-                    if (l3var24z.s@.f[4].c <> chr(0C)) then {
-                       error(errNotAType);
-                       l4var2z.t := integerType;
+            l4var4z.f[4] := curIdent;
+            l4var4z.f[5].i := bucket;
+            l3var24z.s := hashTravPtr;
+            inSymbol;
+            if (SY = COLON) then {
+                if (l3var24z.s <> NIL) then
+                    error(errIdentAlreadyDefined);
+                new(l3var24z.s = 10);
+                curIdent := l4var4z.f[4];
+                bucket := l4var4z.f[5].i;
+                addToTypeHashTab;
+                inSymbol;
+                l3var25z := l3var24z;
+                computeFieldOffsets;
+            } else {
+                l3var24z.s := symHashTabBase[l4var4z.f[5].i];
+                while (l3var24z.s <> NIL) do {
+                    if (l3var24z.s@.f[0] <> l4var4z.f[4]) then {
+                        l3var24z := l3var24z.s@.f[2];
                     } else {
-                       l4var2z := l3var24z.s@.f[3];
+                        if (l3var24z.s@.f[4].c <> chr(0C)) then {
+                            error(errNotAType);
+                            l4var2z.t := integerType;
+                        } else {
+                            l4var2z := l3var24z.s@.f[3];
+                        };
+                        exit identif;
                     };
-                    exit identif;
-                 };
-              };
-              error(errNotDefined)
-           };
+                };
+                error(errNotDefined)
+            };
         }; (* 12035 *)
         if (l4var2z.s@.f[2].c = chr(2C)) then
-           l4var2z := l4var2z.s@.f[3];
+            l4var2z := l4var2z.s@.f[3];
         checkSymAndRead(OFSY);
         l4var10z := l3var3z;
         l4var26z := l3var3z;
         l4var1z.s := NIL;
         repeat
-        l4var3z.s := NIL;
-        repeat
-        parseLiteral(l4var4z.f[0].t, l4var4z.f[3], false);
-        if (l4var4z.f[0].s = NIL) then
-           error(errNoConstant)
-        else if (not typeCheck(l4var4z.f[0].t, l4var2z.t)) then
-           error(errConstOfOtherTypeNeeded);
-        new(l4var4z.f[1].s=7);
-        l4var4z.f[1].s@ := [l3var3z, 48, chr(10B), l4var4z.f[3], NIL, NIL, NIL];
-        if (l4var3z.s = NIL) then {
-           l3var28z := l4var4z.f[1];
-        } else {
-           l4var3z.s@.f[6] := l4var4z.f[1];
-        };
-        l4var3z := l4var4z.f[1];
-        inSymbol;
-        l3var2z.b := (SY <> COMMA);
-        if (not l3var2z.b) then
-           inSymbol;
-        until l3var2z.b;
-        if (l4var1z.s = NIL) then {
-           if (l3var29z.s@.f[3].s = NIL) then {
-              l3var29z.s@.f[3] := l3var28z;
-           } else {
-              l4arg1z.s@.f[4] := l3var28z;
-           }
-        } else {
-           l4var1z.s@.f[5] := l3var28z;
-        };
-        l4var1z := l3var28z;
-        checkSymAndRead(COLON);
-        if (SY <> LPAREN) then
-           requiredSymErr(LPAREN);
-        parseRecordDecl(l3var28z, false);
-        if (l4var26z.f1 < l3var3z.f1) or
-           l3var1z.b and (l3var3z.f1 = 1) and (l4var26z.f1 = 1) and
-           (l3var3z.f2 = 1) and (l4var26z.f2 = 1) and
-           (l3var3z.pairs[1].first < l4var26z.pairs[1].first) then {
-              l4var26z := l3var3z;
-           }; (* 12201 *)
-           l3var3z := l4var10z;
-           checkSymAndRead(RPAREN);
-           l3var2z.b := SY <> SEMICOLON;
-           if (not l3var2z.b) then
-              inSymbol;
-           if (SY = ENDSY) then
-              l3var2z.b := true;
+            l4var3z.s := NIL;
+            repeat
+                parseLiteral(l4var4z.f[0].t, l4var4z.f[3], false);
+                if (l4var4z.f[0].s = NIL) then
+                    error(errNoConstant)
+                else if (not typeCheck(l4var4z.f[0].t, l4var2z.t)) then
+                    error(errConstOfOtherTypeNeeded);
+                new(l4var4z.f[1].s = 7);
+                l4var4z.f[1].s@ := [l3var3z, 48, chr(10B),
+                                    l4var4z.f[3], NIL, NIL, NIL];
+                if (l4var3z.s = NIL) then {
+                    l3var28z := l4var4z.f[1];
+                } else {
+                    l4var3z.s@.f[6] := l4var4z.f[1];
+                };
+                l4var3z := l4var4z.f[1];
+                inSymbol;
+                l3var2z.b := (SY <> COMMA);
+                if (not l3var2z.b) then
+                    inSymbol;
+            until l3var2z.b;
+            if (l4var1z.s = NIL) then {
+                if (l3var29z.s@.f[3].s = NIL) then {
+                    l3var29z.s@.f[3] := l3var28z;
+                } else {
+                    l4arg1z.s@.f[4] := l3var28z;
+                }
+            } else {
+                l4var1z.s@.f[5] := l3var28z;
+            };
+            l4var1z := l3var28z;
+            checkSymAndRead(COLON);
+            if (SY <> LPAREN) then
+                requiredSymErr(LPAREN);
+            parseRecordDecl(l3var28z, false);
+            if (l4var26z.f1 < l3var3z.f1) or
+               l3var1z.b and (l3var3z.f1 = 1) and (l4var26z.f1 = 1) and
+                (l3var3z.f2 = 1) and (l4var26z.f2 = 1) and
+                (l3var3z.pairs[1].first < l4var26z.pairs[1].first) then {
+                l4var26z := l3var3z;
+            }; (* 12201 *)
+            l3var3z := l4var10z;
+            checkSymAndRead(RPAREN);
+            l3var2z.b := SY <> SEMICOLON;
+            if (not l3var2z.b) then
+                inSymbol;
+            if (SY = ENDSY) then
+                l3var2z.b := true;
         until l3var2z.b;
         l3var3z := l4var26z;
     }; (* 12232 *)
- l4arg1z.s@.f[0].i := l3var3z.f1;
- if l3var1z.b and (l3var3z.f1 = (1)) and (l3var3z.f2 = (1)) then {
-    l4arg1z.s@.f[1].i := ((48) - l3var3z.pairs[1].first);
- }
-(* 12242 *) }; (* parseRecordDecl*)
+    l4arg1z.s@.f[0].i := l3var3z.f1;
+    if l3var1z.b and (l3var3z.f1 = (1)) and (l3var3z.f2 = (1)) then {
+        l4arg1z.s@.f[1].i := ((48) - l3var3z.pairs[1].first);
+    }
+    (* 12242 *)
+}; (* parseRecordDecl*)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 { (* parseTypeRef *)
- l3var1z.b := false;
- 12247:
- if (SY = LPAREN) then {
- l3var23z.i := (0);
- int93z := (0);
- inSymbol;
- l3var25z.s := NIL;
- new(l3var29z.s=6);
- while (SY = IDENT) do {
-    if (bool100z) then
-       error(errIdentAlreadyDefined);
- new(l3var24z.s=7);
- l3var24z.s@:=[ curIdent, curFrameRegTemplate, symHashTabBase[bucket],
-               l3var29z, chr(1C), NIL, ptr(l3var23z.i)];
- symHashTabBase[bucket] := l3var24z.s;
- l3var23z.i := (l3var23z.i + (1));
- if (l3var25z.s = NIL) then {
-    l3var29z.s@.f[3] := l3var24z;
- } else {
-    l3var25z.s@.f[5] := l3var24z;
- };
- l3var25z := l3var24z;
- inSymbol;
- if (SY = COMMA) then {
-    int93z := (0);
-    inSymbol;
- } else {
-    if (SY <> RPAREN) then
-        requiredSymErr(RPAREN);
-  };
-  }; (* 12324 *)
- checkSymAndRead(RPAREN);
- if (l3var25z.s = NIL) then {
-    l3var29z.t := booleanType;
-    error(errNoIdent);
- } else {
-    l3var29z.s@ := [1, nrOfBits(l3var23z.i - 1), chr(1), , l3var23z, 0];
- };
- } else (* 12344 *)
-    if (SY = ARROW) then {
-       inSymbol;
-       if (SY <> IDENT) then {
-          error(errNoIdent);
-          l3var29z.t := pointerType;
-       } else {
-           if (hashTravPtr = NIL) then {
-              if (l2var9z.b) then {
-                 if (F2751(l3var24z)) then {
-                    l3var29z := l3var24z.s@.f[3];
-                 } else {
-                    P11423(integerType);
-                 };
-             } else {
-                12366: error(errNotAType);
-                l3var29z.t := pointerType;
-             };
-           } else {
-              if (hashTravPtr@.f[4].c <> chr(0C)) then {
-                 goto 12366
-              };
-              new(l3var29z.s=4);
-              with l3var29z.s@ do {
-                 f[0].i := (1);
-                 f[1].i := (15);
-                 f[2].c := chr(3C);
-                 f[3] := hashTravPtr@.f[3];
-              }
-           }; (* 12405 *)
-           inSymbol;
-   }} else (* 12410*)
-   if (SY = IDENT) then {
-      if (hashTravPtr <> NIL) then {
-         if (hashTravPtr@.f[4].c = chr(0C)) then {
-            l3var29z := hashTravPtr@.f[3];
-         } else {
-            goto 12760;
-         }
-      } else {
-         if (l2var9z.b) then {
-            if (F2751(l3var24z)) then {
-               l3var29z := l3var24z.s@.f[3];
-               l3var29z.s@.f[3].t := booleanType;
-            } else {
-               P11423(booleanType);
-            };
-         } else {
-            error(4);
-            l3var29z.t := integerType;
-         };
-      };
-      inSymbol;
-  } else { (* 12440 *)
-     if (SY = PACKEDSY) then {
-        l3var1z.b := true;
+    l3var1z.b := false;
+12247:
+    if (SY = LPAREN) then {
+        l3var23z.i := (0);
+        int93z := (0);
         inSymbol;
-        goto 12247;
-     };
-     if (SY = RECORDSY) then { (* 12446 *)
-     new(l3var29z.s=7);
-     strp121z := l3var29z.t;
-     with l3var29z.s@ do {
-        f[0].i := (0);
-        f[1].i := (48);
-        f[2].c := chr(6C);
-        f[3].s := NIL;
-        f[4].s := NIL;
-        f[5].c := chr(0C);
-        f[6] := l3var1z;
-     };
-     l3var3z.f1 := (0);
-     l3var3z.f2 := (0);
-     parseRecordDecl(l3var29z, true);
-     checkSymAndRead(ENDSY);
-     } else (* 12467 *)
+        l3var25z.s := NIL;
+        new(l3var29z.s = 6);
+        while (SY = IDENT) do {
+            if (bool100z) then
+                error(errIdentAlreadyDefined);
+            new(l3var24z.s = 7);
+            l3var24z.s@ := [curIdent, curFrameRegTemplate,
+                            symHashTabBase[bucket], l3var29z,
+                            chr(1C), NIL, ptr(l3var23z.i)];
+            symHashTabBase[bucket] := l3var24z.s;
+            l3var23z.i := (l3var23z.i + (1));
+            if (l3var25z.s = NIL) then {
+                l3var29z.s@.f[3] := l3var24z;
+            } else {
+                l3var25z.s@.f[5] := l3var24z;
+            };
+            l3var25z := l3var24z;
+            inSymbol;
+            if (SY = COMMA) then {
+                int93z := (0);
+                inSymbol;
+            } else {
+                if (SY <> RPAREN) then
+                    requiredSymErr(RPAREN);
+            };
+        }; (* 12324 *)
+        checkSymAndRead(RPAREN);
+        if (l3var25z.s = NIL) then {
+            l3var29z.t := booleanType;
+            error(errNoIdent);
+        } else {
+            l3var29z.s@ := [1, nrOfBits(l3var23z.i - 1), chr(1), , l3var23z, 0];
+        };
+    } else (* 12344 *)
+    if (SY = ARROW) then {
+        inSymbol;
+        if (SY <> IDENT) then {
+            error(errNoIdent);
+            l3var29z.t := pointerType;
+        } else {
+            if (hashTravPtr = NIL) then {
+                if (l2var9z.b) then {
+                    if (F2751(l3var24z)) then {
+                        l3var29z := l3var24z.s@.f[3];
+                    } else {
+                        P11423(integerType);
+                    };
+                } else {
+12366:              error(errNotAType);
+                    l3var29z.t := pointerType;
+                };
+            } else {
+                if (hashTravPtr@.f[4].c <> chr(0C)) then {
+                    goto 12366
+                };
+                new(l3var29z.s = 4);
+                with l3var29z.s@ do {
+                    f[0].i := (1);
+                    f[1].i := (15);
+                    f[2].c := chr(3C);
+                    f[3] := hashTravPtr@.f[3];
+                }
+            }; (* 12405 *)
+            inSymbol;
+        }
+    } else (* 12410 *)
+    if (SY = IDENT) then {
+        if (hashTravPtr <> NIL) then {
+            if (hashTravPtr@.f[4].c = chr(0C)) then {
+                l3var29z := hashTravPtr@.f[3];
+            } else {
+                goto 12760;
+            }
+        } else {
+            if (l2var9z.b) then {
+                if (F2751(l3var24z)) then {
+                    l3var29z := l3var24z.s@.f[3];
+                    l3var29z.s@.f[3].t := booleanType;
+                } else {
+                    P11423(booleanType);
+                };
+            } else {
+                error(4);
+                l3var29z.t := integerType;
+            };
+        };
+        inSymbol;
+    } else { (* 12440 *)
+        if (SY = PACKEDSY) then {
+            l3var1z.b := true;
+            inSymbol;
+            goto 12247;
+        };
+        if (SY = RECORDSY) then { (* 12446 *)
+            new(l3var29z.s = 7);
+            strp121z := l3var29z.t;
+            with l3var29z.s@ do {
+                f[0].i := (0);
+                f[1].i := (48);
+                f[2].c := chr(6C);
+                f[3].s := NIL;
+                f[4].s := NIL;
+                f[5].c := chr(0C);
+                f[6] := l3var1z;
+            };
+            l3var3z.f1 := (0);
+            l3var3z.f2 := (0);
+            parseRecordDecl(l3var29z, true);
+            checkSymAndRead(ENDSY);
+        } else (* 12467 *)
         if (SY = ARRAYSY) then {
-           inSymbol;
-           if (SY = LBRACK) then
-              inSymbol;
-           l3var28z.s := NIL;
-           12476:
-           parseTypeRef(ref(l3var27z), l3arg2z + [42]);
-           curVarKind := l3var27z.s@.f[2].k;
-           if (curVarKind <> kind2) then {
-           if (curVarKind = kindScalar) and
-              (l3var27z.t <> integerType) then {
-              l3var23z := l3var27z.s@.f[4];
-           } else {
-              error(8);
-              l3var27z.t := integerType;
-              l3var23z.i := (10);
-           };
-           definePacked(ref(l3var27z), 0, l3var23z.i - 1);
-        }; (* 12524 *)
-        new(l3var26z.s8);
-        with l3var26z.s@ do {
-         f[0].i := ord(l3var28z.s);
-         f[1].i := (48);
-         f[2].c := chr(5C);
-         f[4] := l3var27z;
-        };
-        if (l3var28z.s =  NIL) then
-           l3var29z := l3var26z
-        else
-           l3var28z.s@.f[3] := l3var26z;
-        l3var28z := l3var26z;
-        if (SY = COMMA) then {
-           inSymbol;
-           goto 12476;
-        };
-        if (SY = RBRACK) then
-           inSymbol;
-        checkSymAndRead(OFSY);
-        parseTypeRef(ref(l3var27z), l3arg2z);
-        l3var26z.s@.f[3] := l3var27z;
-        if isFileType(l3var27z.s) then
-           error(errTypeMustNotBeFile);
-        repeat with l3var26z.s@, f[4].s8@ do {
-           l3var23z.i := g[6].i - g[5].i + 1;
-           l3var28z.s := ptr(f[0].i);
-           l3var22z := f[3].s@.f[1];
-           if ((24) < l3var22z.i) then
-              l3var1z.b := false;
-           f[1].i := (48);
-           if (l3var1z.b) then {
-              l3var22z.i := ((48) DIV l3var22z.i);
-              if (l3var22z.i = (9)) then {
-                 l3var22z.i := (8);
-              } else if (l3var22z.i = (5)) then
-                 l3var22z.i := (4);
-              f[6] := l3var22z;
-              f[7].i := ((48) DIV l3var22z.i);
-              l3var22z.i := l3var23z.i * f[7].i;
-              if l3var22z.i mod 48 = 0 then
-                 l3var21z.i := 0
-              else
-                 l3var21z.i := 1;
-              f[0].i := l3var22z.i div 48 + l3var21z.i;
-              if (f[0].i = (1)) then
-                 f[1] := l3var22z;
-           } else { (* 12633 *)
-              f[0].i := l3var23z.i * f[3].s@.f[0].i;
-              curVal := f[3].s@.f[0];
-              curVal.m := ((curVal.m * [7:47]) + [0]);
-              if (f[4].s@.f[3].t <> integerType) then
-                 curVal.m := (curVal.m + [1, 3]);
-              l3var26z.s@.f[6].i := (getFCSToffset  + 40170000B);
-           }; (* 12652 *)
-              l3var26z.s@.f[5] := l3var1z;
-              l3var1z.b := false;
-              l3var2z.b := (l3var29z = l3var26z);
-              l3var26z := l3var28z;
-           } until l3var2z.b;
+            inSymbol;
+            if (SY = LBRACK) then
+                inSymbol;
+            l3var28z.s := NIL;
+12476:      parseTypeRef(ref(l3var27z), l3arg2z + [42]);
+            curVarKind := l3var27z.s@.f[2].k;
+            if (curVarKind <> kind2) then {
+                if (curVarKind = kindScalar) and
+                   (l3var27z.t <> integerType) then {
+                    l3var23z := l3var27z.s@.f[4];
+                } else {
+                    error(8);
+                    l3var27z.t := integerType;
+                    l3var23z.i := (10);
+                };
+                definePacked(ref(l3var27z), 0, l3var23z.i - 1);
+            }; (* 12524 *)
+            new(l3var26z.s8);
+            with l3var26z.s@ do {
+                f[0].i := ord(l3var28z.s);
+                f[1].i := (48);
+                f[2].c := chr(5C);
+                f[4] := l3var27z;
+            };
+            if (l3var28z.s =  NIL) then
+                l3var29z := l3var26z
+            else
+                l3var28z.s@.f[3] := l3var26z;
+            l3var28z := l3var26z;
+            if (SY = COMMA) then {
+                inSymbol;
+                goto 12476;
+            };
+            if (SY = RBRACK) then
+                inSymbol;
+            checkSymAndRead(OFSY);
+            parseTypeRef(ref(l3var27z), l3arg2z);
+            l3var26z.s@.f[3] := l3var27z;
+            if isFileType(l3var27z.s) then
+                error(errTypeMustNotBeFile);
+            repeat with l3var26z.s@, f[4].s8@ do {
+                l3var23z.i := g[6].i - g[5].i + 1;
+                l3var28z.s := ptr(f[0].i);
+                l3var22z := f[3].s@.f[1];
+                if ((24) < l3var22z.i) then
+                    l3var1z.b := false;
+                f[1].i := (48);
+                if (l3var1z.b) then {
+                    l3var22z.i := ((48) DIV l3var22z.i);
+                    if (l3var22z.i = (9)) then {
+                        l3var22z.i := (8);
+                    } else if (l3var22z.i = (5)) then
+                        l3var22z.i := (4);
+                    f[6] := l3var22z;
+                    f[7].i := ((48) DIV l3var22z.i);
+                    l3var22z.i := l3var23z.i * f[7].i;
+                    if l3var22z.i mod 48 = 0 then
+                        l3var21z.i := 0
+                    else
+                        l3var21z.i := 1;
+                    f[0].i := l3var22z.i div 48 + l3var21z.i;
+                    if (f[0].i = (1)) then
+                        f[1] := l3var22z;
+                } else { (* 12633 *)
+                    f[0].i := l3var23z.i * f[3].s@.f[0].i;
+                    curVal := f[3].s@.f[0];
+                    curVal.m := ((curVal.m * [7:47]) + [0]);
+                    if (f[4].s@.f[3].t <> integerType) then
+                        curVal.m := (curVal.m + [1, 3]);
+                    l3var26z.s@.f[6].i := (getFCSToffset  + 40170000B);
+                }; (* 12652 *)
+                l3var26z.s@.f[5] := l3var1z;
+                l3var1z.b := false;
+                l3var2z.b := (l3var29z = l3var26z);
+                l3var26z := l3var28z;
+            } until l3var2z.b;
         } else (* 12663 *)
         if (SY = FILESY) then {
-        inSymbol;
-        checkSymAndRead(OFSY);
-        parseTypeRef(ref(l3var27z), l3arg2z);
-        if (isFileType(l3var27z.s)) then
-           error(errTypeMustNotBeFile);
-        if (l3var1z.b) then {
-           l3var22z := l3var27z.s@.f[1];
-           if ((24) < l3var22z.i) then
-              l3var1z.b := false;
-        };
-        new(l3var29z.s5);
-        if (not l3var1z.b) then
-           l3var22z.i := (0);
-        with l3var29z.s@ do {
-         f[0].i := (30);
-         f[1].i := (48);
-         f[2].c := chr(7C);
-         f[3] := l3var27z;
-         f[4] := l3var22z;
-        }
+            inSymbol;
+            checkSymAndRead(OFSY);
+            parseTypeRef(ref(l3var27z), l3arg2z);
+            if (isFileType(l3var27z.s)) then
+                error(errTypeMustNotBeFile);
+            if (l3var1z.b) then {
+                l3var22z := l3var27z.s@.f[1];
+                if ((24) < l3var22z.i) then
+                    l3var1z.b := false;
+            };
+            new(l3var29z.s5);
+            if (not l3var1z.b) then
+                l3var22z.i := (0);
+            with l3var29z.s@ do {
+                f[0].i := (30);
+                f[1].i := (48);
+                f[2].c := chr(7C);
+                f[3] := l3var27z;
+                f[4] := l3var22z;
+            }
         } else (* 12721 *)
         if (SY = SETSY) then {
-           inSymbol;
-           checkSymAndRead(OFSY);
-           parseTypeRef(ref(l3var27z), l3arg2z);
-           with l3var27z.s@ do {
-              if (f[2].c = chr(2C)) and
-                 (f[5].i >= (0)) and
-                 ((47) >= f[6].i) then
-                 l3var21z.i := (f[6].i + (1))
-              else if (f[2].c = chr(1C)) and
-                      ((48) >= f[4].i) then
-                  l3var21z := f[4]
-              else {
-                  l3var21z.i := (48);
-                  error(63); (* errBadBaseTypeForSet *)
-              }
-           };
-           new(l3var29z.s4);
-           with l3var29z.s4@ do {
-              f[0].i := (1);
-              f[1] := l3var21z;
-              f[2].c := chr(4C);
-              f[3] := l3var27z;
-           }
-        } else { 12760:;
-           parseLiteral(l3var28z.t, l3var19z, true);
-           if (l3var28z.s <> NIL) then {
-              inSymbol;
-              if (SY <> COLON) then {
-                 requiredSymErr(COLON);
-              } else {
-                 inSymbol;
-              };
-              parseLiteral(l3var29z.t, l3var20z, true);
-              if (l3var29z = l3var28z) and
-                 (l3var29z.s@.f[2].c = chr(1C)) then {
-                 definePacked(ref(l3var29z), l3var19z.i, l3var20z.i);
-                 inSymbol;
-                 goto 13020;
-              }
-           };
-           error(64); (* errIncorrectRangeDefinition *)
-           l3var29z.t := booleanType;
+            inSymbol;
+            checkSymAndRead(OFSY);
+            parseTypeRef(ref(l3var27z), l3arg2z);
+            with l3var27z.s@ do {
+                if (f[2].c = chr(2C)) and
+                   (f[5].i >= (0)) and
+                   ((47) >= f[6].i) then
+                    l3var21z.i := (f[6].i + (1))
+                else if (f[2].c = chr(1C)) and
+                        ((48) >= f[4].i) then
+                    l3var21z := f[4]
+                else {
+                    l3var21z.i := (48);
+                    error(63); (* errBadBaseTypeForSet *)
+                }
+            };
+            new(l3var29z.s4);
+            with l3var29z.s4@ do {
+                f[0].i := (1);
+                f[1] := l3var21z;
+                f[2].c := chr(4C);
+                f[3] := l3var27z;
+            }
+        } else {
+12760:      ;
+            parseLiteral(l3var28z.t, l3var19z, true);
+            if (l3var28z.s <> NIL) then {
+                inSymbol;
+                if (SY <> COLON) then {
+                    requiredSymErr(COLON);
+                } else {
+                    inSymbol;
+                };
+                parseLiteral(l3var29z.t, l3var20z, true);
+                if (l3var29z = l3var28z) and
+                   (l3var29z.s@.f[2].c = chr(1C)) then {
+                    definePacked(ref(l3var29z), l3var19z.i, l3var20z.i);
+                    inSymbol;
+                    goto 13020;
+                }
+            };
+            error(64); (* errIncorrectRangeDefinition *)
+            l3var29z.t := booleanType;
         };
-     };
+    };
 13020:
-     if (errors) then
+    if (errors) then
         skip((skipToSet + [RPAREN, RBRACK, SEMICOLON, OFSY]));
-     l3arg1z@.f[0] := l3var29z;
+    l3arg1z@.f[0] := l3var29z;
 }; (* parseTypeRef *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P13026(l3arg1z: @struc);
-var l3var1z: @struc;
+var
+    l3var1z: @struc;
 {
- if (l3arg1z@.f[5].i = (0)) then {
-    l3arg1z@.f[5].i := FcstCnt;
-    l3var1z := l3arg1z@.f[3].s;
-    while (l3var1z <> NIL) do {
-       curVal := l3var1z@.f[0];
-       l3var1z := l3var1z@.f[5].s;
-       toFCST;
+    if (l3arg1z@.f[5].i = (0)) then {
+        l3arg1z@.f[5].i := FcstCnt;
+        l3var1z := l3arg1z@.f[3].s;
+        while (l3var1z <> NIL) do {
+            curVal := l3var1z@.f[0];
+            l3var1z := l3var1z@.f[5].s;
+            toFCST;
+        }
     }
- }
 }; (* P13026 *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure formPMD;
-var l3var1z, l3var2z, l3var3z: word;
-    l3var4z: boolean; l3var5z: word;
+var
+    l3var1z, l3var2z, l3var3z: word;
+    l3var4z: boolean;
+    l3var5z: word;
 {
- for l3var4z := false to true do {
-     if l3var4z then {
-        optSflags.m := (optSflags.m + [S3]);
-        curVal.i := 00074001B;
-        P0715((2), 34); (*"P/DS"*)
-        curVal := l2arg2z@.f[0];
-        toFCST;
-        curVal.i := lineCnt;
-        toFCST;
-     }; (* 13063 *)
-     for l2var22z := 0 to 127 do {
-         l2var5z.s := symHashTabBase[l2var22z];
-         (*13066*)
-         while (l2var5z.s <> NIL) and
-               (l2arg2z < l2var5z.q) do with l2var5z.s@ do {
-            l3var2z := f[3].s@.f[0];
-            if (f[4].i IN [3, 4]) and
-               (f[6].i < 00074000B) then {
-               curVal := f[0];
-               if (l3var4z) then
-                    toFCST;
-               l3var1z := f[3];
-               l3var5z := l3var1z.s@.f[2];
-               l3var3z.c := chr(0C);
-               if (l3var5z.c = chr(3C)) then {
-                  l3var1z := l3var1z.s@.f[3];
-                  l3var5z := l3var1z.s@.f[2];
-                  l3var3z.m := [0];
-               };
-               if (l3var1z.t = realType) then
-                  curVal.i := (0)
-               else if typeCheck(l3var1z.t, integerType) then
-                  curVal.i := 00100000B
-               else if typeCheck(l3var1z.t, charType) then
-                  curVal.i := 00200000B
-               else if (l3var5z.c = chr(5C)) then
-                  curVal.i := 00400000B
-               else if (l3var5z.c = chr(1C)) then {
-                  P13026(l3var1z.s);
-                  curVal.i := 1000000B * l3var1z.s@.f[5].i + 00300000B;
-               } else if (l3var5z.c = chr(7C)) then
-                  curVal.i := 00600000B
-               else {
-                  curVal.i := 00500000B;
-                  (q) exit q (* workaround *)
-               };
-               curVal.i := (curVal.i + l2var5z.s@.f[6].i);
-               l3var2z := l3var2z;
-               besm(360037B);
-               l3var2z := ;
-               curVal.m := curVal.m * [15:47] + l3var2z.m + l3var3z.m;
-               if (l3var4z) then
-                    toFCST;
-            }; (* 13164 *)
-            l2var5z := l2var5z.s@.f[2];
-         }; (* 13166 *)
-     }; (*13167+*)
-     curVal.m := [];
-     if l3var4z then toFCST;
- }
+    for l3var4z := false to true do {
+        if l3var4z then {
+            optSflags.m := (optSflags.m + [S3]);
+            curVal.i := 00074001B;
+            P0715((2), 34); (*"P/DS"*)
+            curVal := l2arg2z@.f[0];
+            toFCST;
+            curVal.i := lineCnt;
+            toFCST;
+        }; (* 13063 *)
+        for l2var22z := 0 to 127 do {
+            l2var5z.s := symHashTabBase[l2var22z];
+            (*13066*)
+            while (l2var5z.s <> NIL) and
+                  (l2arg2z < l2var5z.q) do with l2var5z.s@ do {
+                l3var2z := f[3].s@.f[0];
+                if (f[4].i IN [3, 4]) and
+                  (f[6].i < 00074000B) then {
+                    curVal := f[0];
+                    if (l3var4z) then
+                        toFCST;
+                    l3var1z := f[3];
+                    l3var5z := l3var1z.s@.f[2];
+                    l3var3z.c := chr(0C);
+                    if (l3var5z.c = chr(3C)) then {
+                        l3var1z := l3var1z.s@.f[3];
+                        l3var5z := l3var1z.s@.f[2];
+                        l3var3z.m := [0];
+                    };
+                    if (l3var1z.t = realType) then
+                        curVal.i := (0)
+                    else if typeCheck(l3var1z.t, integerType) then
+                        curVal.i := 00100000B
+                    else if typeCheck(l3var1z.t, charType) then
+                        curVal.i := 00200000B
+                    else if (l3var5z.c = chr(5C)) then
+                        curVal.i := 00400000B
+                    else if (l3var5z.c = chr(1C)) then {
+                        P13026(l3var1z.s);
+                        curVal.i := 1000000B * l3var1z.s@.f[5].i + 00300000B;
+                    } else if (l3var5z.c = chr(7C)) then
+                        curVal.i := 00600000B
+                    else {
+                        curVal.i := 00500000B;
+                        (q) exit q (* workaround *)
+                    };
+                    curVal.i := (curVal.i + l2var5z.s@.f[6].i);
+                    l3var2z := l3var2z;
+                    besm(360037B);
+                    l3var2z := ;
+                    curVal.m := curVal.m * [15:47] + l3var2z.m + l3var3z.m;
+                    if (l3var4z) then
+                        toFCST;
+                }; (* 13164 *)
+                l2var5z := l2var5z.s@.f[2];
+            }; (* 13166 *)
+        }; (*13167+*)
+        curVal.m := [];
+        if l3var4z then
+            toFCST;
+    }
 }; (* formPMD *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure parseDecls(l3arg1z: integer);
-var l3var1z, l3var2z, l3var3z: word;
+var
+    l3var1z, l3var2z, l3var3z: word;
 {
- case l3arg1z of
- 0: {
-    int93z := (0);
-    inSymbol;
-    if (SY <> IDENT) then
-       errAndSkip(3, skipToSet + [IDENT]);
- };
- 1: {
-    prevErrPos := (0);
-    write('IDENT ');
-    printTextWord(l2var12z);
-    write(' IN LINE ', l2var5z.s@.f[1].i:0);
- };
- 2: {
-    with l2arg2z@ do
-        ; (* useless *)
-    formLabel;
-    l3var3z.b := 22 IN l2arg2z@.f[11].m;
-    l3arg1z := l2arg2z@.f[10].i;
-    l3var2z.i := (moduleOffset - 00040000B);
-    if (l3arg1z <> (0)) then
-       symTab[l3arg1z].m := [24, 29] + l3var2z.m * halfWord.m;
-    l2arg2z@.f[10].i := moduleOffset;
-    l3arg1z := F3307(l2arg2z);
-    if (l3var3z.b) then {
-       if ((41) >= entryPtCnt) then {
-          curVal := l2arg2z@.f[0];
-          entryPtTableBase[entryPtCnt] := makeNameWithStars(true);
-          entryPtTableBase[entryPtCnt+1].m := [1] + l3var2z.m - [0, 3];
-          entryPtCnt := (entryPtCnt + (2));
-       } else
-          error(87); (* errTooManyEntryProcs *)
+    case l3arg1z of
+    0: {
+        int93z := (0);
+        inSymbol;
+        if (SY <> IDENT) then
+            errAndSkip(3, skipToSet + [IDENT]);
     };
-    if (l2arg2z@.f[3].s = NIL) then {
-       l3var2z.i := (3);
-    } else {
-       l3var2z.i := (4);
+    1: {
+        prevErrPos := (0);
+        write('IDENT ');
+        printTextWord(l2var12z);
+        write(' IN LINE ', l2var5z.s@.f[1].i:0);
     };
-    if (l3var3z.b) then
-       form2Insn(72400000B + l3arg1z + (l3var2z.i - 3) * 1000B,
-                 getHelperProc(94 (*"P/NN"*)) - 10000000B);
-    if ((1) < l3arg1z) then {
-       l3var2z.i := getValueOrAllocSymtab(-(l3var2z.i+l3arg1z));
-    };
-    if (S5 IN optSflags.m) and
-       (curProcNesting = (1)) then
-       l3var1z.i := (59)
-    else
-       l3var1z.i := curProcNesting;
-    l3var1z.i := getHelperProc(l3var1z.i) - 6437777774000000C;
-    if (l3arg1z = (1)) then {
-       form1Insn(74000000B + l3var2z.i);
-    } else if (l3arg1z <> (0)) then {
-       form2Insn(74000000B, (76500000B + l3var2z.i));
-    };
-    formInsnAndLabel(l3var1z.i);
-    glob57z.i := objBufIdx;
-    if (curProcNesting <> (1)) then
-       form1Insn((0));
-    if (l3var3z.b) then
-       form1Insn(42474001B);
-    if (l2var11z.i <> (0)) then {
-       form1Insn(insnTemp[XTA]);
-       formInsnAndLabel((67100000B + l2var11z.i));
-       curVal := l2var11z;
-       P0715((2), 49 (* "P/RDC" *));
-    };
-    if (curProcNesting = (1)) then {
-       if (heapCallsCnt <> (0)) and
-          (heapSize = (0)) then
-          error(65 (*errCannotHaveK0AndNew*));
-       l3var3z.b := (heapSize = (0)) or
-          (heapCallsCnt = (0)) and
-          (heapSize = (100));
-       if (heapSize = (100)) then
-           heapSize := (4);
-       if (not l3var3z.b) then {
-           form2Insn(getValueOrAllocSymtab(heapSize * 2000B) + 72400000B,
-                     getHelperProc(26 (*"P/GD"*)));
-           formLabel;
-       }
-    };
-    if (doPMD) then
-        formPMD;
- }
- end; (* case *)
+    2: {
+        with l2arg2z@ do
+            ; (* useless *)
+        formLabel;
+        l3var3z.b := 22 IN l2arg2z@.f[11].m;
+        l3arg1z := l2arg2z@.f[10].i;
+        l3var2z.i := (moduleOffset - 00040000B);
+        if (l3arg1z <> (0)) then
+            symTab[l3arg1z].m := [24, 29] + l3var2z.m * halfWord.m;
+        l2arg2z@.f[10].i := moduleOffset;
+        l3arg1z := F3307(l2arg2z);
+        if (l3var3z.b) then {
+            if ((41) >= entryPtCnt) then {
+                curVal := l2arg2z@.f[0];
+                entryPtTableBase[entryPtCnt] := makeNameWithStars(true);
+                entryPtTableBase[entryPtCnt+1].m := [1] + l3var2z.m - [0, 3];
+                entryPtCnt := (entryPtCnt + (2));
+            } else
+                error(87); (* errTooManyEntryProcs *)
+        };
+        if (l2arg2z@.f[3].s = NIL) then {
+            l3var2z.i := (3);
+        } else {
+            l3var2z.i := (4);
+        };
+        if (l3var3z.b) then
+            form2Insn(72400000B + l3arg1z + (l3var2z.i - 3) * 1000B,
+                      getHelperProc(94 (*"P/NN"*)) - 10000000B);
+        if ((1) < l3arg1z) then {
+            l3var2z.i := getValueOrAllocSymtab(-(l3var2z.i+l3arg1z));
+        };
+        if (S5 IN optSflags.m) and
+           (curProcNesting = (1)) then
+            l3var1z.i := (59)
+        else
+            l3var1z.i := curProcNesting;
+        l3var1z.i := getHelperProc(l3var1z.i) - 6437777774000000C;
+        if (l3arg1z = (1)) then {
+            form1Insn(74000000B + l3var2z.i);
+        } else if (l3arg1z <> (0)) then {
+            form2Insn(74000000B, (76500000B + l3var2z.i));
+        };
+        formInsnAndLabel(l3var1z.i);
+        glob57z.i := objBufIdx;
+        if (curProcNesting <> (1)) then
+            form1Insn((0));
+        if (l3var3z.b) then
+            form1Insn(42474001B);
+        if (l2var11z.i <> (0)) then {
+            form1Insn(insnTemp[XTA]);
+            formInsnAndLabel((67100000B + l2var11z.i));
+            curVal := l2var11z;
+            P0715((2), 49 (* "P/RDC" *));
+        };
+        if (curProcNesting = (1)) then {
+            if (heapCallsCnt <> (0)) and
+               (heapSize = (0)) then
+                error(65 (*errCannotHaveK0AndNew*));
+            l3var3z.b := (heapSize = (0)) or
+                (heapCallsCnt = (0)) and (heapSize = (100));
+            if (heapSize = (100)) then
+                heapSize := (4);
+            if (not l3var3z.b) then {
+                form2Insn(getValueOrAllocSymtab(heapSize * 2000B) + 72400000B,
+                          getHelperProc(26 (*"P/GD"*)));
+                formLabel;
+            }
+        };
+        if (doPMD) then
+            formPMD;
+    }
+    end; (* case *)
 }; (* parseDecls *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure statement;
-label 8888;
-var l3var1z: @struc; l3var2z, l3var3z, l3var4z, l3var5z,
+label
+    8888;
+var
+    l3var1z: @struc; l3var2z, l3var3z, l3var4z, l3var5z,
     l3var6z, l3var7z, l3var8z: word; l3var9z: integer;
     l3var10z, l3var11z, l3var12z: word;
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function checkForChar(l4arg1z: @types): boolean;
 {
- with l4arg1z@.s8 do
-    checkForChar := (f[2].c = chr(5)) and (f[3].t = charType);
+    with l4arg1z@.s8 do
+        checkForChar := (f[2].c = chr(5)) and (f[3].t = charType);
 }; (* checkForChar *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-procedure expression; forward;
+procedure expression;
+    forward;
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure parseLval;
-label 13462, 13530;
-var l4var1z, l4var2z, l4var3z, l4var4z: word;
+label
+    13462, 13530;
+var
+    l4var1z, l4var2z, l4var3z, l4var4z: word;
 {
- if (hashTravPtr@.f[4].c =chr(5C)) then {
-    curExpr := strp62z;
-    goto 13530;
- } else {
-    new(curExpr);
-    with curExpr@ do {
-       f[0] := hashTravPtr@.f[3];
-       f[1].c := chr(35C);
-       f[2].s := hashTravPtr;
-    };
- 13462:
-    inSymbol;
-    l4var3z := curExpr@.f[0];
-    l4var4z := l4var3z.s@.f[2];
-    if (SY = ARROW) then {
-       new(l4var1z.s4);
-       with l4var1z.s4@ do {
-          f[2].s4 := curExpr;
-          if (l4var4z.c =chr(3C)) then {
-             f[0] := l4var3z.s@.f[3];
-             f[1].c := chr(42C);
-          } else if (l4var4z.c = chr(7C)) then {
-             f[0] := l4var3z.s@.f[3];
-             f[1].c := chr(43C);
-          } else {
-             stmtName := '  ^   ';
-             error(errWrongVarTypeBefore);
-             l4var1z.s@.f[0] := l4var3z;
-          }
-       };
-       curExpr := l4var1z.s4;
-    } else if (SY = PERIOD) then {
-       if (l4var4z.c = chr(6C)) then {
-          int93z := (3);
-          strp121z := l4var3z.t;
-          inSymbol;
-          if (hashTravPtr = NIL) then {
-             error(20); (* errDigitGreaterThan7 ??? *)
-          } else 13530: {
-             new(l4var1z.s4);
-             with l4var1z.s4@ do {
-                f[0] := hashTravPtr@.f[3];
-                f[1].c := chr(41C);
+    if (hashTravPtr@.f[4].c =chr(5C)) then {
+        curExpr := strp62z;
+        goto 13530;
+    } else {
+        new(curExpr);
+        with curExpr@ do {
+            f[0] := hashTravPtr@.f[3];
+            f[1].c := chr(35C);
+            f[2].s := hashTravPtr;
+        };
+13462:  inSymbol;
+        l4var3z := curExpr@.f[0];
+        l4var4z := l4var3z.s@.f[2];
+        if (SY = ARROW) then {
+            new(l4var1z.s4);
+            with l4var1z.s4@ do {
                 f[2].s4 := curExpr;
-                f[3].s := hashTravPtr;
-             };
-             curExpr := l4var1z.s4;
-          }
-       } else {
-          stmtName := '  .   ';
-          error(errWrongVarTypeBefore);
-       };
-    } else if (SY = LBRACK) then {
-       stmtName := '  [   ';
-       repeat
-          l4var1z.s4 := curExpr;
-          expression;
-          l4var3z := l4var1z.s@.f[0];
-          if (l4var3z.s@.f[2].c <> chr(5C)) then {
-             error(errWrongVarTypeBefore);
-          } else {
-             if(not typeCheck(l4var3z.s@.f[4].t, curExpr@.f[0].t)) then
-                error(66 (*errOtherIndexTypeNeeded *));
-             new(l4var2z.s4);
-             with l4var2z.s4@ do {
-                f[0] := l4var3z.s@.f[3];
-                f[2] := l4var1z;
-                f[3].s4 := curExpr;
-                f[1].c := chr(34C);
-             };
-             l4var1z := l4var2z;
-          };
-          curExpr := l4var1z.s4;
-          stmtName := '  ,   ';
-       until (SY <> COMMA);
-       if (SY <> RBRACK) then
-          error(67 (*errNeedBracketAfterIndices*));
-    } else exit;
- };
- goto 13462;
+                if (l4var4z.c =chr(3C)) then {
+                    f[0] := l4var3z.s@.f[3];
+                    f[1].c := chr(42C);
+                } else if (l4var4z.c = chr(7C)) then {
+                    f[0] := l4var3z.s@.f[3];
+                    f[1].c := chr(43C);
+                } else {
+                    stmtName := '  ^   ';
+                    error(errWrongVarTypeBefore);
+                    l4var1z.s@.f[0] := l4var3z;
+                }
+            };
+            curExpr := l4var1z.s4;
+        } else if (SY = PERIOD) then {
+            if (l4var4z.c = chr(6C)) then {
+                int93z := (3);
+                strp121z := l4var3z.t;
+                inSymbol;
+                if (hashTravPtr = NIL) then {
+                    error(20); (* errDigitGreaterThan7 ??? *)
+                } else 13530: {
+                    new(l4var1z.s4);
+                    with l4var1z.s4@ do {
+                        f[0] := hashTravPtr@.f[3];
+                        f[1].c := chr(41C);
+                        f[2].s4 := curExpr;
+                        f[3].s := hashTravPtr;
+                    };
+                    curExpr := l4var1z.s4;
+                }
+            } else {
+                stmtName := '  .   ';
+                error(errWrongVarTypeBefore);
+            };
+        } else if (SY = LBRACK) then {
+            stmtName := '  [   ';
+            repeat
+                l4var1z.s4 := curExpr;
+                expression;
+                l4var3z := l4var1z.s@.f[0];
+                if (l4var3z.s@.f[2].c <> chr(5C)) then {
+                    error(errWrongVarTypeBefore);
+                } else {
+                    if (not typeCheck(l4var3z.s@.f[4].t, curExpr@.f[0].t)) then
+                        error(66 (*errOtherIndexTypeNeeded *));
+                    new(l4var2z.s4);
+                    with l4var2z.s4@ do {
+                        f[0] := l4var3z.s@.f[3];
+                        f[2] := l4var1z;
+                        f[3].s4 := curExpr;
+                        f[1].c := chr(34C);
+                    };
+                    l4var1z := l4var2z;
+                };
+                curExpr := l4var1z.s4;
+                stmtName := '  ,   ';
+            until (SY <> COMMA);
+            if (SY <> RBRACK) then
+                error(67 (*errNeedBracketAfterIndices*));
+        } else exit;
+    };
+    goto 13462;
 }; (* parseLval *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure castToReal(var l4arg1z: @struc4);
-var l4var1z: @struc4;
+var
+    l4var1z: @struc4;
 {
- new(l4var1z);
- with l4var1z@ do {
-    f[0].t := realType;
-    f[1].c := chr(51C);
-    f[2].s4 := l4arg1z;
-    l4arg1z := l4var1z;
- }
+    new(l4var1z);
+    with l4var1z@ do {
+        f[0].t := realType;
+        f[1].c := chr(51C);
+        f[2].s4 := l4arg1z;
+        l4arg1z := l4var1z;
+    }
 }; (* castToReal *)
+%
 function areTypesCompatible(var l4arg1z: @struc4): boolean;
 {
- if (arg1Type = realType) then {
-    if typeCheck(integerType, arg2Type) then {
-       castToReal(l4arg1z);
-       areTypesCompatible := true;
-       exit
+    if (arg1Type = realType) then {
+        if typeCheck(integerType, arg2Type) then {
+            castToReal(l4arg1z);
+            areTypesCompatible := true;
+            exit
+        };
+    } else if (arg2Type = realType) and
+               typeCheck(integerType, arg1Type) then {
+        castToReal(curExpr);
+        areTypesCompatible := true;
+        exit
     };
- } else if (arg2Type = realType) and
-           typeCheck(integerType, arg1Type) then {
-    castToReal(curExpr);
-    areTypesCompatible := true;
-    exit
- };
- areTypesCompatible := false;
+    areTypesCompatible := false;
 }; (* areTypesCompatible *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure parseCallArgs(l4arg1z: @bigstruc);
-label 13736;
-var l4var1z: boolean; l4var2z: @struc4; l4var3z, l4var4z: @struc4;
-    l4var5z: @bigstruc; l4var6z, l4var7z: word;
+label
+    13736;
+var
+    l4var1z: boolean;
+    l4var2z: @struc4;
+    l4var3z, l4var4z: @struc4;
+    l4var5z: @bigstruc;
+    l4var6z, l4var7z: word;
 {
- with l4arg1z@ do {
-    if f[3].s <> NIL then
-       glob146z.m := glob146z.m - f[11].m;
-    l4var1z := (f[5].s = NIL) and not (24 in f[11].m);
- };
- new(l4var3z);
- l4var4z := l4var3z;
- bool48z := true;
- with l4var3z@ do {
- f[0] := l4arg1z@.f[3];
- f[1].c := chr(45C);
- f[3].q := l4arg1z;
- f[2].s := NIL;
- };
- if (SY = LPAREN) then {
-    if (l4var1z) then {
-       l4var5z := l4arg1z@.f[7].q;
-       if (l4var5z = NIL) then {
-          error(errTooManyArguments);
-          goto 8888;
-       }
+    with l4arg1z@ do {
+        if f[3].s <> NIL then
+            glob146z.m := glob146z.m - f[11].m;
+        l4var1z := (f[5].s = NIL) and not (24 in f[11].m);
     };
-    repeat
-    if (l4var1z) and (l4arg1z = l4var5z) then {
-       error(errTooManyArguments);
-       goto 8888;
+    new(l4var3z);
+    l4var4z := l4var3z;
+    bool48z := true;
+    with l4var3z@ do {
+        f[0] := l4arg1z@.f[3];
+        f[1].c := chr(45C);
+        f[3].q := l4arg1z;
+        f[2].s := NIL;
     };
-    bool47z := true;
-    expression;
-    l4var6z := curExpr@.f[1];
-(a) if l4var1z then {
-       l4var7z := l4var5z@.f[4];
-       if (l4var6z.c = chr(46C)) then {
-          if (l4var7z.c <> chr(2C)) or
-             (l4var5z@.f[3].s <> NIL) then {
-13736:       error(39); (*errIncompatibleArgumentKinds*)
-             exit a
-          }
-       } else { (* 13741 *)
-          if (l4var6z.c = chr(47C)) then {
-             if (l4var7z.c = chr(2C)) then {
-                if (l4var5z@.f[3].s = NIL) then
-                   goto 13736
-             } else (* 13750 *)
-             if (curExpr@.f[3].s@.f[7].s = NIL) and
-                     (l4var7z.c = chr(3C)) then {
-                curExpr@.f[1].c := chr(45C);
-                curExpr@.f[2].s := NIL;
-             } else
-                goto 13736;
-          } else (* 13762 *)
-          if (l4var6z.i IN lvalOpSet) then {
-             if (l4var7z.c <> chr(3C)) and
-                (l4var7z.c <> chr(4C)) then
-                goto 13736;
-          } else {
-             if (l4var7z.c <> chr(3C)) then
-                goto 13736;
-            (q) exit q (* workaround *)
-          }
-       };
-       arg1Type := curExpr@.f[0].t;
-       if (arg1Type <> NIL) then {
-          if not typeCheck(arg1Type, l4var5z@.f[3].t) then
-             error(40); (*errIncompatibleArgumentTypes*)
-       }
-    }; (* 14006 *)
-    new(l4var2z);
-    with l4var2z@ do {
-       f[0].s := NIL;
-       f[2].s := NIL;
-       f[3].s4 := curExpr;
+    if (SY = LPAREN) then {
+        if (l4var1z) then {
+            l4var5z := l4arg1z@.f[7].q;
+            if (l4var5z = NIL) then {
+                error(errTooManyArguments);
+                goto 8888;
+            }
+        };
+        repeat
+            if (l4var1z) and (l4arg1z = l4var5z) then {
+                error(errTooManyArguments);
+                goto 8888;
+            };
+            bool47z := true;
+            expression;
+            l4var6z := curExpr@.f[1];
+(a)         if l4var1z then {
+                l4var7z := l4var5z@.f[4];
+                if (l4var6z.c = chr(46C)) then {
+                    if (l4var7z.c <> chr(2C)) or
+                       (l4var5z@.f[3].s <> NIL) then {
+13736:                  error(39); (*errIncompatibleArgumentKinds*)
+                        exit a
+                    }
+                } else { (* 13741 *)
+                    if (l4var6z.c = chr(47C)) then {
+                        if (l4var7z.c = chr(2C)) then {
+                            if (l4var5z@.f[3].s = NIL) then
+                                goto 13736
+                        } else (* 13750 *)
+                        if (curExpr@.f[3].s@.f[7].s = NIL) and
+                           (l4var7z.c = chr(3C)) then {
+                            curExpr@.f[1].c := chr(45C);
+                            curExpr@.f[2].s := NIL;
+                        } else
+                            goto 13736;
+                    } else (* 13762 *)
+                    if (l4var6z.i IN lvalOpSet) then {
+                        if (l4var7z.c <> chr(3C)) and
+                           (l4var7z.c <> chr(4C)) then
+                            goto 13736;
+                    } else {
+                        if (l4var7z.c <> chr(3C)) then
+                            goto 13736;
+                        (q) exit q (* workaround *)
+                    }
+                };
+                arg1Type := curExpr@.f[0].t;
+                if (arg1Type <> NIL) then {
+                    if not typeCheck(arg1Type, l4var5z@.f[3].t) then
+                        error(40); (*errIncompatibleArgumentTypes*)
+                }
+            }; (* 14006 *)
+            new(l4var2z);
+            with l4var2z@ do {
+                f[0].s := NIL;
+                f[2].s := NIL;
+                f[3].s4 := curExpr;
+            };
+            l4var4z@.f[2].s4 := l4var2z;
+            l4var4z := l4var2z;
+            if (l4var1z) then
+                l4var5z := l4var5z@.f[5].q;
+        until (SY <> COMMA);
+        if (SY <> RPAREN) or
+           l4var1z and (l4var5z <> l4arg1z) then
+            error(errNoCommaOrParenOrTooFewArgs)
+        else
+            inSymbol;
+    } else { (* 14035 *)
+        if (l4var1z) and (l4arg1z@.f[7].s <> NIL) then
+            error(42); (*errNoArgList*)
     };
-    l4var4z@.f[2].s4 := l4var2z;
-    l4var4z := l4var2z;
-    if (l4var1z) then
-       l4var5z := l4var5z@.f[5].q;
-    until (SY <> COMMA);
-    if (SY <> RPAREN) or
-       l4var1z and (l4var5z <> l4arg1z) then
-       error(errNoCommaOrParenOrTooFewArgs)
-    else
-       inSymbol;
- } else { (* 14035 *)
-    if (l4var1z) and (l4arg1z@.f[7].s <> NIL) then
-       error(42); (*errNoArgList*)
- };
- curExpr := l4var3z;
+    curExpr := l4var3z;
     (* 14042 *)
 }; (* parseCallArgs *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure factor;
 label
@@ -4952,650 +4982,692 @@ var
     l4var10z: word;
     l4var11z: word;
     l4var12z: boolean;
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure stdCall;
-var l5var1z: integer; l5var2z: @types; l5var3z: word; l5var4z: set of 0..47;
+var
+    l5var1z: integer;
+    l5var2z: @types;
+    l5var3z: word;
+    l5var4z: set of 0..47;
     l5var5z, l5var6z: integer;
 {
- curVal := l4var9z@.f[5];
- l5var5z := curVal.i;
- if (SY <> LPAREN) then {
-    requiredSymErr(LPAREN);
-    goto 8888;
- };
- expression;
- if (l5var5z >= (14)) and
-    ((16) >= l5var5z) and
-    not (curExpr@.f[1].i IN [28, 29, 30, 31, 32, 33, 34, 35]) then {
-    error(27); (* errExpressionWhereVariableExpected *)
-    exit;
- };
- arg1Type := curExpr@.f[0].t;
- if (arg1Type@.s8.f[2].c = chr(2C)) then
-    arg1Type := arg1Type@.s8.f[3].t;
- l5var3z := arg1Type@.s8.f[2];
- if (arg1Type = realType) then
-    l5var6z := (0)
- else if (arg1Type = integerType) then
-    l5var6z := (1)
- else if (arg1Type = charType) then
-    l5var6z := (2)
- else if (l5var3z.c = chr(1C)) then
-    l5var6z := (3)
- else if (l5var3z.c = chr(3C)) then
-    l5var6z := (4)
- else if (l5var3z.c = chr(7C)) then
-    l5var6z := (5)
- else if (l5var3z.c = chr(4C)) then
-    l5var6z := (6)
- else {
-    l5var6z := (7);
-    (q) exit q (* workaround *)
- };
- l5var4z := [l5var5z];
- if not ((l5var6z = (0)) and (l5var4z <= [0:8, 15, 17, 18, 29]) or
-        ((l5var6z = (1)) and (l5var4z <= [0:7, 9, 11, 15, 17, 21])) or
-        ((l5var6z IN [2, 3, 4]) and (l5var4z <= [10, 12, 13, 15])) or
-        ((l5var6z = (5)) and (l5var4z <= [14, 15, 16])) or
-        ((l5var6z = (6)) and (l5var4z <= [15, 19, 20])) or
-        ((l5var6z = (7)) and (l5var5z = (15)))) then
-    error(errNeedOtherTypesOfOperands);
- if not (l5var4z <= [7, 12, 13, 17]) then {
-    arg1Type := l4var9z@.f[3].t;
- } else if (l5var6z = (1)) and (l5var4z <= [7, 17]) then {
-    if (l5var5z = (7)) then
-       l5var5z := (22)
-    else
-       l5var5z := (23);
- };
- new(l4var6z);
- l4var6z@.f[1].c := chr(55C);
- l4var6z@.f[2].s4 := curExpr;
- l4var6z@.f[3].i := l5var5z;
- if (l5var5z = (24)) then {
-    if (SY <> COMMA) then {
-       requiredSymErr(COMMA);
-       GOTO 8888;
+    curVal := l4var9z@.f[5];
+    l5var5z := curVal.i;
+    if (SY <> LPAREN) then {
+        requiredSymErr(LPAREN);
+        goto 8888;
     };
     expression;
-    l5var2z := curExpr@.f[0].t;
-    l5var1z := (27C);
-    if (l5var2z <> realType) and
-       not typeCheck(l5var2z, integerType) then
-       error(errNeedOtherTypesOfOperands);
-    if (l5var2z = realType) then
-       l5var1z := (30C)
-    else if (l5var6z = (0)) then
-       l5var1z := (31C);
-    l4var6z@.f[3].s4 := curExpr;
-    l4var6z@.f[1].i := l5var1z;
- };
- curExpr := l4var6z;
- curExpr@.f[0].t := arg1Type;
- checkSymAndRead(RPAREN);
+    if (l5var5z >= (14)) and
+       ((16) >= l5var5z) and
+       not (curExpr@.f[1].i IN [28, 29, 30, 31, 32, 33, 34, 35]) then {
+        error(27); (* errExpressionWhereVariableExpected *)
+        exit;
+    };
+    arg1Type := curExpr@.f[0].t;
+    if (arg1Type@.s8.f[2].c = chr(2C)) then
+        arg1Type := arg1Type@.s8.f[3].t;
+    l5var3z := arg1Type@.s8.f[2];
+    if (arg1Type = realType) then
+        l5var6z := (0)
+    else if (arg1Type = integerType) then
+        l5var6z := (1)
+    else if (arg1Type = charType) then
+        l5var6z := (2)
+    else if (l5var3z.c = chr(1C)) then
+        l5var6z := (3)
+    else if (l5var3z.c = chr(3C)) then
+        l5var6z := (4)
+    else if (l5var3z.c = chr(7C)) then
+        l5var6z := (5)
+    else if (l5var3z.c = chr(4C)) then
+        l5var6z := (6)
+    else {
+        l5var6z := (7);
+        (q) exit q (* workaround *)
+    };
+    l5var4z := [l5var5z];
+    if not ((l5var6z = (0)) and (l5var4z <= [0:8, 15, 17, 18, 29]) or
+           ((l5var6z = (1)) and (l5var4z <= [0:7, 9, 11, 15, 17, 21])) or
+           ((l5var6z IN [2, 3, 4]) and (l5var4z <= [10, 12, 13, 15])) or
+           ((l5var6z = (5)) and (l5var4z <= [14, 15, 16])) or
+           ((l5var6z = (6)) and (l5var4z <= [15, 19, 20])) or
+           ((l5var6z = (7)) and (l5var5z = (15)))) then
+        error(errNeedOtherTypesOfOperands);
+    if not (l5var4z <= [7, 12, 13, 17]) then {
+        arg1Type := l4var9z@.f[3].t;
+    } else if (l5var6z = (1)) and (l5var4z <= [7, 17]) then {
+        if (l5var5z = (7)) then
+            l5var5z := (22)
+        else
+            l5var5z := (23);
+    };
+    new(l4var6z);
+    l4var6z@.f[1].c := chr(55C);
+    l4var6z@.f[2].s4 := curExpr;
+    l4var6z@.f[3].i := l5var5z;
+    if (l5var5z = (24)) then {
+        if (SY <> COMMA) then {
+            requiredSymErr(COMMA);
+            goto 8888;
+        };
+        expression;
+        l5var2z := curExpr@.f[0].t;
+        l5var1z := (27C);
+        if (l5var2z <> realType) and
+            not typeCheck(l5var2z, integerType) then
+            error(errNeedOtherTypesOfOperands);
+        if (l5var2z = realType) then
+            l5var1z := (30C)
+        else if (l5var6z = (0)) then
+            l5var1z := (31C);
+        l4var6z@.f[3].s4 := curExpr;
+        l4var6z@.f[1].i := l5var1z;
+    };
+    curExpr := l4var6z;
+    curExpr@.f[0].t := arg1Type;
+    checkSymAndRead(RPAREN);
     (* 14247 *)
 }; (* stdCall *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 { (* factor *)
- l4var2z := bool47z;
- bool47z := false;
- if (SY < MULOP) then {
- case SY of
- IDENT: {
-    if (hashTravPtr = NIL) then {
-       error(errNotDefined);
-       curExpr := uVarPtr;
-    } else case hashTravPtr@.f[4].c of
-       '_000': {
-          error(23); (* errTypeIdInsteadOfVar *)
-          curExpr := uVarPtr;
-       };
-       '_001': {
-          new(curExpr);
-          with curExpr@ do {
-             f[0] := hashTravPtr@.f[3];
-             f[1].c := chr(40C);
-             f[2] := hashTravPtr@.f[6];
-             f[3].i := (0);
-          };
-          inSymbol;
-       };
-       '_002': {
-          (*=c-*)l4var9z := hashTravPtr;(*=c+*)
-          inSymbol;
-          if (l4var9z@.f[1].i = (0)) then {
-             if (l4var9z@.f[3].s <> NIL) and
-                (SY = LPAREN) then {
-                stdCall;
-                exit;
-             };
-             besm(2200000B); (* workaround *)
-             error(44); (* errIncorrectUsageOfStandProcOrFunc *)
-          } else if (l4var9z@.f[3].s =  NIL) then {
-             if (l4var2z) then {
-                l4var10z.c := chr(46C);
-             } else {
-                error(68); (* errUsingProcedureInExpression *)
-             }
-          } else (* 14330 *) {
-             if (SY = LPAREN) then {
-                parseCallArgs(l4var9z);
-                exit
-             };
-             if (l4var2z) then {
-                l4var10z.c := chr(47C);
-             } else {
-                parseCallArgs(l4var9z);
-                exit
-             };
-             (q) exit q
-          }; (* 14342 *)
-          new(curExpr);
-          if not (SY IN [RPAREN, COMMA]) then {
-             error(errNoCommaOrParenOrTooFewArgs);
-             goto 8888;
-          };
-          with curExpr@ do {
-             f[0] := l4var9z@.f[3];
-             f[1] := l4var10z;
-             f[2].s := NIL;
-             f[3].q := l4var9z;
-          }
-       };
-       '_003', '_004', '_005':
-          parseLval;
-       end (* case *)
-    };
-    LPAREN: {
-       expression;
-       checkSymAndRead(RPAREN);
-    };
-    INTCONST, REALCONST,
-    CHARCONST, LTSY, GTSY: {
-       new(curExpr);
-       parseLiteral(curExpr@.f[0].t, curExpr@.f[2], false);
-       curExpr@.f[3].i := ord(octalMode);
-       curExpr@.f[1].c := chr(40C);
-       inSymbol;
-    };
-    NOTSY: {
-       inSymbol;
-       factor;
-       if (curExpr@.f[0].t <> booleanType) then
-          error(1); (* errNoCommaNorSemicolon *)
-       l4var6z := curExpr;
-       new(curExpr);
-       with curExpr @ do {
-          f[0].t := booleanType;
-          f[1].c := chr(52C);
-          f[2].s4 := l4var6z;
-       }
-    };
-    LBRACK: {
-       new(curExpr);
-       inSymbol;
-       l4var8z := curExpr;
-       l4var1z.b := false;
-       if (SY <> RBRACK) then {
-          l4var12z := true;
-          bool102z := false;
-          repeat
-             l4var6z := curExpr;
-             expression;
-             if (l4var12z) then {
-                l4var11z := curExpr@.f[0];
-                if not (l4var11z.s@.f[2].i IN [1, 2]) then
-                   error(23); (* errTypeIdInsteadOfVar *)
-             } else {
-                  if not typeCheck(l4var11z.t, curExpr@.f[0].t) then
-                     error(24); (*errIncompatibleExprsInSetCtor*)
-             };
-             l4var12z := false;
-             (*=c-*)l4var5z := curExpr;(*=c+*)
-             if (SY = COLON) then {
-                expression;
-                if not typeCheck(l4var11z.t, curExpr@.f[0].t) then
-                   error(24); (*errIncompatibleExprsInSetCtor*)
-                if (l4var5z.s@.f[1].c = chr(40C)) and
-                   (curExpr@.f[1].c = chr(40C)) then {
-                   l4var4z := l4var5z.s@.f[2];
-                   l4var3z := curExpr@.f[2];
-                   l4var4z.m := l4var4z.m - intZero;
-                   l4var3z.m := l4var3z.m - intZero;
-                   l4var1z.m := l4var1z.m + [l4var4z.i..l4var3z.i];
-                   curExpr := l4var6z;
-                   goto 14567;
+    l4var2z := bool47z;
+    bool47z := false;
+    if (SY < MULOP) then {
+        case SY of
+        IDENT: {
+            if (hashTravPtr = NIL) then {
+                error(errNotDefined);
+                curExpr := uVarPtr;
+            } else
+                case hashTravPtr@.f[4].c of
+                '_000': {
+                    error(23); (* errTypeIdInsteadOfVar *)
+                    curExpr := uVarPtr;
                 };
-                new(l4var7z);
-                with l4var7z@ do {
-                   f[0].t := setType;
-                   f[1].c := chr(32C);
-                   f[2] := l4var5z;
-                   f[3].s4 := curExpr;
+                '_001': {
+                    new(curExpr);
+                    with curExpr@ do {
+                        f[0] := hashTravPtr@.f[3];
+                        f[1].c := chr(40C);
+                        f[2] := hashTravPtr@.f[6];
+                        f[3].i := (0);
+                    };
+                    inSymbol;
                 };
-                l4var5z.s4 := l4var7z;
-                (q); (* workaround *)
-             } else {(* 14535 *)
-                if (l4var5z.s@.f[1].c = chr(40C)) then {
-                   l4var4z := l4var5z.s@.f[2];
-                   l4var4z.m := l4var4z.m - intZero;
-                   l4var1z.m := l4var1z.m + [l4var4z.i];
-                   curExpr := l4var6z;
-                   goto 14567;
+                '_002': {
+                    (*=c-*)l4var9z := hashTravPtr;(*=c+*)
+                    inSymbol;
+                    if (l4var9z@.f[1].i = (0)) then {
+                        if (l4var9z@.f[3].s <> NIL) and
+                           (SY = LPAREN) then {
+                            stdCall;
+                            exit;
+                        };
+                        besm(2200000B); (* workaround *)
+                        error(44); (* errIncorrectUsageOfStandProcOrFunc *)
+                    } else if (l4var9z@.f[3].s =  NIL) then {
+                        if (l4var2z) then {
+                            l4var10z.c := chr(46C);
+                        } else {
+                            error(68); (* errUsingProcedureInExpression *)
+                        }
+                   } else (* 14330 *) {
+                        if (SY = LPAREN) then {
+                            parseCallArgs(l4var9z);
+                            exit
+                        };
+                        if (l4var2z) then {
+                            l4var10z.c := chr(47C);
+                        } else {
+                            parseCallArgs(l4var9z);
+                            exit
+                        };
+                        (q) exit q
+                    }; (* 14342 *)
+                    new(curExpr);
+                    if not (SY IN [RPAREN, COMMA]) then {
+                        error(errNoCommaOrParenOrTooFewArgs);
+                        goto 8888;
+                    };
+                    with curExpr@ do {
+                        f[0] := l4var9z@.f[3];
+                        f[1] := l4var10z;
+                        f[2].s := NIL;
+                        f[3].q := l4var9z;
+                    }
                 };
-                new(l4var7z);
-                with l4var7z@ do {
-                   f[0].t := setType;
-                   f[1].c := chr(55C);
-                   f[2] := l4var5z;
-                   f[3].i := (109);
-                   l4var5z.s4 := l4var7z;
-                }
-             }; (* 14560 *)
-             new(curExpr);
-             with curExpr@ do {
-                f[0].t := setType;
-                f[1].c := chr(23C);
+                '_003', '_004', '_005':
+                    parseLval;
+                end (* case *)
+        };
+        LPAREN: {
+            expression;
+            checkSymAndRead(RPAREN);
+        };
+        INTCONST, REALCONST, CHARCONST, LTSY, GTSY: {
+            new(curExpr);
+            parseLiteral(curExpr@.f[0].t, curExpr@.f[2], false);
+            curExpr@.f[3].i := ord(octalMode);
+            curExpr@.f[1].c := chr(40C);
+            inSymbol;
+        };
+        NOTSY: {
+            inSymbol;
+            factor;
+            if (curExpr@.f[0].t <> booleanType) then
+                error(1); (* errNoCommaNorSemicolon *)
+            l4var6z := curExpr;
+            new(curExpr);
+            with curExpr @ do {
+                f[0].t := booleanType;
+                f[1].c := chr(52C);
                 f[2].s4 := l4var6z;
-                f[3] := l4var5z;
-             };
-             14567:;
-          until SY <> COMMA;
-       }; (* 14571 *)
-       checkSymAndRead(RBRACK);
-       with l4var8z@ do {
-          f[1].c := chr(40C);
-          f[0].t := setType;
-          f[2] := l4var1z;
-       }
-    };
-    end; (* case *)
- } else {
-    error(errBadSymbol);
-    GOTO 8888;
- }
-(* 14623 *) }; (* factor *)
+            }
+        };
+        LBRACK: {
+            new(curExpr);
+            inSymbol;
+            l4var8z := curExpr;
+            l4var1z.b := false;
+            if (SY <> RBRACK) then {
+                l4var12z := true;
+                bool102z := false;
+                repeat
+                    l4var6z := curExpr;
+                    expression;
+                    if (l4var12z) then {
+                        l4var11z := curExpr@.f[0];
+                        if not (l4var11z.s@.f[2].i IN [1, 2]) then
+                            error(23); (* errTypeIdInsteadOfVar *)
+                    } else {
+                        if not typeCheck(l4var11z.t, curExpr@.f[0].t) then
+                            error(24); (*errIncompatibleExprsInSetCtor*)
+                    };
+                    l4var12z := false;
+                    (*=c-*)l4var5z := curExpr;(*=c+*)
+                    if (SY = COLON) then {
+                        expression;
+                        if not typeCheck(l4var11z.t, curExpr@.f[0].t) then
+                            error(24); (*errIncompatibleExprsInSetCtor*)
+                        if (l4var5z.s@.f[1].c = chr(40C)) and
+                           (curExpr@.f[1].c = chr(40C)) then {
+                            l4var4z := l4var5z.s@.f[2];
+                            l4var3z := curExpr@.f[2];
+                            l4var4z.m := l4var4z.m - intZero;
+                            l4var3z.m := l4var3z.m - intZero;
+                            l4var1z.m := l4var1z.m + [l4var4z.i..l4var3z.i];
+                            curExpr := l4var6z;
+                            goto 14567;
+                        };
+                        new(l4var7z);
+                        with l4var7z@ do {
+                            f[0].t := setType;
+                            f[1].c := chr(32C);
+                            f[2] := l4var5z;
+                            f[3].s4 := curExpr;
+                        };
+                        l4var5z.s4 := l4var7z;
+                        (q); (* workaround *)
+                   } else {(* 14535 *)
+                        if (l4var5z.s@.f[1].c = chr(40C)) then {
+                            l4var4z := l4var5z.s@.f[2];
+                            l4var4z.m := l4var4z.m - intZero;
+                            l4var1z.m := l4var1z.m + [l4var4z.i];
+                            curExpr := l4var6z;
+                            goto 14567;
+                        };
+                        new(l4var7z);
+                        with l4var7z@ do {
+                            f[0].t := setType;
+                            f[1].c := chr(55C);
+                            f[2] := l4var5z;
+                            f[3].i := (109);
+                            l4var5z.s4 := l4var7z;
+                        }
+                    }; (* 14560 *)
+                    new(curExpr);
+                    with curExpr@ do {
+                        f[0].t := setType;
+                        f[1].c := chr(23C);
+                        f[2].s4 := l4var6z;
+                        f[3] := l4var5z;
+                    };
+14567:              ;
+                until SY <> COMMA;
+            }; (* 14571 *)
+            checkSymAndRead(RBRACK);
+            with l4var8z@ do {
+                f[1].c := chr(40C);
+                f[0].t := setType;
+                f[2] := l4var1z;
+            }
+        };
+        end; (* case *)
+    } else {
+        error(errBadSymbol);
+        goto 8888;
+    }
+    (* 14623 *)
+}; (* factor *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure term;
-label 14650;
-var l4var1z, l4var2z, l4var3z: word; l4var4z: boolean;
+label
+    14650;
+var
+    l4var1z, l4var2z, l4var3z: word; l4var4z: boolean;
 {
- factor;
- while (SY = MULOP) do {
-    l4var1z.o := charClass;
-    inSymbol;
-    l4var2z.s4 := curExpr;
     factor;
-    arg1Type := curExpr@.f[0].t;
-    arg2Type := l4var2z.s@.f[0].t;
-    l4var4z := typeCheck(arg1Type, arg2Type);
-    if (not l4var4z) and
-    (chr(1C) < l4var1z.c) then
-       14650: error(errNeedOtherTypesOfOperands)
-    else {
-       case l4var1z.c of
-       '_000', '_001': {
-          if (l4var4z) then {
-          if (arg1Type = realType) then { } else {
-             if (strp120z = integerType) then {
-       if (l4var1z.c = chr(0C)) then {
-          arg1Type := integerType;
-       } else {
-         arg1Type := realType;
-       };
-       l4var1z := glob327z[l4var1z.i];
-    } else {
-       if (arg1Type@.s8.f[2].c = chr(4C)) then {
-          l4var1z := glob332z[l4var1z.i];
-       } else
-         goto 14650;
+    while (SY = MULOP) do {
+        l4var1z.o := charClass;
+        inSymbol;
+        l4var2z.s4 := curExpr;
+        factor;
+        arg1Type := curExpr@.f[0].t;
+        arg2Type := l4var2z.s@.f[0].t;
+        l4var4z := typeCheck(arg1Type, arg2Type);
+        if (not l4var4z) and
+           (chr(1C) < l4var1z.c) then
+14650:      error(errNeedOtherTypesOfOperands)
+        else {
+            case l4var1z.c of
+            '_000', '_001': {
+                if (l4var4z) then {
+                    if (arg1Type = realType) then {
+                        (* empty *)
+                    } else {
+                        if (strp120z = integerType) then {
+                            if (l4var1z.c = chr(0C)) then {
+                                arg1Type := integerType;
+                            } else {
+                                arg1Type := realType;
+                            };
+                            l4var1z := glob327z[l4var1z.i];
+                        } else {
+                            if (arg1Type@.s8.f[2].c = chr(4C)) then {
+                                l4var1z := glob332z[l4var1z.i];
+                            } else
+                                goto 14650;
+                        }
+                    }
+                } else {
+                    if areTypesCompatible(l4var2z.s4) then {
+                        arg1Type := realType;
+                    } else
+                        goto 14650;
+                }
+            };
+            '_002': {
+                if (arg1Type <> booleanType) then
+                    goto 14650;
+            };
+            '_003': {
+                if (strp120z <> integerType) then
+                    goto 14650;
+                arg1Type := integerType;
+            };
+            '_004': {
+                if (strp120z = integerType) then {
+                    arg1Type := integerType;
+                } else {
+                    if (arg1Type@.s8.f[2].c = chr(4C)) then
+                        l4var1z.c := chr(22C)
+                    else
+                        goto 14650;
+                }
+            };
+            end;
+            new(l4var3z.s4);
+            with l4var3z.s4@ do {
+                f[1] := l4var1z;
+                f[2] := l4var2z;
+                f[3].s4 := curExpr;
+                curExpr := l4var3z.s4;
+                f[0].t := arg1Type;
+            }
+        }
     }
- }
- } else {
-    if areTypesCompatible(l4var2z.s4) then {
-       arg1Type := realType;
-    } else
-       goto 14650;
-  }
-       };
-       '_002': {
-          if (arg1Type <> booleanType) then
-             goto 14650;
-       };
-       '_003': {
-          if (strp120z <> integerType) then
-             goto 14650;
-          arg1Type := integerType;
-       };
-       '_004': {
-          if (strp120z = integerType) then {
-             arg1Type := integerType;
-          } else {
-             if (arg1Type@.s8.f[2].c = chr(4C)) then
-                l4var1z.c := chr(22C)
-             else
-                goto 14650;
-          }
-       };
-       end;
-       new(l4var3z.s4);
-       with l4var3z.s4@ do {
-       f[1] := l4var1z;
-       f[2] := l4var2z;
-       f[3].s4 := curExpr;
-       curExpr := l4var3z.s4;
-       f[0].t := arg1Type;
-       }
-    }
- } (* 14746 *) }; (* term *)
+    (* 14746 *)
+}; (* term *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure simpleExpression;
-label 15031;
-var l4var1z, l4var2z: @struc4; l4var3z: word;
-    l4var4z: word; l4var5z: boolean;
+label
+    15031;
+var
+    l4var1z, l4var2z: @struc4;
+    l4var3z: word;
+    l4var4z: word;
+    l4var5z: boolean;
 {
- l4var5z := false;
- if (charClass IN [PLUSOP, MINUSOP]) then {
-    if (charClass = MINUSOP) then
-       l4var5z := true;
-    inSymbol;
- };
- term;
+    l4var5z := false;
+    if (charClass IN [PLUSOP, MINUSOP]) then {
+        if (charClass = MINUSOP) then
+            l4var5z := true;
+        inSymbol;
+    };
+    term;
 (minus)
     if (l4var5z) then {
-    arg1Type := curExpr@.f[0].t;
-    new(l4var2z);
-    with l4var2z@ do {
-       f[0].t := arg1Type;
-       f[2].s4 := curExpr;
-       if (arg1Type = realType) then {
-          f[1].c := chr(54C);
-       } else if typeCheck(arg1Type, integerType) then {
-          l4var2z@.f[1].c := chr(53C);
-          l4var2z@.f[0].t := integerType;
-       } else {
-          error(69); (* errUnaryMinusNeedRealOrInteger *)
-          exit minus
-       };
-       curExpr := l4var2z;
+        arg1Type := curExpr@.f[0].t;
+        new(l4var2z);
+        with l4var2z@ do {
+            f[0].t := arg1Type;
+            f[2].s4 := curExpr;
+            if (arg1Type = realType) then {
+                f[1].c := chr(54C);
+            } else if typeCheck(arg1Type, integerType) then {
+                l4var2z@.f[1].c := chr(53C);
+                l4var2z@.f[0].t := integerType;
+            } else {
+                error(69); (* errUnaryMinusNeedRealOrInteger *)
+                exit minus
+            };
+            curExpr := l4var2z;
+        }
+    }; (* 15010 *)
+    while (SY = ADDOP) do {
+        l4var3z.o := charClass;
+        inSymbol;
+        l4var2z := curExpr;
+        term;
+        arg1Type := curExpr@.f[0].t;
+        arg2Type := l4var2z@.f[0].t;
+        l4var5z := typeCheck(arg1Type, arg2Type);
+        l4var4z := arg2Type@.s8.f[2];
+        if (chr(4C) < l4var4z.c) then {
+15031:      error(errNeedOtherTypesOfOperands);
+        } else {
+            new(l4var1z);
+            with l4var1z@ do {
+                if (l4var3z.c = chr(7C)) then {
+                    if (not l4var5z) or
+                       (arg1Type <> booleanType) then
+                        goto 15031;
+                    f[0].t := booleanType;
+                    f[1] := l4var3z;
+                } else (* 15046 *) {
+                    if (l4var5z) then {
+                        if (arg1Type = realType) then {
+                            f[1] := l4var3z;
+                            f[0].t := realType;
+                        } else if (strp120z = integerType) then {
+                            f[1] := glob334z[l4var3z.i];
+                            f[0].t := integerType;
+                        } else if (l4var4z.c = chr(4C)) then {
+                            f[1] := glob332z[l4var3z.i];
+                            f[0].t := arg1Type;
+                        } else {
+                            goto 15031
+                        }
+                    } else if areTypesCompatible(l4var2z) then {
+                        l4var1z@.f[0].t := realType;
+                        l4var1z@.f[1] := l4var3z;
+                    } else
+                        goto 15031
+                }; (* 15077 *)
+                l4var1z@.f[2].s4 := l4var2z;
+                l4var1z@.f[3].s4 := curExpr;
+                curExpr := l4var1z;
+            }
+        };
     }
- }; (* 15010 *)
- while (SY = ADDOP) do {
-    l4var3z.o := charClass;
-    inSymbol;
-    l4var2z := curExpr;
-    term;
-    arg1Type := curExpr@.f[0].t;
-    arg2Type := l4var2z@.f[0].t;
-    l4var5z :=   typeCheck(arg1Type, arg2Type);
-    l4var4z := arg2Type@.s8.f[2];
-    if (chr(4C) < l4var4z.c) then {
-15031: error(errNeedOtherTypesOfOperands);
-    } else {
-       new(l4var1z);
-       with l4var1z@ do {
-          if (l4var3z.c = chr(7C)) then {
-             if (not l4var5z) or
-                (arg1Type <> booleanType) then
-                goto 15031;
-             f[0].t := booleanType;
-             f[1] := l4var3z;
-          } else (* 15046 *) {
-             if (l4var5z) then {
-                if (arg1Type = realType) then {
-                   f[1] := l4var3z;
-                   f[0].t := realType;
-                } else if (strp120z = integerType) then {
-                   f[1] := glob334z[l4var3z.i];
-                   f[0].t := integerType;
-                } else if (l4var4z.c = chr(4C)) then {
-                   f[1] := glob332z[l4var3z.i];
-                   f[0].t := arg1Type;
-                } else {
-                   goto 15031
-                }
-             } else if areTypesCompatible(l4var2z) then {
-                l4var1z@.f[0].t := realType;
-                l4var1z@.f[1] := l4var3z;
-             } else
-                goto 15031
-          }; (* 15077 *)
-          l4var1z@.f[2].s4 := l4var2z;
-          l4var1z@.f[3].s4 := curExpr;
-          curExpr := l4var1z;
-       }
-    };
- }
-(* 15104 *) }; (* simpleExpression *)
+    (* 15104 *)
+}; (* simpleExpression *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure expression;
 var l4var1z: word; l4var2z, l4var3z: @struc4;
 {
- if (bool102z) then
-    inSymbol
- else
-    bool102z := true;
- simpleExpression;
- if (SY = RELOP) then {
-    l4var1z.o := charClass;
-    inSymbol;
-    l4var3z := curExpr;
+    if (bool102z) then
+        inSymbol
+    else
+        bool102z := true;
     simpleExpression;
-    arg1Type := curExpr@.f[0].t;
-    arg2Type := l4var3z@.f[0].t;
-    if typeCheck(arg1Type, arg2Type) then {
-       if (l4var1z.c = chr(16C)) or
-          (arg1Type@.s8.f[2].c = chr(7C)) or
-          (arg1Type@.s8.f[0].i <> (1)) and
-          (l4var1z.c >= chr(12C)) and
-          not checkForChar(arg1Type) then
-          error(errNeedOtherTypesOfOperands);
-    } else (* 15150 *) {
-       if not areTypesCompatible(l4var3z) and
-          ((arg1Type@.s8.f[2].c <> chr(4C)) or
-          not (arg2Type@.s8.f[2].i IN [1, 2]) or
-          (l4var1z.c <> chr(16C))) then {
-          besm(2200000B); besm(2200000B); (* workaround *)
-          error(errNeedOtherTypesOfOperands);
+    if (SY = RELOP) then {
+        l4var1z.o := charClass;
+        inSymbol;
+        l4var3z := curExpr;
+        simpleExpression;
+        arg1Type := curExpr@.f[0].t;
+        arg2Type := l4var3z@.f[0].t;
+        if typeCheck(arg1Type, arg2Type) then {
+            if (l4var1z.c = chr(16C)) or
+               (arg1Type@.s8.f[2].c = chr(7C)) or
+               (arg1Type@.s8.f[0].i <> (1)) and
+               (l4var1z.c >= chr(12C)) and
+               not checkForChar(arg1Type) then
+                error(errNeedOtherTypesOfOperands);
+        } else (* 15150 *) {
+            if not areTypesCompatible(l4var3z) and
+               ((arg1Type@.s8.f[2].c <> chr(4C)) or
+               not (arg2Type@.s8.f[2].i IN [1, 2]) or
+               (l4var1z.c <> chr(16C))) then {
+                besm(2200000B); besm(2200000B); (* workaround *)
+                error(errNeedOtherTypesOfOperands);
+            }
+        }; (* 15167 *)
+        new(l4var2z);
+        if (arg2Type@.s8.f[2].c = chr(4C)) and
+           (l4var1z.i IN [10, 12]) then
+            error(errNeedOtherTypesOfOperands);
+        with l4var2z@ do {
+            f[0].t := booleanType;
+            if (l4var1z.i IN [12, 13]) then {
+                f[2].s4 := curExpr;
+                f[3].s4 := l4var3z;
+                if (l4var1z.c =chr(14C)) then
+                    f[1].c := chr(12C)
+                else
+                    f[1].c := chr(13C);
+            } else {
+                f[2].s4 := l4var3z;
+                f[3].s4 := curExpr;
+                f[1] := l4var1z;
+            };
+            curExpr := l4var2z;
         }
-    }; (* 15167 *)
-    new(l4var2z);
-    if (arg2Type@.s8.f[2].c = chr(4C)) and
-       (l4var1z.i IN [10, 12]) then
-       error(errNeedOtherTypesOfOperands);
-    with l4var2z@ do {
-       f[0].t := booleanType;
-       if (l4var1z.i IN [12, 13]) then {
-          f[2].s4 := curExpr;
-          f[3].s4 := l4var3z;
-          if (l4var1z.c =chr(14C)) then
-             f[1].c := chr(12C)
-          else
-             f[1].c := chr(13C);
-       } else {
-          f[2].s4 := l4var3z;
-          f[3].s4 := curExpr;
-          f[1] := l4var1z;
-       };
-       curExpr := l4var2z;
     }
- }
-(* 15217 *)}; (* expression *)
+    (* 15217 *)
+}; (* expression *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure forStatement;
-var l4var1z: @types; l4var2z, l4var3z: @struc4;
-    l4var4z: @struc4; l4var5z, l4var6z: integer;
-    l4var7z: integer; l4var8z: integer;
+var
+    l4var1z: @types;
+    l4var2z, l4var3z: @struc4;
+    l4var4z: @struc4;
+    l4var5z, l4var6z: integer;
+    l4var7z: integer;
+    l4var8z: integer;
     l4var9z: boolean;
 {
- inSymbol;
- disableNorm;
- curExpr := NIL;
- if (SY = IDENT) then {
-    if (hashTravPtr <> NIL) and (hashTravPtr@.f[4].c = chr(3C)) then {
-       parseLval;
-       if (curExpr@.f[1].c <> chr(35C)) then
-          error(errNoSimpleVarForLoop);
-    } else
-       error(errNoSimpleVarForLoop);
- } else {
-    errAndSkip(errNoIdent, skipToSet + [BECOMES, DOSY, TOSY, DOWNTOSY]);
- }; (* 15251 *)
- if (curExpr = NIL) then
-    curExpr := uVarPtr;
- l4var2z := curExpr;
- l4var1z := l4var2z@.f[0].t;
- if not (l4var1z@.s8.f[2].i IN [1, 2]) then
-    error(25); (* errExprNotOfADiscreteType *)
- if typeCheck(integerType, l4var1z) then
-    l4var5z := 04000021B
- else
-    l4var5z := 04000010B;
- if (SY = BECOMES) then {
-    expression;
-    l4var9z := true;
- } else {
-    l4var9z := false;
- };
- l4var3z := curExpr;
- l4var6z := insnTemp[ADD];
- if not typeCheck(l4var1z, l4var3z@.f[0].t) then
-    error(31); (* errIncompatibleTypesOfLoopIndexAndExpr *)
+    inSymbol;
+    disableNorm;
+    curExpr := NIL;
+    if (SY = IDENT) then {
+        if (hashTravPtr <> NIL) and (hashTravPtr@.f[4].c = chr(3C)) then {
+            parseLval;
+            if (curExpr@.f[1].c <> chr(35C)) then
+                error(errNoSimpleVarForLoop);
+        } else
+            error(errNoSimpleVarForLoop);
+    } else {
+        errAndSkip(errNoIdent, skipToSet + [BECOMES, DOSY, TOSY, DOWNTOSY]);
+    }; (* 15251 *)
+    if (curExpr = NIL) then
+        curExpr := uVarPtr;
+    l4var2z := curExpr;
+    l4var1z := l4var2z@.f[0].t;
+    if not (l4var1z@.s8.f[2].i IN [1, 2]) then
+        error(25); (* errExprNotOfADiscreteType *)
+    if typeCheck(integerType, l4var1z) then
+        l4var5z := 04000021B
+    else
+        l4var5z := 04000010B;
+    if (SY = BECOMES) then {
+        expression;
+        l4var9z := true;
+    } else {
+        l4var9z := false;
+    };
+    l4var3z := curExpr;
+    l4var6z := insnTemp[ADD];
+    if not typeCheck(l4var1z, l4var3z@.f[0].t) then
+        error(31); (* errIncompatibleTypesOfLoopIndexAndExpr *)
 (todownto)
- if (SY = TOSY) then
-    exit todownto
- else if (SY = DOWNTOSY) then
-    l4var6z := insnTemp[SUB]
- else
-    error(70); (* errNeitherToNorDownto *)
- expression;
- if not typeCheck(l4var1z, curExpr@.f[0].t) then
-    error(31); (* errIncompatibleTypesOfLoopIndexAndExpr *)
- formOperator(gen0);
- l4var4z := curExpr;
- if (l4var9z) then {
-    curExpr := l4var3z;
+    if (SY = TOSY) then
+        exit todownto
+    else if (SY = DOWNTOSY) then
+        l4var6z := insnTemp[SUB]
+    else
+        error(70); (* errNeitherToNorDownto *)
+    expression;
+    if not typeCheck(l4var1z, curExpr@.f[0].t) then
+        error(31); (* errIncompatibleTypesOfLoopIndexAndExpr *)
+    formOperator(gen0);
+    l4var4z := curExpr;
+    if (l4var9z) then {
+        curExpr := l4var3z;
+        formOperator(LOAD);
+    } else {
+        form1Insn(insnTemp[XTA] + l4var5z);
+    };
+    l4var7z := (0);
+    disableNorm;
+    formJumpOnCond(l4var7z);
+    formLabel;
+    l4var8z := moduleOffset;
+    checkSymAndRead(DOSY);
+    statement;
+    disableNorm;
+    curExpr := l4var2z;
     formOperator(LOAD);
- } else {
-    form1Insn(insnTemp[XTA] + l4var5z);
- };
- l4var7z := (0);
- disableNorm;
- formJumpOnCond(l4var7z);
- formLabel;
- l4var8z := moduleOffset;
- checkSymAndRead(DOSY);
- statement;
- disableNorm;
- curExpr := l4var2z;
- formOperator(LOAD);
- form1Insn(l4var6z + l4var5z);
- P0715((0), l4var7z);
- formOperator(STORE);
- curExpr := l4var4z;
- if (l4var6z = insnTemp[SUB]) then
-    curVal.i := l4var6z
- else
-    curVal.i := insnTemp[RSUB];
-(*15401*)
- formOperator(gen3);
- form1Insn(insnTemp[U1A] + l4var8z);
+    form1Insn(l4var6z + l4var5z);
+    P0715((0), l4var7z);
+    formOperator(STORE);
+    curExpr := l4var4z;
+    if (l4var6z = insnTemp[SUB]) then
+        curVal.i := l4var6z
+    else
+        curVal.i := insnTemp[RSUB];
+    (*15401*)
+    formOperator(gen3);
+    form1Insn(insnTemp[U1A] + l4var8z);
 }; (* forStatement *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure withStatement;
-var l4var1z: @struc4; l4var2z: word;
-    l4var3z: set of 0..47; l4var4z: integer;
+var
+    l4var1z: @struc4;
+    l4var2z: word;
+    l4var3z: set of 0..47;
+    l4var4z: integer;
 {
- l4var1z := strp63z;
- l4var4z := l2var20z;
- l4var2z := glob147z;
- l4var3z := [];
- repeat
-    inSymbol;
-    if (hashTravPtr <> NIL) and
-       (hashTravPtr@.f[4].c >= chr(3C)) then {
-       parseLval;
-       if (curExpr@.f[0].s@.f[2].c = chr(6C)) then {
-          formOperator(SETREG);
-          l4var3z := (l4var3z + [curVal.i]) * glob148z.m;
-       } else {
-          error(71); (* errWithOperatorNotOfARecord *)
-       };
-    } else {
-       error(72); (* errWithOperatorNotOfAVariable *)
-    }
- until (SY <> COMMA);
- checkSymAndRead(DOSY);
- statement;
- strp63z := l4var1z;
- l2var20z := l4var4z;
- glob147z := l4var2z;
- glob145z.m := (glob145z.m + l4var3z);
+    l4var1z := strp63z;
+    l4var4z := l2var20z;
+    l4var2z := glob147z;
+    l4var3z := [];
+    repeat
+        inSymbol;
+        if (hashTravPtr <> NIL) and
+           (hashTravPtr@.f[4].c >= chr(3C)) then {
+            parseLval;
+            if (curExpr@.f[0].s@.f[2].c = chr(6C)) then {
+                formOperator(SETREG);
+                l4var3z := (l4var3z + [curVal.i]) * glob148z.m;
+            } else {
+                error(71); (* errWithOperatorNotOfARecord *)
+            };
+        } else {
+            error(72); (* errWithOperatorNotOfAVariable *)
+        }
+    until (SY <> COMMA);
+    checkSymAndRead(DOSY);
+    statement;
+    strp63z := l4var1z;
+    l2var20z := l4var4z;
+    glob147z := l4var2z;
+    glob145z.m := (glob145z.m + l4var3z);
 }; (* withStatement *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure reportStmtType(l4arg1z: integer);
 {
- writeln(' STATEMENT ', stmtname:0, ' IN ', l3var9z:0, ' LINE');
+    writeln(' STATEMENT ', stmtname:0, ' IN ', l3var9z:0, ' LINE');
 }; (* reportStmtType *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function gotoStatement(l4arg1z: boolean): boolean;
-var l4var1z: word;
+var
+    l4var1z: word;
 {
- gotoStatement := true;
- if (SY = IDENT) or not l4arg1z then {
-    l4var1z := l2var17z;
-    l2var19z := (1);
-    while (l4var1z.s <> NIL) do {
-       with l4var1z.s@ do {
-          if (f[1].c = chr(0C)) then {
-             l2var19z := (l2var19z - (1));
-          } else {
-             if (f[1] = curIdent) then {
-                if (l2var19z = (1)) then {
-                   if (l4arg1z) then {
-                      form1Insn(insnTemp[VJM] + f[2].i);
-                   } else {
-                      formJumpOnCond(l4var1z.s@.f[3].i);
-                   };
+    gotoStatement := true;
+    if (SY = IDENT) or not l4arg1z then {
+        l4var1z := l2var17z;
+        l2var19z := (1);
+        while (l4var1z.s <> NIL) do {
+            with l4var1z.s@ do {
+                if (f[1].c = chr(0C)) then {
+                    l2var19z := (l2var19z - (1));
                 } else {
-                   form1Insn(getValueOrAllocSymtab(l2var19z) + 66400000B);
-                   if (l4arg1z) then {
-                      form1Insn(52400000B + l4var1z.s@.f[2].i);
-                   } else {
-                      glob51z.i := 52400000B;
-                      formJumpOnCond(l4var1z.s@.f[3].i);
-                      glob51z.i := insnTemp[VJM];
-                   };
-                   form1Insn(getHelperProc(60) + 6437777713700000C);(*P/ZAM*)
+                    if (f[1] = curIdent) then {
+                        if (l2var19z = (1)) then {
+                            if (l4arg1z) then {
+                                form1Insn(insnTemp[VJM] + f[2].i);
+                            } else {
+                                formJumpOnCond(l4var1z.s@.f[3].i);
+                            };
+                        } else {
+                            form1Insn(getValueOrAllocSymtab(l2var19z) +
+                                      66400000B);
+                            if (l4arg1z) then {
+                                form1Insn(52400000B + l4var1z.s@.f[2].i);
+                            } else {
+                                glob51z.i := 52400000B;
+                                formJumpOnCond(l4var1z.s@.f[3].i);
+                                glob51z.i := insnTemp[VJM];
+                            };
+                            form1Insn(getHelperProc(60) +
+                                      6437777713700000C); (* P/ZAM *)
+                        };
+                        exit
+                    }
                 };
-                exit
-             }
-          };
-          l4var1z := l4var1z.s@.f[0];
-       }
-    };
-    if not l4arg1z and (SY <> IDENT) then {
-       if (l2var19z <> (1)) then {
-          form1Insn(getValueOrAllocSymtab(l2var19z) + 66400000B);
-          form1Insn(getHelperProc(60)); (* P/ZAM *)
-       };
-       formJumpOnCond(int53z);
-    } else {
-       error(errNotDefined);
-    }
- } else
-    gotoStatement := false;
+                l4var1z := l4var1z.s@.f[0];
+            }
+        };
+        if not l4arg1z and (SY <> IDENT) then {
+            if (l2var19z <> (1)) then {
+                form1Insn(getValueOrAllocSymtab(l2var19z) + 66400000B);
+                form1Insn(getHelperProc(60)); (* P/ZAM *)
+            };
+            formJumpOnCond(int53z);
+        } else {
+            error(errNotDefined);
+        }
+    } else
+        gotoStatement := false;
 }; (* gotoStatement *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure caseStatement;
-label 16211;
-var l4var1z: word;
+label
+    16211;
+var
+    l4var1z: word;
     l4var2z, l4var3z, l4var4z, l4var5z: word;
     l4var6z: boolean;
-    l4var7z: integer; l4var8z, l4var9z, l4var10z, l4var11z: word;
-    l4var12z: @types; l4var13z, l4var14z, l4var15z: word;
+    l4var7z: integer;
+    l4var8z, l4var9z, l4var10z, l4var11z: word;
+    l4var12z: @types;
+    l4var13z, l4var14z, l4var15z: word;
     l4var16z, l4var17z, l4var18z: integer;
     l4var19z, l4var20z, l4var21z: word;
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function max(a, b: integer): integer;
 {
@@ -5604,255 +5676,267 @@ function max(a, b: integer): integer;
     else
         max := b;
 }; (* max *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 { (* caseStatement *)
- l4var16z := lineCnt;
- expression;
- l4var12z := curExpr@.f[0].t;
- l4var6z := false;
- if (l4var12z = alfaType) or
-    (l4var12z@.s8.f[2].i IN [1, 2]) then
-    formOperator(LOAD)
- else
-    error(25); (* errExprNotOfADiscreteType *)
- disableNorm;
- l4var17z := (0);
- l4var18z := (0);
- l4var1z.s := NIL;
- formJumpOnCond(l4var17z);
- checkSymAndRead(OFSY);
- l4var10z.s := NIL;
- l4var9z.b := true;
+    l4var16z := lineCnt;
+    expression;
+    l4var12z := curExpr@.f[0].t;
+    l4var6z := false;
+    if (l4var12z = alfaType) or
+       (l4var12z@.s8.f[2].i IN [1, 2]) then
+        formOperator(LOAD)
+    else
+        error(25); (* errExprNotOfADiscreteType *)
+    disableNorm;
+    l4var17z := (0);
+    l4var18z := (0);
+    l4var1z.s := NIL;
+    formJumpOnCond(l4var17z);
+    checkSymAndRead(OFSY);
+    l4var10z.s := NIL;
+    l4var9z.b := true;
     (* 15640 *)
- repeat
-    if not (SY IN [SEMICOLON, ENDSY]) then {
-       formLabel;
-       arithMode := (1);
-       if (SY = OTHERSY) then {
-          if (l4var6z) then
-             error(73); (* errCaseLabelsIdentical *)
-          inSymbol;
-          l4var6z := true;
-          l4var7z := moduleOffset;
-       } else (* 15657 *) repeat
-          parseLiteral(l4var11z.t, l4var13z, true);
-          if (l4var11z.s <> NIL) then {
-             if (l4var10z.s = NIL) then {
-                l4var10z := l4var11z;
-             } else {
-                if not typeCheck(l4var11z.t, l4var10z.t) then
-                   error(errConstOfOtherTypeNeeded);
-             }; (* 15700 *)
-             new(l4var3z.s3);
-             l4var3z.s@.f[1] := l4var13z;
-             l4var3z.s@.f[2].i := moduleOffset;
-             l4var2z := l4var1z;
-(loop)       while (l4var2z.s <> NIL) do {
-                if (l4var13z = l4var2z.s@.f[1]) then {
-                   error(73); (* errIdenticalCaseLabels *)
-                   exit loop
-                } else if (l4var13z.i < l4var2z.s@.f[1].i) then {
-                   exit loop
-                } else {
-                   l4var4z := l4var2z;
-                   l4var2z := l4var2z.s@.f[0];
-                }
-             }; (* 15723 *)
-             if (l4var2z = l4var1z) then {
-                l4var3z.s@.f[0] := l4var1z;
-                l4var1z := l4var3z;
-             } else {
-                l4var3z.s@.f[0] := l4var2z;
-                l4var4z.s@.f[0] := l4var3z;
-             };
-             inSymbol;
-          }; (* 15735 *)
-          l4var8z.b := (SY <> COMMA);
-          if not l4var8z.b then
-             inSymbol;
-       until l4var8z.b; (* 15745 *)
-       checkSymAndRead(COLON);
-       statement;
-       l4var9z.b := l4var9z.b and (arithMode = 1);
-       formJumpOnCond(l4var18z);
-    }; (* 15762 *)
-    l4var8z.b := (SY = ENDSY);
-    if not l4var8z.b then
-       inSymbol;
+    repeat
+        if not (SY IN [SEMICOLON, ENDSY]) then {
+            formLabel;
+            arithMode := (1);
+            if (SY = OTHERSY) then {
+                if (l4var6z) then
+                    error(73); (* errCaseLabelsIdentical *)
+                inSymbol;
+                l4var6z := true;
+                l4var7z := moduleOffset;
+            } else (* 15657 *) repeat
+                parseLiteral(l4var11z.t, l4var13z, true);
+                if (l4var11z.s <> NIL) then {
+                    if (l4var10z.s = NIL) then {
+                        l4var10z := l4var11z;
+                    } else {
+                        if not typeCheck(l4var11z.t, l4var10z.t) then
+                            error(errConstOfOtherTypeNeeded);
+                    }; (* 15700 *)
+                    new(l4var3z.s3);
+                    l4var3z.s@.f[1] := l4var13z;
+                    l4var3z.s@.f[2].i := moduleOffset;
+                    l4var2z := l4var1z;
+(loop)              while (l4var2z.s <> NIL) do {
+                        if (l4var13z = l4var2z.s@.f[1]) then {
+                            error(73); (* errIdenticalCaseLabels *)
+                            exit loop
+                        } else if (l4var13z.i < l4var2z.s@.f[1].i) then {
+                            exit loop
+                        } else {
+                            l4var4z := l4var2z;
+                            l4var2z := l4var2z.s@.f[0];
+                        }
+                    }; (* 15723 *)
+                    if (l4var2z = l4var1z) then {
+                        l4var3z.s@.f[0] := l4var1z;
+                        l4var1z := l4var3z;
+                    } else {
+                        l4var3z.s@.f[0] := l4var2z;
+                        l4var4z.s@.f[0] := l4var3z;
+                    };
+                    inSymbol;
+                }; (* 15735 *)
+                l4var8z.b := (SY <> COMMA);
+                if not l4var8z.b then
+                    inSymbol;
+            until l4var8z.b; (* 15745 *)
+            checkSymAndRead(COLON);
+            statement;
+            l4var9z.b := l4var9z.b and (arithMode = 1);
+            formJumpOnCond(l4var18z);
+        }; (* 15762 *)
+        l4var8z.b := (SY = ENDSY);
+        if not l4var8z.b then
+            inSymbol;
         (* 15771 *)
     until l4var8z.b;
- if (SY <> ENDSY) then {
-    requiredSymErr(ENDSY);
-    stmtName := 'CASE  ';
-    reportStmtType(l4var16z);
- } else
-    inSymbol;
- if not typeCheck(l4var10z.t, l4var12z) then {
-    error(88); (* errDifferentTypesOfLabelsAndExpr *);
-    exit
- };
- formLabel;
- l4var5z.b := typeCheck(l4var12z, integerType);
- if (l4var1z.s <> NIL) then {
- l4var15z := l4var1z.s@.f[1];
- l4var19z := l4var15z;
- l4var2z := l4var1z;
- while (l4var2z.s <> NIL) do {
-    if (l4var15z = l4var2z.s@.f[1]) and
-       (l4var12z@.s8.f[2].c = chr(1C)) then {
-       l4var21z := l4var15z;
-       if (l4var5z.b) then {
-          l4var15z.i := (l4var15z.i + (1));
-       } else {
-          curVal := l4var15z;
-          curVal.c := succ(curVal.c);
-          l4var15z := curVal;
-       };
-       l4var2z := l4var2z.s@.f[0];
-    } else {
-        l4var14z.i := 00102320B;
+    if (SY <> ENDSY) then {
+        requiredSymErr(ENDSY);
+        stmtName := 'CASE  ';
+        reportStmtType(l4var16z);
+    } else
+        inSymbol;
+    if not typeCheck(l4var10z.t, l4var12z) then {
+        error(88); (* errDifferentTypesOfLabelsAndExpr *);
+        exit
+    };
+    formLabel;
+    l4var5z.b := typeCheck(l4var12z, integerType);
+    if (l4var1z.s <> NIL) then {
+        l4var15z := l4var1z.s@.f[1];
+        l4var19z := l4var15z;
+        l4var2z := l4var1z;
+        while (l4var2z.s <> NIL) do {
+            if (l4var15z = l4var2z.s@.f[1]) and
+               (l4var12z@.s8.f[2].c = chr(1C)) then {
+                l4var21z := l4var15z;
+                if (l4var5z.b) then {
+                    l4var15z.i := (l4var15z.i + (1));
+                } else {
+                    curVal := l4var15z;
+                    curVal.c := succ(curVal.c);
+                    l4var15z := curVal;
+                };
+                l4var2z := l4var2z.s@.f[0];
+            } else {
+                l4var14z.i := 00102320B;
+                P0715(0, l4var17z);
+                if (l4var10z.s@.f[2].c = chr(2C)) then {
+                    l4var14z.i := max(abs(l4var10z.s@.f[5].i),
+                                      abs(l4var10z.s@.f[6].i));
+                } else {
+                    if (l4var10z.s@.f[2].c = chr(1C)) then
+                        l4var14z := l4var10z.s@.f[4];
+                };
+                l4var8z.b := (l4var14z.i < 00076400B);
+                if (l4var8z.b) then {
+                    form1Insn(00400016B);
+                } else {
+                    form1Insn(74000001B);
+                };
+                l4var19z.i := (l4var19z.i - l4var19z.i); (* WTF? *)
+                while (l4var1z.s <> NIL) do {
+                    if (l4var8z.b) then {
+                        curVal.i := (l4var19z.i - l4var1z.s@.f[1].i);
+                        curVal.m := (curVal.m + intZero);
+                        form1Insn(getValueOrAllocSymtab(curVal.i) +
+                                  72500000B);
+                        form1Insn(73400000B + l4var1z.s@.f[2].i);
+                        l4var19z := l4var1z.s@.f[1];
+                    } else {
+                        form1Insn(74100001B);
+                        curVal := l4var1z.s@.f[1];
+                        form2Insn((getFCSToffset + 40120000B),
+                                  (insnTemp[U1A] + l4var1z.s@.f[2].i));
+                    };
+                    l4var1z := l4var1z.s@.f[0];
+                };
+                if (l4var6z) then
+                    form1Insn(insnTemp[VJM] + l4var7z);
+                goto 16211;
+            }; (* if 16141 *)
+        }; (* while 16142 *)
+        if (not l4var6z) then {
+            l4var7z := moduleOffset;
+            formJumpOnCond(l4var18z);
+        };
         P0715(0, l4var17z);
-        if (l4var10z.s@.f[2].c = chr(2C)) then {
-           l4var14z.i := max(abs(l4var10z.s@.f[5].i), abs(l4var10z.s@.f[6].i));
-        } else {
-           if (l4var10z.s@.f[2].c = chr(1C)) then
-              l4var14z := l4var10z.s@.f[4];
+        curVal := l4var19z;
+        P0715(-(insnTemp[UJ]+l4var7z), l4var21z.i);
+        curVal := l4var19z;
+        curVal.m := (curVal.m + intZero);
+        form1Insn(00400016B);
+        curVal.i := ((moduleOffset + (1)) - curVal.i);
+        if (curVal.i < 00040000B) then {
+            curVal.i := (curVal.i - 00040000B);
+            curVal.i := allocSymtabForAbsolute([24, 29] +
+                        (curVal.m * O77777.m));
         };
-        l4var8z.b := (l4var14z.i < 00076400B);
-        if (l4var8z.b) then {
-           form1Insn(00400016B);
-        } else {
-           form1Insn(74000001B);
-        };
-        l4var19z.i := (l4var19z.i - l4var19z.i); (* WTF? *)
+        form1Insn(73000000B + curVal.i);
         while (l4var1z.s <> NIL) do {
-           if (l4var8z.b) then {
-              curVal.i := (l4var19z.i - l4var1z.s@.f[1].i);
-              curVal.m := (curVal.m + intZero);
-              form1Insn(getValueOrAllocSymtab(curVal.i) + 72500000B);
-              form1Insn(73400000B + l4var1z.s@.f[2].i);
-              l4var19z := l4var1z.s@.f[1];
-           } else {
-              form1Insn(74100001B);
-              curVal := l4var1z.s@.f[1];
-              form2Insn((getFCSToffset + 40120000B),
-                        (insnTemp[U1A] + l4var1z.s@.f[2].i));
-           };
-           l4var1z := l4var1z.s@.f[0];
+            formLabel;
+            form1Insn(insnTemp[VJM] + l4var1z.s@.f[2].i);
+            l4var1z := l4var1z.s@.f[0];
         };
-        if (l4var6z) then
-           form1Insn(insnTemp[VJM] + l4var7z);
-        goto 16211;
-    }; (* if 16141 *)
- }; (*while 16142*)
- if (not l4var6z) then {
-    l4var7z := moduleOffset;
-    formJumpOnCond(l4var18z);
- };
- P0715(0, l4var17z);
- curVal := l4var19z;
- P0715(-(insnTemp[UJ]+l4var7z), l4var21z.i);
- curVal := l4var19z;
- curVal.m := (curVal.m + intZero);
- form1Insn(00400016B);
- curVal.i := ((moduleOffset + (1)) - curVal.i);
- if (curVal.i < 00040000B) then {
-    curVal.i := (curVal.i - 00040000B);
-    curVal.i := allocSymtabForAbsolute([24, 29] + (curVal.m * O77777.m));
- };
- form1Insn(73000000B + curVal.i);
- while (l4var1z.s <> NIL) do {
-     formLabel;
-     form1Insn(insnTemp[VJM] + l4var1z.s@.f[2].i);
-     l4var1z := l4var1z.s@.f[0];
- };
- 16211:
- P0715(0, l4var18z);
- if (not l4var9z.b) then
-    disableNorm;
-(* 16217 *) }}; (* caseStatement *)
+        16211:
+        P0715(0, l4var18z);
+        if (not l4var9z.b) then
+           disableNorm;
+        (* 16217 *)
+    }
+}; (* caseStatement *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure assignStatement(l4arg1z: boolean);
-label 16332;
-var l4var1z, l4var2z, l4var3z, l4var4z, l4var5z: word;
+label
+    16332;
+var
+    l4var1z, l4var2z, l4var3z, l4var4z, l4var5z: word;
 {
- if (l4arg1z) then
-    parseLval
- else {
-     new(curExpr);
-     with curExpr@ do {
-        f[0] := hashTravPtr@.f[3];
-        f[1].c := chr(35C);
-        f[2].s := hashTravPtr;
-     };
-     inSymbol;
- };
- checkSymAndRead(BECOMES);
- bool102z := false;
- l4var5z := curExpr@.f[0];
- if (l4var5z.s@.f[2].c = chr(6C)) and
-    (SY = LBRACK) then {
-    formOperator(gen5);
-    l4var3z.i := (0);
-    inSymbol;
-    l3var5z.c := chr(0C);
-(indices)
-    {
-    if (SY = COMMA) then {
-       l4var3z.i := (l4var3z.i + (1));
-       inSymbol;
-    } else if (SY = RBRACK) then {
-       inSymbol;
-       exit indices;
-    } else (* 16262 *) {
-       bool102z := false;
-       expression;
-       curVal := l4var3z;
-       formOperator(gen6);
-    }; (* 16270 *)
-    goto indices;
-    };
-    curExpr := NIL;
- } else (* 16273 *) if (SY = SEMICOLON) and allowCompat then {
-    formOperator(STORE);
-    bool102z := true;
-    curExpr := NIL;
- } else (* 16303 *) {
-    l4var1z.s4 := curExpr;
-    expression;
-    l4var4z := curExpr@.f[0];
-    if (typeCheck(l4var5z.t, l4var4z.t)) then {
-    if (l4var4z.s@.f[2].c = chr(7C)) then
-       error(75) (*errCannotAssignFiles*)
+    if (l4arg1z) then
+        parseLval
     else {
-       if (bool105z) and (l4var5z.s@.f[2].c = chr(2C)) then {
-          new(l4var2z.s4);
-          with l4var2z.s4@ do {
-             f[0] := l4var4z;
-             f[1].c := chr(50C);
-             f[2].s4 := curExpr;
-             f[3] := l4var5z;
-          };
-          curExpr := l4var2z.s4;
-       };
-       16332: new(l4var2z.s4);
-       with l4var2z.s4@ do {
-          f[0] := l4var5z;
-          f[1].c := chr(33C);
-          f[2] := l4var1z;
-          f[3].s4 := curExpr;
-       };
-       curExpr := l4var2z.s4;
+        new(curExpr);
+        with curExpr@ do {
+            f[0] := hashTravPtr@.f[3];
+            f[1].c := chr(35C);
+            f[2].s := hashTravPtr;
+        };
+        inSymbol;
+    };
+    checkSymAndRead(BECOMES);
+    bool102z := false;
+    l4var5z := curExpr@.f[0];
+    if (l4var5z.s@.f[2].c = chr(6C)) and
+       (SY = LBRACK) then {
+        formOperator(gen5);
+        l4var3z.i := (0);
+        inSymbol;
+        l3var5z.c := chr(0C);
+(indices)
+        {
+            if (SY = COMMA) then {
+                l4var3z.i := (l4var3z.i + (1));
+                inSymbol;
+            } else if (SY = RBRACK) then {
+                inSymbol;
+                exit indices;
+            } else (* 16262 *) {
+                bool102z := false;
+                expression;
+                curVal := l4var3z;
+                formOperator(gen6);
+            }; (* 16270 *)
+            goto indices;
+        };
+        curExpr := NIL;
+    } else (* 16273 *)
+    if (SY = SEMICOLON) and allowCompat then {
+        formOperator(STORE);
+        bool102z := true;
+        curExpr := NIL;
+    } else (* 16303 *) {
+        l4var1z.s4 := curExpr;
+        expression;
+        l4var4z := curExpr@.f[0];
+        if (typeCheck(l4var5z.t, l4var4z.t)) then {
+            if (l4var4z.s@.f[2].c = chr(7C)) then
+                error(75) (*errCannotAssignFiles*)
+            else {
+                if (bool105z) and (l4var5z.s@.f[2].c = chr(2C)) then {
+                    new(l4var2z.s4);
+                    with l4var2z.s4@ do {
+                        f[0] := l4var4z;
+                        f[1].c := chr(50C);
+                        f[2].s4 := curExpr;
+                        f[3] := l4var5z;
+                    };
+                    curExpr := l4var2z.s4;
+                };
+16332:          new(l4var2z.s4);
+                with l4var2z.s4@ do {
+                    f[0] := l4var5z;
+                    f[1].c := chr(33C);
+                    f[2] := l4var1z;
+                    f[3].s4 := curExpr;
+                };
+                curExpr := l4var2z.s4;
+            }
+        } else if (l4var5z.t = realType) and
+            typeCheck(integerType, l4var4z.t) then {
+            castToReal(curExpr);
+            goto 16332;
+        } else {
+            error(33); (*errIllegalTypesForAssignment*)
+        }
     }
- } else if (l4var5z.t = realType) and
-       typeCheck(integerType, l4var4z.t) then {
-       castToReal(curExpr);
-       goto 16332;
-    } else {
-       error(33); (*errIllegalTypesForAssignment*)
-    }
- }
-(* 16356 *)}; (* assignStatement *)
+    (* 16356 *)
+}; (* assignStatement *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure compoundStatement;
 {
@@ -5864,21 +5948,23 @@ procedure compoundStatement;
         }
     }
 }; (* compoundStatement *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure ifWhileStatement(l4arg1z: symbol);
 {
- disableNorm;
- expression;
- if (curExpr@.f[0].t <> booleanType) then
-    error(errBooleanNeeded)
- else {
-    jumpTarget.i := (0);
-    formOperator(gen15);
-    l3var10z := jumpTarget;
- };
- checkSymAndRead(l4arg1z);
- statement;
+    disableNorm;
+    expression;
+    if (curExpr@.f[0].t <> booleanType) then
+        error(errBooleanNeeded)
+    else {
+        jumpTarget.i := (0);
+        formOperator(gen15);
+        l3var10z := jumpTarget;
+    };
+    checkSymAndRead(l4arg1z);
+    statement;
 }; (* ifWhileStatement *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P16517;
 label
@@ -5895,43 +5981,47 @@ var
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P16432(l5arg1z: integer);
-var l5var1z: DATAREC;
+var
+    l5var1z: DATAREC;
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function F16417(l6arg1z: integer): integer;
 {
- if (l6arg1z >= (2048)) then {
-    curVal.i := l6arg1z;
-    F16417 := allocSymtabForAbsolute((curVal.m + [24]) * halfWord.m);
- } else {
-    F16417 := l6arg1z;
- }
+    if (l6arg1z >= (2048)) then {
+        curVal.i := l6arg1z;
+        F16417 := allocSymtabForAbsolute((curVal.m + [24]) * halfWord.m);
+    } else {
+        F16417 := l6arg1z;
+    }
 }; (* F16417 *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 { (* P16432 *)
- l5var1z.a[0] := F16417(l4var4z.i);
- if (FcstCnt = l4var3z.i) then {
-    curVal := l4var8z;
-    curVal.i := addSomethingToFCST;
- } else {
-    curVal := l4var3z;
- };
- l5var1z.a[1] := allocSymtabForAbsolute([12,23] + curVal.m * halfWord.m);
- l5var1z.a[2] := F16417(l5arg1z);
- if (l4var9z.i = (0)) then {
-    curVal := l4var7z;
-    besm(360130B);
-    curVal := ;
- } else {
-    curVal.i := allocSymtabForAbsolute(l4var7z.m + l4var9z.m * halfWord.m);
- };
- l5var1z.a[3] := curVal.i;
- l4var9z.i := l5arg1z * l4var4z.i + l4var9z.i;
- F@ := l5var1z;
- put(F);
- l4var2z.i := (l4var2z.i + (1));
- l4var4z.i := (0);
- l4var3z.i := FcstCnt;
+    l5var1z.a[0] := F16417(l4var4z.i);
+    if (FcstCnt = l4var3z.i) then {
+        curVal := l4var8z;
+        curVal.i := addSomethingToFCST;
+    } else {
+        curVal := l4var3z;
+    };
+    l5var1z.a[1] := allocSymtabForAbsolute([12,23] + curVal.m * halfWord.m);
+    l5var1z.a[2] := F16417(l5arg1z);
+    if (l4var9z.i = (0)) then {
+        curVal := l4var7z;
+        besm(360130B);
+        curVal := ;
+    } else {
+        curVal.i := allocSymtabForAbsolute(l4var7z.m + l4var9z.m * halfWord.m);
+    };
+    l5var1z.a[3] := curVal.i;
+    l4var9z.i := l5arg1z * l4var4z.i + l4var9z.i;
+    F@ := l5var1z;
+    put(F);
+    l4var2z.i := (l4var2z.i + (1));
+    l4var4z.i := (0);
+    l4var3z.i := FcstCnt;
 }; (* P16432 *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 { (* P16517 *)
     l4var1z.i := FcstCnt;
@@ -5939,185 +6029,195 @@ function F16417(l6arg1z: integer): integer;
     l4var2z.i := (0);
 (loop)
     repeat (* 16530 *)
-    inSymbol;
-    setup(l4var6z.s);
-    if SY <> IDENT then {
-       if SY = ENDSY then exit loop;
-       error(errNoIdent);
-       curExpr := uVarPtr;
-    } else (* 16543 *) {
-       if (hashTravPtr = NIL) then {
-          16545: error(errNotDefined);
-          curExpr := uVarPtr;
-          inSymbol;
-       } else {
-          if (hashTravPtr@.f[4].c = chr(3C)) then {
-             parseLval;
-          } else goto 16545;
-       }
-    }; (* 16557 *)
-    bool101z := true;
-    objBufIdx := (1);
-    formOperator(gen5);
-    if (objBufIdx <> (1)) then
-       error(errVarTooComplex);
-    l4var7z.m := (isLeftInsn.m * [12,13,14,15,16,17,18,19,20,21,22,23]);
-    l4var3z.i := FcstCnt;
-    l4var4z.i := (0);
-    l4var9z.i := (0);
-    repeat (* 16574 *)
-       expression;
-       formOperator(LITINSN);
-       l4var8z := curVal;
-       if (SY = COLON) then {
-          inSymbol;
-          l4var5z := curToken;
-          if (SY <> INTCONST) then {
-             error(62); (* errIntegerNeeded *)
-             l4var5z.i := (0);
-          } else
-             inSymbol;
-       } else
-          l4var5z.i := (1);
-       if (l4var5z.i <> (1)) then {
-          if (l4var4z.i <> (0)) then
-             P16432((1));
-          l4var4z.i := (1);
-          P16432(l4var5z.i);
-       } else {
-          l4var4z.i := (l4var4z.i + (1));
-          if (SY = COMMA) then {
-             curVal := l4var8z;
-             toFCST;
-          } else {
-             if (l4var4z.i <> (1)) then {
-                curVal := l4var8z;
-                toFCST;
-             };
-             P16432((1));
-          }
-       }; (* 16641 *)
-    until SY <> COMMA;
-    rollup(l4var6z.s);
- until SY <> SEMICOLON; (* 16645 *)
- if (SY <> ENDSY) then
-    error(errBadSymbol);
- reset(F);
- while not eof(F) do {
-    FCST@ := F@.w;
-    put(FCST);
-    get(F);
- };
- int92z := (FcstCnt - l4var1z.i);
- FcstCnt := l4var1z.i;
- int93z := l4var2z.i;
-(* 16666 *)}; (* P16517 *)
+        inSymbol;
+        setup(l4var6z.s);
+        if SY <> IDENT then {
+            if SY = ENDSY then
+                exit loop;
+            error(errNoIdent);
+            curExpr := uVarPtr;
+        } else (* 16543 *) {
+            if (hashTravPtr = NIL) then {
+16545:          error(errNotDefined);
+                curExpr := uVarPtr;
+                inSymbol;
+            } else {
+                if (hashTravPtr@.f[4].c = chr(3C)) then {
+                    parseLval;
+                } else goto 16545;
+            }
+        }; (* 16557 *)
+        bool101z := true;
+        objBufIdx := (1);
+        formOperator(gen5);
+        if (objBufIdx <> (1)) then
+            error(errVarTooComplex);
+        l4var7z.m := (isLeftInsn.m * [12,13,14,15,16,17,18,19,20,21,22,23]);
+        l4var3z.i := FcstCnt;
+        l4var4z.i := (0);
+        l4var9z.i := (0);
+        repeat (* 16574 *)
+            expression;
+            formOperator(LITINSN);
+            l4var8z := curVal;
+            if (SY = COLON) then {
+                inSymbol;
+                l4var5z := curToken;
+                if (SY <> INTCONST) then {
+                    error(62); (* errIntegerNeeded *)
+                    l4var5z.i := (0);
+                } else
+                    inSymbol;
+            } else
+                l4var5z.i := (1);
+            if (l4var5z.i <> (1)) then {
+                if (l4var4z.i <> (0)) then
+                    P16432((1));
+                l4var4z.i := (1);
+                P16432(l4var5z.i);
+            } else {
+                l4var4z.i := (l4var4z.i + (1));
+                if (SY = COMMA) then {
+                    curVal := l4var8z;
+                    toFCST;
+                } else {
+                    if (l4var4z.i <> (1)) then {
+                        curVal := l4var8z;
+                        toFCST;
+                    };
+                    P16432((1));
+                }
+            }; (* 16641 *)
+        until SY <> COMMA;
+        rollup(l4var6z.s);
+    until SY <> SEMICOLON; (* 16645 *)
+    if (SY <> ENDSY) then
+        error(errBadSymbol);
+    reset(F);
+    while not eof(F) do {
+        FCST@ := F@.w;
+        put(FCST);
+        get(F);
+    };
+    int92z := (FcstCnt - l4var1z.i);
+    FcstCnt := l4var1z.i;
+    int93z := l4var2z.i;
+    (* 16666 *)
+}; (* P16517 *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure standProc;
-label 17753, 20041;
-var l4var1z, l4var2z, l4var3z, l4var4z, l4var5z,
+label
+    17753, 20041;
+var
+    l4var1z, l4var2z, l4var3z, l4var4z, l4var5z,
     l4var6z, l4var7z, l4var8z, l4var9z, l4var10z,
     l4var11z, l4var12z, l4var13z, l4var14z, l4var15z,
     l4var16z, l4var17z: word;
     l4var18z: opgen;
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P16667(l5arg1z: @types);
 {
- if (hashTravPtr <> NIL) and
-    (hashTravPtr@.f[4].c >= chr(3C)) then {
-    parseLval;
-    if (l5arg1z <> NIL) and
-       not typeCheck(l5arg1z, curExpr@.f[0].t) then
-       error(errNeedOtherTypesOfOperands);
- } else {
-    error(errNotDefined);
-    curExpr := uVarPtr;
- }
+    if (hashTravPtr <> NIL) and
+       (hashTravPtr@.f[4].c >= chr(3C)) then {
+        parseLval;
+        if (l5arg1z <> NIL) and
+           not typeCheck(l5arg1z, curExpr@.f[0].t) then
+            error(errNeedOtherTypesOfOperands);
+    } else {
+        error(errNotDefined);
+        curExpr := uVarPtr;
+    }
 }; (* P16667 *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure startReadOrWrite(l5arg1z: boolean);
 {
- expression;
- l4var3z := curExpr@.f[0];
- l4var7z.s4 := curExpr;
- if not (l5arg1z) then {
-    if not (curExpr@.f[1].i IN lvalOpSet) then
-       error(27); (* errExpressionWhereVariableExpected *)
- };
- if (l4var9z.s = NIL) then {
-    if (l4var3z.s@.f[2].c = chr(7C)) then {
-       l4var9z.s4 := curExpr;
-    } else {
-       new(l4var9z.s4);
-       l4var9z.s@.f[0].t := textType;
-       l4var9z.s@.f[1].c := chr(35C);
-       if (l5arg1z) then {
-          l4var9z.s@.f[2].q := outputFile;
-       } else {
-          if (inputFile <> NIL) then
-             l4var9z.s@.f[2].q := inputFile
-          else
-            error(37); (* errInputMissingInProgramHeader *)
-       }
+    expression;
+    l4var3z := curExpr@.f[0];
+    l4var7z.s4 := curExpr;
+    if not (l5arg1z) then {
+        if not (curExpr@.f[1].i IN lvalOpSet) then
+            error(27); (* errExpressionWhereVariableExpected *)
     };
-    arg2Type := l4var9z.s@.f[0].t;
-    l4var13z.b := typeCheck(arg2Type@.s8.f[3].t, charType);
-    l4var12z.c := chr(1C);
-    new(l4var8z.s4);
-    l4var8z.s4@.f[0] := arg2Type@.s8.f[3];
-    l4var8z.s4@.f[1].c := chr(43C);
-    l4var8z.s4@.f[2] := l4var9z;
-    new(l4var6z.s4);
-    l4var6z.s4@.f[0] := l4var8z.s@.f[0];
-    l4var6z.s4@.f[1].c := chr(33C);
-    if (l5arg1z) then
-       l4var6z.s4@.f[2] := l4var8z
-    else
-       l4var6z.s4@.f[3] := l4var8z;
- } (* 17002 *)
+    if (l4var9z.s = NIL) then {
+        if (l4var3z.s@.f[2].c = chr(7C)) then {
+            l4var9z.s4 := curExpr;
+        } else {
+            new(l4var9z.s4);
+            l4var9z.s@.f[0].t := textType;
+            l4var9z.s@.f[1].c := chr(35C);
+            if (l5arg1z) then {
+                l4var9z.s@.f[2].q := outputFile;
+            } else {
+                if (inputFile <> NIL) then
+                    l4var9z.s@.f[2].q := inputFile
+                else
+                    error(37); (* errInputMissingInProgramHeader *)
+            }
+        };
+        arg2Type := l4var9z.s@.f[0].t;
+        l4var13z.b := typeCheck(arg2Type@.s8.f[3].t, charType);
+        l4var12z.c := chr(1C);
+        new(l4var8z.s4);
+        l4var8z.s4@.f[0] := arg2Type@.s8.f[3];
+        l4var8z.s4@.f[1].c := chr(43C);
+        l4var8z.s4@.f[2] := l4var9z;
+        new(l4var6z.s4);
+        l4var6z.s4@.f[0] := l4var8z.s@.f[0];
+        l4var6z.s4@.f[1].c := chr(33C);
+        if (l5arg1z) then
+            l4var6z.s4@.f[2] := l4var8z
+        else
+            l4var6z.s4@.f[3] := l4var8z;
+    } (* 17002 *)
 }; (* startReadOrWrite *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure parseWidthSpecifier(var l5arg1z: @struc4);
 {
- expression;
- if not typeCheck(integerType, curExpr@.f[0].t) then {
-    error(14); (* errExprIsNotInteger *)
-    curExpr := uVarPtr;
- };
- l5arg1z := curExpr;
+    expression;
+    if not typeCheck(integerType, curExpr@.f[0].t) then {
+        error(14); (* errExprIsNotInteger *)
+        curExpr := uVarPtr;
+    };
+    l5arg1z := curExpr;
 }; (* parseWidthSpecifier *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P17020;
 {
- if ([12] <= glob145z.m) or
-    (l4var12z.b) then {
-    curExpr := l4var9z.s4;
-    formOperator(gen8);
- };
- l4var12z.b := false;
- formInsnAndLabel(getHelperProc(l4var17z.i));
- disableNorm;
+    if ([12] <= glob145z.m) or (l4var12z.b) then {
+        curExpr := l4var9z.s4;
+        formOperator(gen8);
+    };
+    l4var12z.b := false;
+    formInsnAndLabel(getHelperProc(l4var17z.i));
+    disableNorm;
 }; (* P17020 *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P17037;
 {
- glob145z.m := (glob145z.m - [12]);
- if (l4var17z.i <> (49)) and
-    not typeCheck(l4var8z.s@.f[0].t, l4var7z.s@.f[0].t) then
-    error(34) (* errTypeIsNotAFileElementType *)
- else {
-    if (l4var17z.i = (29)) then {
-       l4var6z.s@.f[3] := l4var7z;
-    } else {
-       if (l4var17z.i = (49)) then
-          l4var17z.i := (30);
-       l4var6z.s@.f[2] := l4var7z;
-    };
-    curExpr := l4var6z.s4;
-    formOperator(gen7);
-    P17020;
- }
+    glob145z.m := (glob145z.m - [12]);
+    if (l4var17z.i <> (49)) and
+       not typeCheck(l4var8z.s@.f[0].t, l4var7z.s@.f[0].t) then
+        error(34) (* errTypeIsNotAFileElementType *)
+    else {
+        if (l4var17z.i = (29)) then {
+            l4var6z.s@.f[3] := l4var7z;
+        } else {
+            if (l4var17z.i = (49)) then
+                l4var17z.i := (30);
+            l4var6z.s@.f[2] := l4var7z;
+        };
+        curExpr := l4var6z.s4;
+        formOperator(gen7);
+        P17020;
+    }
 }; (* P17037 *)
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure checkElementForReadWrite;
 var l5var1z: word;
@@ -6952,21 +7052,21 @@ var l3var1z, l3var2z, l3var3z, l3var4z: word;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure regSysType(l4arg1z:integer; l4arg2z: @types);
 {
- new(l2var5z.s=5);
+ new(l2var5z.s = 5);
  l2var5z.s@ := [l4arg1z, 0, , l4arg2z, chr(0)];
  addToHashTab(l2var5z.s);
 }; (* regSysType *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure regSysEnum(l4arg1z: integer; l4arg2z: integer);
 {
- new(l2var5z.s=7);
+ new(l2var5z.s = 7);
  l2var5z.s@ := [l4arg1z, 48, , l3var10z, chr(1), NIL, l4arg2z];
  addToHashTab(l2var5z.s);
 }; (* regSysEnum *)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure regSysProc(l4arg1z: integer);
 {
- new(l2var5z.s=6);
+ new(l2var5z.s = 6);
  l2var5z.s@ := [l4arg1z, 0, , l3var10z, chr(2), l3var9z];
  l3var9z := (l3var9z + (1));
  addToHashTab(l2var5z.s);
@@ -7055,7 +7155,7 @@ procedure regSysProc(l4arg1z: integer);
  for int76z := 2 to 5 do
     assignType(someTypeArray[int76z]);
  glob159z := (6);
- new(l2var5z.s7=7);
+ new(l2var5z.s7 = 7);
  with l2var5z.s7@ do {
     f[1].i := (0);
     f[3].t := integerType;
