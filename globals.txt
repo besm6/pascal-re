@@ -161,12 +161,12 @@
 598	lineBufBase [130]
 729	errMapBase 
 739	charClassTabBase [128]
-867     keywordHashTabBase [128]
+867     kwordHashTabBase [128]
 995	charSymTabBase [128]
 1123	symHashTabBase  [128]
 1251    typeHashTabBase [128]
-1378	helperProcMapBase [99] base=1
-1477	helperProcNameBase [99] base=1
+1378	helperMapBase [99] base=1
+1477	helperNameBase [99] base=1
 2410	systemProcNameBase 
 2440	resWordNameBase 
 2470	longSymTabBase 
@@ -175,5 +175,5 @@
 3150    constNumTabBase [500]
 3650	objBufBase [1024]
 4633    pasInforIndexed
-4675    pasInforCopy?
+4675    iso2text
 4761	FCST 
