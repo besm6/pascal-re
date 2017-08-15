@@ -19,7 +19,7 @@
 0536 allocSymtabForAbsolute
 0621 getFCSToffset f
 0641 nrOfBits
-0650 definePacked p
+0650 defineRange p
 0701 getValueOrAllocSymtab
 0715 P0715 p
 1046 endOfLine p
