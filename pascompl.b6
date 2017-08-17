@@ -117,7 +117,7 @@ kind = (
 );
 %
 dummy = (ii, rr, bb, aa, pp, cc, ss, mm, yy, tt, ee,
-         oo, qq, ss8, kk);
+         oo, qq, kk);
 %
 bitset = set of 0..47;
 %
@@ -128,7 +128,6 @@ word = record case dummy of
     aa: (a: alfa);
     tt: (t: @types);
     ee: (e: @expr);
-    ss8: (s8: @struc8);
     ss: (s: @struc);
     cc: (c: char);
     oo: (o: operator);
@@ -139,7 +138,6 @@ word = record case dummy of
     end;
 %
 struc     = record f: array [0..10] of word end;
-struc8    = record g: array [0..7] of word end;
 %
 types = record
     size,
@@ -4559,8 +4557,8 @@ var
             l3var26z@.base := l3var27z;
             if isFileType(l3var27z) then
                 error(errTypeMustNotBeFile);
-            repeat with l3var26z@, s8.f[4].s8@ do {
-                l3var23z.i := g[6].i - g[5].i + 1;
+            repeat with l3var26z@, s8.f[4].s@ do {
+                l3var23z.i := f[6].i - f[5].i + 1;
                 l3var28z := ptr(size);
                 l3var22z.i := base@.bits;
                 if ((24) < l3var22z.i) then
