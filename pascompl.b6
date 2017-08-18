@@ -3088,7 +3088,6 @@ function myminel(l6arg1z: bitset): integer;
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P6470;
-label 7007;
 var
     l5var1z, l5var2z, l5var3z, l5var4z, l5var5z,
     l5var6z, l5var7z, l5var8z, l5var9z, l5var10z,
@@ -3242,13 +3241,13 @@ procedure P6443(l6arg1z: boolean);
         if not (not l5var9z.b or (l5var22z.c <> '_004') or
                (l5var6z.s@.f[4].c <> '_003')) then
             l5var22z.c := '_003';
-7007:   if (l5var22z.c = '_004') or (l5var11z.b) then {
+(loop)      if (l5var22z.c = '_004') or (l5var11z.b) then {
             P4621(14);
             addToInsnList(00420016B);
         } else if (l5var22z.c = '_003') then {
             if (insnList@.f[2].s@.f[0].i <> (1)) then {
                 l5var22z.c := '_004';
-                goto 7007; (* a structural label doesn't work *)
+                goto loop;
             } else {
                 P4343;
                 (*=z-*)(q) exit q(*=z+*)
