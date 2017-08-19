@@ -144,7 +144,7 @@ type
 %
 idclass = (
         TYPEID,     ENUMID,     ROUTINEID,  VARID,
-        FORMALID,   CLASS5
+        FORMALID,   FIELDID
 );
 %
 insn = (
@@ -242,6 +242,10 @@ types = record
                  ptr2:      @identrec;
                  flag,
                  pckrec:    boolean);
+    kindCases:  (sel:       word;
+                 selptr1,
+                 selptr2,
+                 selptr3:      @identrec)
     end;
 %
 typechain = record
@@ -295,6 +299,10 @@ identrec = record
     5:      (typ: @types;
              cl: idclass);
     7:      (f3of7, f4of7: word; list: @identrec; value: integer);
+    10:     (f3of10, f4of10, f5of10, f6of10: word;
+             pckfield:  boolean;
+             shift:     integer;
+             width:     integer);
     12:     (f: array [3..10] of word; flags: bitset);
 end;
 %
@@ -468,7 +476,7 @@ var
     l2var3z, l2var4z: word;
     curIdRec: @identrec;
     l2var6z: word;
-    isPredefined, l2bool8z, l2var9z: boolean;
+    isPredefined, l2bool8z, inTypeDef: boolean;
     l2var10z: @expr;
     l2var11z, l2var12z: word;
     l2var13z: @types;
@@ -1758,21 +1766,21 @@ function isFileType(typtr: @types): boolean;
 }; (* isFileType *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function F2751(var l3arg1z: @identrec): boolean;
+function knownInType(var rec: @identrec): boolean;
 {
     if (typelist <> NIL) then {
-        l3arg1z := typelist;
-        while (l3arg1z <> NIL) do {
-            if (l3arg1z@.id = curIdent) then {
-                F2751 := true;
+        rec := typelist;
+        while (rec <> NIL) do {
+            if (rec@.id = curIdent) then {
+                knownInType := true;
                 exit
             };
-            l3arg1z := l3arg1z@.next;
+            rec := rec@.next;
             (*=z-*)besm(2200000B);(*=z+*)
         }
     };
-    F2751 := false;
-}; (* F2751 *)
+    knownInType := false;
+}; (* knownInType *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure checkSymAndRead(sym: symbol);
@@ -4203,7 +4211,7 @@ var l4var1z, l4var2z, l4var3z, l4var4z, l4var5z: word;
 }; (* formOperator *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-procedure parseTypeRef(var newtype: @types; l3arg2z: bitset);
+procedure parseTypeRef(var newtype: @types; skipTarget: setofsys);
 label
     12247, 12366, 12476, 12760, 13020;
 type
@@ -4216,45 +4224,44 @@ type
             pairs: pair7;
         end;
 var
-    l3var1z, l3var2z: word;
+    l3var1z: word;
+    cond: boolean;
     cases: caserec;
-    l3var19z, l3var20z, l3var21z, l3var22z: word;
-    l3var23z: word;
-    l3var24z: @identrec;
-    l3var25z: @identrec;
-    l3var26z, l3var27z, l3var28z, l3var29z: @types;
+    leftBound, rightBound: word;
+    numBits: integer;
+    l3var22z: word;
+    span: integer;
+    curEnum: @identrec;
+    curField: @identrec;
+    l3var26z, nestedType, tempType, curType: @types;
     l3var30z: word;
     l3var31z: @identrec;
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-procedure definePtrType(l4arg1z: @types);
+procedure definePtrType(toType: @types);
 {
-    new(l3var29z = 4);
-    l3var29z@ := [1, 15, kindPtr, l4arg1z];
-    new(l3var24z = 5);
-    l3var24z@ := [curIdent, lineCnt, typelist, l3var29z, false];
-    typelist := l3var24z;
+    new(curType = 4);
+    curType@ := [1, 15, kindPtr, toType];
+    new(curEnum = 5);
+    curEnum@ := [curIdent, lineCnt, typelist, curType, TYPEID];
+    typelist := curEnum;
 }; (* definePtrType *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure parseRecordDecl(rectype: @types; isOuterDecl: boolean);
-type
-    struc6 = record
-            f: array [0..5] of word
-        end;
 var
-    l4var1z: word;
-    l4var2z: @types;
-    l4var3z: word;
-    l4var4z: struc6;
+    l4typ1z, selType, l4var3z, l4var4z, l4var5z: @types;
+    l4var6z: @identrec;
+    l4var7z, l4var8z: word;
+    l4var9z: integer;
     l4var10z, l4var26z: caserec;
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure addToTypeHashTab;
 {
-    l3var24z@ := [curIdent, , typeHashTabBase[bucket], ,
-                    CLASS5, NIL, l3var29z, l3var1z];
-    typeHashTabBase[bucket] := l3var24z;
+    curEnum@ := [curIdent, , typeHashTabBase[bucket], ,
+                    FIELDID, NIL, curType, l3var1z];
+    typeHashTabBase[bucket] := curEnum;
 }; (* addToTypeHashTab *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4262,84 +4269,84 @@ procedure computeFieldOffsets;
 label
     11523, 11622;
 var
-    l5var1z, l5var2z, l5var3z, l5var4z, l5var5z: integer;
+    l5var1z, pairIdx, l5var3z, l5var4z, l5var5z: integer;
     l5var6z: @pair;
 {
-    parseTypeRef(l4var2z, l3arg2z + [33]);
-    if (l3var29z@.ptr2 = NIL) then {
-        l3var29z@.ptr2 := l3var25z;
+    parseTypeRef(selType, skipTarget + [CASESY]);
+    if (curType@.ptr2 = NIL) then {
+        curType@.ptr2 := curField;
     } else {
-        l3var31z@.list := l3var25z;
+        l3var31z@.list := curField;
     };
-    l3var2z.b := isFileType(l4var2z);
-    if (not isOuterDecl) and l3var2z.b then
+    cond := isFileType(selType);
+    if (not isOuterDecl) and cond then
         error(errTypeMustNotBeFile);
-    l3var29z@.s8.f[5].b := l3var2z.b or l3var29z@.s8.f[5].b;
-    l3var31z := l3var24z;
+    curType@.s8.f[5].b := cond or curType@.s8.f[5].b;
+    l3var31z := curEnum;
     repeat
-        l3var25z@.typ := l4var2z;
+        curField@.typ := selType;
 (q)     if (l3var1z.b) then {
-            l5var1z := l4var2z@.bits;
-            l3var25z@.f[9].i := l5var1z;
-            if (l5var1z <> (48)) then {
-                for l5var2z to cases.f2 do
+            l5var1z := selType@.bits;
+            curField@.width := l5var1z;
+            if (l5var1z <> 48) then {
+                for pairIdx to cases.f2 do
 11523:          {
-                    l5var6z := ref(cases.pairs[l5var2z]);
+                    l5var6z := ref(cases.pairs[pairIdx]);
                     if (l5var6z@.first >= l5var1z) then {
-                        l3var25z@.f[8].i := 48 - l5var6z@.first;
-                        l3var25z@.offset := l5var6z@.second;
+                        curField@.shift := 48 - l5var6z@.first;
+                        curField@.offset := l5var6z@.second;
                         if not (S6 IN optSflags.m) then
-                            l3var25z@.f[8].i := 48 - l3var25z@.f[9].i -
-                                                  l3var25z@.f[8].i;
+                            curField@.shift := 48 - curField@.width -
+                                                  curField@.shift;
                         l5var6z@.first := l5var6z@.first - l5var1z;
                         if l5var6z@.first = 0 then {
-                            cases.pairs[l5var2z] :=
+                            cases.pairs[pairIdx] :=
                                 cases.pairs[cases.f2];
-                            cases.f2 := (cases.f2 - (1));
+                            cases.f2 := cases.f2 - 1;
                         }; (* 11562 *)
                         goto 11622;
                     }
                 }; (* 11564 *)
-                if (cases.f2 <> (7)) then {
+                if (cases.f2 <> 7) then {
                     cases.f2 := cases.f2 + 1;
-                    l5var2z := cases.f2;
+                    pairIdx := cases.f2;
                 } else {
                     l5var3z := 48;
                     for l5var4z to 7 do {
                         l5var5z := cases.pairs[l5var4z].first;
                         if (l5var5z < l5var3z) then {
                             l5var3z := l5var5z;
-                            l5var2z := l5var4z;
+                            pairIdx := l5var4z;
                         }
                     }; (* for *)
                 }; (* 11606 *)
-                cases.pairs[l5var2z] := [48, cases.f1];
-                cases.f1 := (cases.f1 + (1));
+                cases.pairs[pairIdx] := [48, cases.f1];
+                cases.f1 := cases.f1 + 1;
                 goto 11523;
             }
         }; (* 11615 *)
-        l3var25z@.f[7].c := chr(0C);
-        l3var25z@.offset := cases.f1;
-        cases.f1 := (cases.f1 + l4var2z@.size);
+        curField@.pckfield := false;
+        curField@.offset := cases.f1;
+        cases.f1 := cases.f1 + selType@.size;
 11622:
-        if (PASINFOR.listMode = (3)) then {
+        if (PASINFOR.listMode = 3) then {
             write(' ':16);
-            if (l3var25z@.f[7].b) then
+            if (curField@.pckfield) then
                 write('PACKED');
             write(' FIELD ');
-            printTextWord(l3var25z@.id);
-            write('.OFFSET=', l3var25z@.offset:5 oct, 'B');
-            if (l3var25z@.f[7].b) then {
-                write('.<<=SHIFT=', l3var25z@.f[8].i:2,
-                      '. WIDTH=', l3var25z@.f[9].i:2, ' BITS');
+            printTextWord(curField@.id);
+            write('.OFFSET=', curField@.offset:5 oct, 'B');
+            if (curField@.pckfield) then {
+                write('.<<=SHIFT=', curField@.shift:2,
+                      '. WIDTH=', curField@.width:2, ' BITS');
             } else {
-                write('.WORDS=', l4var2z@.size:0);
+                write('.WORDS=', selType@.size:0);
             };
             writeLN;
         };
-        l3var2z.b := (l3var25z = l3var24z);
-        l3var25z := l3var25z@.list;
-    until l3var2z.b;
+        cond := (curField = curEnum);
+        curField := curField@.list;
+    until cond;
     (* 11674 *)
 }; (* computeFieldOffsets *)
 %
@@ -4349,30 +4356,30 @@ var
     inSymbol;
     (*11702*)
     while (SY = IDENT) do {
-        l4var4z.f[2].s := NIL;
+        l4var6z := NIL;
         repeat
             if (SY <> IDENT) then {
                 error(errNoIdent);
             } else {
                 if (hashTravPtr <> NIL) then
                     error(errIdentAlreadyDefined);
-                new(l3var24z = 10);
+                new(curEnum = 10);
                 addToTypeHashTab;
-                if (l4var4z.f[2].s = NIL) then {
-                    l3var25z := l3var24z;
+                if (l4var6z = NIL) then {
+                    curField := curEnum;
                 } else {
-                    l4var4z.f[2].q@.list := l3var24z;
+                    l4var6z@.list := curEnum;
                 };
-                l4var4z.f[2].q := l3var24z;
+                l4var6z := curEnum;
                 int93z := 3;
                 inSymbol;
             };
-            l3var2z.b := (SY <> COMMA);
-            if (not l3var2z.b) then {
+            cond := (SY <> COMMA);
+            if (not cond) then {
                 int93z := 3;
                 inSymbol;
             }
-        until l3var2z.b;
+        until cond;
         checkSymAndRead(COLON);
         computeFieldOffsets;
         if (SY = SEMICOLON) then {
@@ -4383,37 +4390,37 @@ var
     if (SY = CASESY) then {
         int93z := 3;
         inSymbol;
-        l4var2z := integerType;
+        selType := integerType;
 (identif)
         if (SY <> IDENT) then {
             error(3);
-            skip((l3arg2z + [42]));
+            skip((skipTarget + [OFSY]));
         } else { (* 11766 *)
-            l4var4z.f[4] := curIdent;
-            l4var4z.f[5].i := bucket;
-            l3var24z := hashTravPtr;
+            l4var8z := curIdent;
+            l4var9z := bucket;
+            curEnum := hashTravPtr;
             inSymbol;
             if (SY = COLON) then {
-                if (l3var24z <> NIL) then
+                if (curEnum <> NIL) then
                     error(errIdentAlreadyDefined);
-                new(l3var24z = 10);
-                curIdent := l4var4z.f[4];
-                bucket := l4var4z.f[5].i;
+                new(curEnum = 10);
+                curIdent := l4var8z;
+                bucket := l4var9z;
                 addToTypeHashTab;
                 inSymbol;
-                l3var25z := l3var24z;
+                curField := curEnum;
                 computeFieldOffsets;
             } else {
-                l3var24z := symHashTabBase[l4var4z.f[5].i];
-                while (l3var24z <> NIL) do {
-                    if (l3var24z@.id <> l4var4z.f[4]) then {
-                        l3var24z := l3var24z@.next;
+                curEnum := symHashTabBase[l4var9z];
+                while (curEnum <> NIL) do {
+                    if (curEnum@.id <> l4var8z) then {
+                        curEnum := curEnum@.next;
                     } else {
-                        if (l3var24z@.cl <> TYPEID) then {
+                        if (curEnum@.cl <> TYPEID) then {
                             error(errNotAType);
-                            l4var2z := integerType;
+                            selType := integerType;
                         } else {
-                            l4var2z := l3var24z@.typ;
+                            selType := curEnum@.typ;
                         };
                         exit identif;
                     };
@@ -4421,48 +4428,48 @@ var
                 error(errNotDefined)
             };
         }; (* 12035 *)
-        if (l4var2z@.k = kindRange) then
-            l4var2z := l4var2z@.base;
+        if (selType@.k = kindRange) then
+            selType := selType@.base;
         checkSymAndRead(OFSY);
         l4var10z := cases;
         l4var26z := cases;
-        l4var1z.s := NIL;
+        l4typ1z := NIL;
         repeat
-            l4var3z.s := NIL;
+            l4var3z := NIL;
             repeat
-                parseLiteral(l4var4z.f[0].t, l4var4z.f[3], false);
-                if (l4var4z.f[0].s = NIL) then
+                parseLiteral(l4var4z, l4var7z, false);
+                if (l4var4z = NIL) then
                     error(errNoConstant)
-                else if (not typeCheck(l4var4z.f[0].t, l4var2z)) then
+                else if (not typeCheck(l4var4z, selType)) then
                     error(errConstOfOtherTypeNeeded);
-                new(l4var4z.f[1].s = 7);
-                l4var4z.f[1].s@ := [cases, 48, kindCases,
-                                    l4var4z.f[3], NIL, NIL, NIL];
-                if (l4var3z.s = NIL) then {
-                    l3var28z := l4var4z.f[1].t;
+                new(l4var5z = 7);
+                l4var5z@ := [cases, 48, kindCases,
+                                    l4var7z, NIL, NIL, NIL];
+                if (l4var3z = NIL) then {
+                    tempType := l4var5z;
                 } else {
-                    l4var3z.s@.f[6] := l4var4z.f[1];
+                    l4var3z@.s8.f[6].t := l4var5z;
                 };
-                l4var3z := l4var4z.f[1];
+                l4var3z := l4var5z;
                 inSymbol;
-                l3var2z.b := (SY <> COMMA);
-                if (not l3var2z.b) then
+                cond := (SY <> COMMA);
+                if (not cond) then
                     inSymbol;
-            until l3var2z.b;
-            if (l4var1z.s = NIL) then {
-                if (l3var29z@.base = NIL) then {
-                    l3var29z@.base := l3var28z;
+            until cond;
+            if (l4typ1z = NIL) then {
+                if (curType@.base = NIL) then {
+                    curType@.base := tempType;
                 } else {
-                    rectype@.s8.f[4].t := l3var28z;
+                    rectype@.s8.f[4].t := tempType;
                 }
             } else {
-                l4var1z.s@.f[5].t := l3var28z;
+                l4typ1z@.s8.f[5].t := tempType;
             };
-            l4var1z.t := l3var28z;
+            l4typ1z := tempType;
             checkSymAndRead(COLON);
             if (SY <> LPAREN) then
                 requiredSymErr(LPAREN);
-            parseRecordDecl(l3var28z, false);
+            parseRecordDecl(tempType, false);
             if (l4var26z.f1 < cases.f1) or
                l3var1z.b and (cases.f1 = 1) and (l4var26z.f1 = 1) and
                 (cases.f2 = 1) and (l4var26z.f2 = 1) and
@@ -4471,17 +4478,17 @@ var
             }; (* 12201 *)
             cases := l4var10z;
             checkSymAndRead(RPAREN);
-            l3var2z.b := SY <> SEMICOLON;
-            if (not l3var2z.b) then
+            cond := SY <> SEMICOLON;
+            if (not cond) then
                 inSymbol;
             if (SY = ENDSY) then
-                l3var2z.b := true;
-        until l3var2z.b;
+                cond := true;
+        until cond;
         cases := l4var26z;
     }; (* 12232 *)
     rectype@.size := cases.f1;
-    if l3var1z.b and (cases.f1 = (1)) and (cases.f2 = (1)) then {
-        rectype@.bits := ((48) - cases.pairs[1].first);
+    if l3var1z.b and (cases.f1 = 1) and (cases.f2 = 1) then {
+        rectype@.bits := 48 - cases.pairs[1].first;
     }
     (* 12242 *)
 }; (* parseRecordDecl*)
@@ -4491,26 +4498,26 @@ var
     l3var1z.b := false;
 12247:
     if (SY = LPAREN) then {
-        l3var23z.i := 0;
+        span := 0;
         int93z := 0;
         inSymbol;
-        l3var25z := NIL;
-        new(l3var29z = 6);
+        curField := NIL;
+        new(curType = 6);
         while (SY = IDENT) do {
             if (isDefined) then
                 error(errIdentAlreadyDefined);
-            new(l3var24z = 7);
-            l3var24z@ := [curIdent, curFrameRegTemplate,
-                            symHashTabBase[bucket], l3var29z,
-                            chr(1C), NIL, ptr(l3var23z.i)];
-            symHashTabBase[bucket] := l3var24z;
-            l3var23z.i := (l3var23z.i + (1));
-            if (l3var25z = NIL) then {
-                l3var29z@.s8.f[3].q := l3var24z;
+            new(curEnum = 7);
+            curEnum@ := [curIdent, curFrameRegTemplate,
+                            symHashTabBase[bucket], curType,
+                            ENUMID, NIL, ptr(span)];
+            symHashTabBase[bucket] := curEnum;
+            span := span + 1;
+            if (curField = NIL) then {
+                curType@.enums := curEnum;
             } else {
-                l3var25z@.list := l3var24z;
+                curField@.list := curEnum;
             };
-            l3var25z := l3var24z;
+            curField := curEnum;
             inSymbol;
             if (SY = COMMA) then {
                 int93z := 0;
@@ -4521,37 +4528,37 @@ var
             };
         }; (* 12324 *)
         checkSymAndRead(RPAREN);
-        if (l3var25z = NIL) then {
-            l3var29z := booleanType;
+        if (curField = NIL) then {
+            curType := booleanType;
             error(errNoIdent);
         } else {
-            l3var29z@ := [1, nrOfBits(l3var23z.i - 1), kindScalar, ,
-                          l3var23z, 0];
+            curType@ := [1, nrOfBits(span - 1), kindScalar, ,
+                          span, 0];
         };
     } else (* 12344 *)
     if (SY = ARROW) then {
         inSymbol;
         if (SY <> IDENT) then {
             error(errNoIdent);
-            l3var29z := pointerType;
+            curType := pointerType;
         } else {
             if (hashTravPtr = NIL) then {
-                if (l2var9z) then {
-                    if (F2751(l3var24z)) then {
-                        l3var29z := l3var24z@.typ;
+                if (inTypeDef) then {
+                    if (knownInType(curEnum)) then {
+                        curType := curEnum@.typ;
                     } else {
                         definePtrType(integerType);
                     };
                 } else {
 12366:              error(errNotAType);
-                    l3var29z := pointerType;
+                    curType := pointerType;
                 };
             } else {
                 if (hashTravPtr@.cl <> TYPEID) then {
                     goto 12366
                 };
-                new(l3var29z = 4);
-                with l3var29z@ do {
+                new(curType = 4);
+                with curType@ do {
                     size := 1;
                     bits := 15;
                     k := kindPtr;
@@ -4564,21 +4571,21 @@ var
     if (SY = IDENT) then {
         if (hashTravPtr <> NIL) then {
             if (hashTravPtr@.cl = TYPEID) then {
-                l3var29z := hashTravPtr@.typ;
+                curType := hashTravPtr@.typ;
             } else {
                 goto 12760;
             }
         } else {
-            if (l2var9z) then {
-                if (F2751(l3var24z)) then {
-                    l3var29z := l3var24z@.typ;
-                    l3var29z@.base := booleanType;
+            if (inTypeDef) then {
+                if (knownInType(curEnum)) then {
+                    curType := curEnum@.typ;
+                    curType@.base := booleanType;
                 } else {
                     definePtrType(booleanType);
                 };
             } else {
-                error(4);
-                l3var29z := integerType;
+                error(errNotAType);
+                curType := integerType;
             };
         };
         inSymbol;
@@ -4589,9 +4596,9 @@ var
             goto 12247;
         };
         if (SY = RECORDSY) then { (* 12446 *)
-            new(l3var29z = 7);
-            strp121z := l3var29z;
-            with l3var29z@ do {
+            new(curType = 7);
+            strp121z := curType;
+            with curType@ do {
                 size := 0;
                 bits := 48;
                 k := kindRecord;
@@ -4602,39 +4609,39 @@ var
             };
             cases.f1 := 0;
             cases.f2 := 0;
-            parseRecordDecl(l3var29z, true);
+            parseRecordDecl(curType, true);
             checkSymAndRead(ENDSY);
         } else (* 12467 *)
         if (SY = ARRAYSY) then {
             inSymbol;
             if (SY = LBRACK) then
                 inSymbol;
-            l3var28z := NIL;
-12476:      parseTypeRef(l3var27z, l3arg2z + [42]);
-            curVarKind := l3var27z@.k;
+            tempType := NIL;
+12476:      parseTypeRef(nestedType, skipTarget + [OFSY]);
+            curVarKind := nestedType@.k;
             if (curVarKind <> kindRange) then {
                 if (curVarKind = kindScalar) and
-                   (l3var27z <> integerType) then {
-                    l3var23z := l3var27z@.s8.f[4];
+                   (nestedType <> integerType) then {
+                    span := nestedType@.numen;
                 } else {
-                    error(8);
-                    l3var27z := integerType;
-                    l3var23z.i := (10);
+                    error(8); (* errNotAnIndexType *)
+                    nestedType := integerType;
+                    span := 10;
                 };
-                defineRange(l3var27z, 0, l3var23z.i - 1);
+                defineRange(nestedType, 0, span - 1);
             }; (* 12524 *)
             new(l3var26z, kindArray);
             with l3var26z@ do {
-                size := ord(l3var28z);
+                size := ord(tempType);
                 bits := 48;
                 k := kindArray;
-                range := l3var27z;
+                range := nestedType;
             };
-            if (l3var28z = NIL) then
-                l3var29z := l3var26z
+            if (tempType = NIL) then
+                curType := l3var26z
             else
-                l3var28z@.base := l3var26z;
-            l3var28z := l3var26z;
+                tempType@.base := l3var26z;
+            tempType := l3var26z;
             if (SY = COMMA) then {
                 inSymbol;
                 goto 12476;
@@ -4642,36 +4649,36 @@ var
             if (SY = RBRACK) then
                 inSymbol;
             checkSymAndRead(OFSY);
-            parseTypeRef(l3var27z, l3arg2z);
-            l3var26z@.base := l3var27z;
-            if isFileType(l3var27z) then
+            parseTypeRef(nestedType, skipTarget);
+            l3var26z@.base := nestedType;
+            if isFileType(nestedType) then
                 error(errTypeMustNotBeFile);
             repeat with l3var26z@, s8.f[4].s@ do {
-                l3var23z.i := f[6].i - f[5].i + 1;
-                l3var28z := ptr(size);
+                span := f[6].i - f[5].i + 1;
+                tempType := ptr(size);
                 l3var22z.i := base@.bits;
                 if (24 < l3var22z.i) then
                     l3var1z.b := false;
                 bits := 48;
                 if (l3var1z.b) then {
                     l3var22z.i := 48 DIV l3var22z.i;
-                    if (l3var22z.i = (9)) then {
-                        l3var22z.i := (8);
-                    } else if (l3var22z.i = (5)) then {
+                    if (l3var22z.i = 9) then {
+                        l3var22z.i := 8;
+                    } else if (l3var22z.i = 5) then {
                         l3var22z.i := 4
                     } (*=z-*)else(*=z+*) ;
                     perword := l3var22z.i;
-                    pcksize := ((48) DIV l3var22z.i);
-                    l3var22z.i := l3var23z.i * pcksize;
+                    pcksize := 48 DIV l3var22z.i;
+                    l3var22z.i := span * pcksize;
                     if l3var22z.i mod 48 = 0 then
-                        l3var21z.i := 0
+                        numBits := 0
                     else
-                        l3var21z.i := 1;
-                    size := l3var22z.i div 48 + l3var21z.i;
+                        numBits := 1;
+                    size := l3var22z.i div 48 + numBits;
                     if (size = 1) then
                         bits := l3var22z.i;
                 } else { (* 12633 *)
-                    size := l3var23z.i * base@.size;
+                    size := span * base@.size;
                     curVal.i := base@.size;
                     curVal.m := ((curVal.m * [7:47]) + [0]);
                     if (range@.base <> integerType) then
@@ -4680,84 +4687,84 @@ var
                 }; (* 12652 *)
                 l3var26z@.pck := l3var1z.b;
                 l3var1z.b := false;
-                l3var2z.b := (l3var29z = l3var26z);
-                l3var26z := l3var28z;
-            } until l3var2z.b;
+                cond := (curType = l3var26z);
+                l3var26z := tempType;
+            } until cond;
         } else (* 12663 *)
         if (SY = FILESY) then {
             inSymbol;
             checkSymAndRead(OFSY);
-            parseTypeRef(l3var27z, l3arg2z);
-            if (isFileType(l3var27z)) then
+            parseTypeRef(nestedType, skipTarget);
+            if (isFileType(nestedType)) then
                 error(errTypeMustNotBeFile);
             if (l3var1z.b) then {
-                l3var22z.i := l3var27z@.bits;
+                l3var22z.i := nestedType@.bits;
                 if ((24) < l3var22z.i) then
                     l3var1z.b := false;
             };
-            new(l3var29z, kindFile);
+            new(curType, kindFile);
             if (not l3var1z.b) then
                 l3var22z.i := 0;
-            with l3var29z@ do {
+            with curType@ do {
                 size := (30);
                 bits := (48);
                 k := kindFile;
-                base := l3var27z;
+                base := nestedType;
                 elsize := l3var22z.i;
             }
         } else (* 12721 *)
         if (SY = SETSY) then {
             inSymbol;
             checkSymAndRead(OFSY);
-            parseTypeRef(l3var27z, l3arg2z);
-            with l3var27z@ do {
+            parseTypeRef(nestedType, skipTarget);
+            with nestedType@ do {
                 if (k = kindRange) and
                    (left >= (0)) and
                    ((47) >= right) then
-                    l3var21z.i := (right + (1))
+                    numBits := (right + (1))
                 else if (k = kindScalar) and
                         ((48) >= numen) then
-                    l3var21z.i := numen
+                    numBits := numen
                 else (q) {
-                    l3var21z.i := (48);
+                    numBits := (48);
                     error(63); (* errBadBaseTypeForSet *)
                     (*=z-*)exit q(*=z+*)
                 }
             };
-            new(l3var29z, kindSet);
-            with l3var29z@ do {
+            new(curType, kindSet);
+            with curType@ do {
                 size := 1;
-                bits := l3var21z.i;
+                bits := numBits;
                 k := kindSet;
-                base := l3var27z;
+                base := nestedType;
             }
         } else (q) {
 12760:      ;
-            parseLiteral(l3var28z, l3var19z, true);
-            if (l3var28z <> NIL) then {
+            parseLiteral(tempType, leftBound, true);
+            if (tempType <> NIL) then {
                 inSymbol;
                 if (SY <> COLON) then {
                     requiredSymErr(COLON);
                 } else {
                     inSymbol;
                 };
-                parseLiteral(l3var29z, l3var20z, true);
-                if (l3var29z = l3var28z) and
-                   (l3var29z@.k = kindScalar) then {
-                    defineRange(l3var29z, l3var19z.i, l3var20z.i);
+                parseLiteral(curType, rightBound, true);
+                if (curType = tempType) and
+                   (curType@.k = kindScalar) then {
+                    defineRange(curType, leftBound.i, rightBound.i);
                     inSymbol;
                     goto 13020;
                 }
             };
             error(64); (* errIncorrectRangeDefinition *)
-            l3var29z := booleanType;
+            curType := booleanType;
             (*=z-*)exit q(*=z+*)
         };
     };
 13020:
     if (errors) then
-        skip((skipToSet + [RPAREN, RBRACK, SEMICOLON, OFSY]));
-    newtype := l3var29z;
+        skip(skipToSet + [RPAREN, RBRACK, SEMICOLON, OFSY]);
+    newtype := curType;
 }; (* parseTypeRef *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4972,7 +4979,7 @@ var
     l4var3z: @types;
     l4var4z: kind;
 {
-    if (hashTravPtr@.cl = CLASS5) then {
+    if (hashTravPtr@.cl = FIELDID) then {
         curExpr := strp62z;
         goto 13530;
     } else {
@@ -5360,7 +5367,7 @@ var
                         arg2.q := l4var9z;
                     }
                 };
-                VARID, FORMALID, CLASS5:
+                VARID, FORMALID, FIELDID:
                     parseLval;
                 end (* case *)
         };
@@ -7797,7 +7804,7 @@ procedure exitScope(var l3arg1z: array [0..127] of @identrec);
         exit;
     };
     l2var1z.m := [];
-    l2var9z := false;
+    inTypeDef := false;
     l2var11z.i := 0;
     strLabList := NIL;
     lineNesting := (lineNesting + (1));
@@ -7873,7 +7880,7 @@ procedure exitScope(var l3arg1z: array [0..127] of @identrec);
     }; (* 22511 *)
     objBufIdx := 1;
     if (SY = TYPESY) then {
-        l2var9z := true;
+        inTypeDef := true;
         typelist := NIL;
         parseDecls(0);
         while SY = IDENT do {
@@ -7888,7 +7895,7 @@ procedure exitScope(var l3arg1z: array [0..127] of @identrec);
                 inSymbol;
             parseTypeRef(l2var13z, skipToSet + [SEMICOLON]);
             curIdent := l2var12z;
-            if (F2751(curIdRec)) then {
+            if (knownInType(curIdRec)) then {
                 l2var14z.t := curIdRec@.f[3].t;
                 if (l2var14z.t@.base = booleanType) then {
                     if (l2var13z@.k <> kindPtr) then {
@@ -7923,7 +7930,7 @@ procedure exitScope(var l3arg1z: array [0..127] of @identrec);
             typelist := typelist@.next;
         }
     }; (* TYPESY -> 22612 *)
-    l2var9z := false;
+    inTypeDef := false;
     curExpr := NIL;
     if (SY = VARSY) then {
         parseDecls(0);
