@@ -1,4 +1,6 @@
 #!/bin/sh
+rm -f ~/.besm6/1234 re-pascompl.o
+touch ~/.besm6/1234
 sed 's/{/_(/g;s/}/_)/g' < pascompl.b6 > pascompl$$
 length=`dispak pascompl$$ | grep ЗОН | cut -d ' ' -f 5`
 echo Length of library is $length
