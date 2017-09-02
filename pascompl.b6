@@ -358,7 +358,7 @@ var (* total size 4791 words *)
             skipToSet, lvalOpSet: setofsys;
 (*47-49*)   bool47z, bool48z, bool49z: boolean;
 (*50*)      dataCheck: boolean;
-(*51*)      int51z: integer;
+(*51*)      jumpType: integer;
 (*52*)      jumpTarget: integer;
 (*53*)      int53z: integer;
 (*54*)      charClass: operator;
@@ -729,7 +729,7 @@ function getObjBufIdxPlus: integer;
 }; (* getObjBufIdxPlus *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-procedure formJumpOnCond(var arg: integer);
+procedure formJump(var arg: integer);
 var
     pos: integer;
     isLeft: boolean;
@@ -737,12 +737,12 @@ var
     if prevOpcode <> insnTemp[UJ] then {
         pos := getObjBufIdxPlus;
         isLeft := putLeft;
-        form1Insn(int51z + arg);
+        form1Insn(jumpType + arg);
         if putLeft = isLeft then
             pos := pos - 1;
         arg := pos;
     }
-}; (* formJumpOnCond *)
+}; (* formJump *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure padToLeft;
@@ -2354,11 +2354,11 @@ procedure addJumpInsn(opcode: integer);
         } else {
             curInsn.i := curInsn.i - macro;
             curVal.m := curInsn.m * [0, 1, 3, 28:32];
-            int51z := curVal.i;
+            jumpType := curVal.i;
             curVal.m := [0, 1, 3, 33:47] * curInsn.m;
             l4inl7z := ptr(curVal.i);
-            formJumpOnCond(l4inl7z@.code);
-            int51z := insnTemp[UJ];
+            formJump(l4inl7z@.code);
+            jumpType := insnTemp[UJ];
             exit iter
         }
     }; (* loop *)
@@ -3323,7 +3323,7 @@ procedure traceEntry(isEntry: boolean);
                         exit a;
                     } else { (* 6651 *)
                         l5var16z.i := 0;
-                        formJumpOnCond(l5var16z.i);
+                        formJump(l5var16z.i);
                         padToLeft;
                         l5idr4z@.value := moduleOffset;
                         l5idr3z := l5idr4z@.argList;
@@ -3728,8 +3728,7 @@ var
                     if (arg2Const) then {
                         prepLoad;
                         if card(arg2Val.m) = 4 then {
-                            curVal.m := [minel(arg2Val.m-intZero)+1..47];
-                            (* TODO + [0,1,3] *)
+                            curVal.m := [0,1,3,minel(arg2Val.m-intZero)+1..47];
                             addToInsnList(KAAX+I8 +getFCSToffset);
                             l3int3z := 0;
                         } else { (* 10016 *)
@@ -4177,7 +4176,7 @@ var l4exf1z: @extfilerec;
                     jumpTarget := 0;
                 } else {
                     if (l3bool9z) then {
-                        formJumpOnCond(jumpTarget);
+                        formJump(jumpTarget);
                     } else {
                         form1Insn(insnTemp[UJ] + jumpTarget);
                     }
@@ -4189,7 +4188,7 @@ var l4exf1z: @extfilerec;
                     genOneOp;
                     if (l3var8z.b) then {
                         if (l3bool9z) then
-                            formJumpOnCond(l3int3z)
+                            formJump(l3int3z)
                         else
                             form1Insn(insnTemp[UJ] + l3int3z);
                         P0715(0, jumpTarget);
@@ -4213,9 +4212,9 @@ var l4exf1z: @extfilerec;
                     else
                         nextInsn := insnTemp[UZA];
                     if (l3bool9z) then {
-                        int51z := nextInsn;
-                        formJumpOnCond(l3int3z);
-                        int51z := insnTemp[UJ];
+                        jumpType := nextInsn;
+                        formJump(l3int3z);
+                        jumpType := insnTemp[UJ];
                         jumpTarget := l3int3z;
                     } else {
                         form1Insn(nextInsn + l3int3z);
@@ -5822,7 +5821,7 @@ var
     };
     l4int7z := 0;
     disableNorm;
-    formJumpOnCond(l4int7z);
+    formJump(l4int7z);
     padToLeft;
     l4int8z := moduleOffset;
     checkSymAndRead(DOSY);
@@ -5902,7 +5901,7 @@ var
                             if (isGoto) then {
                                 form1Insn(insnTemp[UJ] + offset);
                             } else {
-                                formJumpOnCond(curLab@.exitTarget);
+                                formJump(curLab@.exitTarget);
                             };
                         } else {
                             form1Insn(getValueOrAllocSymtab(ii) +
@@ -5910,9 +5909,9 @@ var
                             if (isGoto) then {
                                 form1Insn(KVTM+I10 + curLab@.offset);
                             } else {
-                                int51z := KVTM+I10;
-                                formJumpOnCond(curLab@.exitTarget);
-                                int51z := insnTemp[UJ];
+                                jumpType := KVTM+I10;
+                                formJump(curLab@.exitTarget);
+                                jumpType := insnTemp[UJ];
                             };
                             form1Insn(getHelperProc(60) +
                                       6437777713700000C); (* P/ZAM *)
@@ -5928,7 +5927,7 @@ var
                 form1Insn(getValueOrAllocSymtab(ii) + (KVTM+I13));
                 form1Insn(getHelperProc(60)); (* P/ZAM *)
             };
-            formJumpOnCond(int53z);
+            formJump(int53z);
         } else {
             error(errNotDefined);
         }
@@ -5983,7 +5982,7 @@ function max(a, b: integer): integer;
     l4var17z := 0;
     endOfStmt := 0;
     allClauses := NIL;
-    formJumpOnCond(l4var17z);
+    formJump(l4var17z);
     checkSymAndRead(OFSY);
     firstType := NIL;
     goodMode := true;
@@ -6039,7 +6038,7 @@ function max(a, b: integer): integer;
             checkSymAndRead(COLON);
             statement;
             goodMode := goodMode and (arithMode = 1);
-            formJumpOnCond(endOfStmt);
+            formJump(endOfStmt);
         }; (* 15762 *)
         itemsEnded := (SY = ENDSY);
         if not itemsEnded then
@@ -6114,7 +6113,7 @@ function max(a, b: integer): integer;
         }; (* while 16142 *)
         if (not otherSeen) then {
             otherOffset := moduleOffset;
-            formJumpOnCond(endOfStmt);
+            formJump(endOfStmt);
         };
         P0715(0, l4var17z);
         curVal := minValue;
@@ -6877,7 +6876,7 @@ var
                 error(1); (* errCommaOrSemicolonNeeded *)
             inSymbol;
         } else {
-            formJumpOnCond(int53z);
+            formJump(int53z);
         };
         if not (l4bool10z) then
             exit
@@ -7124,7 +7123,7 @@ var
                         if (offset >= 40000B) then {
                             form1Insn(insnTemp[UJ] + offset);
                         } else {
-                            formJumpOnCond(offset);
+                            formJump(offset);
                         }
                     } else {
                         if offset = 0 then {
@@ -7144,7 +7143,7 @@ var
             ifWhileStatement(THENSY);
             if (SY = ELSESY) then {
                 l3var11z.i := 0;
-                formJumpOnCond(l3var11z.i);
+                formJump(l3var11z.i);
                 P0715(0, l3var10z.i);
                 l3var8z.i := arithMode;
                 arithMode := 1;
@@ -7212,7 +7211,7 @@ var
                 };
                 checkSymAndRead(COLON);
                 statement;
-                formJumpOnCond(l3var11z.i);
+                formJump(l3var11z.i);
                 l3bool5z := l3bool5z and (arithMode = 1);
                 P0715(0, l3var10z.i);
             until (SY <> SEMICOLON);
@@ -8287,7 +8286,7 @@ var
     };
     for idx to 15 do
         indexreg[idx] := idx * frameRegTemplate;
-    int51z := insnTemp[UJ];
+    jumpType := insnTemp[UJ];
     for l3var2z := MUL to ASSIGNOP do {
         opFlags[l3var2z] := opfCOMM;
         opToInsn[l3var2z] := 0;
