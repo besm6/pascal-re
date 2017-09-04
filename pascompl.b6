@@ -14,10 +14,11 @@ const
 %   boilerplate = ' PASCAL BACK TO LIFE (15.08.2017)';
 %
     fnSQRT  = 0;  fnSIN  = 1;  fnCOS  = 2;  fnATAN  = 3;  fnASIN = 4;
-    fnLN    = 5;  fnEXP  = 6;  fnABSR = 7;  fnTRUNC = 8;  fnODD  = 9;
+    fnLN    = 5;  fnEXP  = 6;  fnABS =  7;  fnTRUNC = 8;  fnODD  = 9;
     fnORD   = 10; fnCHR  = 11; fnSUCC = 12; fnPRED  = 13; fnEOF  = 14;
-    fnREF   = 15; fnEOLN = 16; fnSQRR = 17; fnROUND = 18; fnCARD = 19;
-    fnMINEL = 20; fnPTR  = 21; fnABSI = 22; fnSQRI  = 23;
+    fnREF   = 15; fnEOLN = 16; fnSQR =  17; fnROUND = 18; fnCARD = 19;
+    fnMINEL = 20; fnPTR  = 21; fnABSI = 22; fnSQRI  = 23; fn24 = 24;
+    fn29    = 29;
 %
     S3 = 0;
     S4 = 1;
@@ -65,6 +66,7 @@ const
     mcROUND = 11;
     mcMINEL = 15;
     mcSQRI = 13;
+    mcPOP2ADDR = 19;
     mcCARD = 23;
 %
     ASCII0 =    4000007B;
@@ -525,7 +527,7 @@ var
     l2var15z, l2var16z: @numLabel;
     strLabList: @strLabel;
 %
-    l2int18z, ii, l2int20z, l2int21z, l2int22z: integer;
+    l2int18z, ii, localSize, l2int21z, jj: integer;
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %              PrintErrMsg               %
@@ -1241,7 +1243,7 @@ procedure readOptFlag(var res: boolean);
         if '_200' < CH then {
             lineBufBase[linePos] := ' ';
             chord := ord(CH);
-            for l2int22z := 130 to chord do {
+            for jj := 130 to chord do {
                 linePos := linePos + 1;
                 lineBufBase[linePos] := ' ';
             };
@@ -2217,7 +2219,7 @@ procedure addJumpInsn(opcode: integer);
                 add2InsnsToBuf(KATX+SP+1, KUTM+SP + curInsn.i)
             };
             18: add2InsnsToBuf(KVTM+I10, getHelperProc(65)); (* P/B7 *)
-            19: {
+            mcPOP2ADDR: {
                 addInsnToBuf(KVTM+I14);
                 add2InsnsToBuf(KXTA+SP, KATX+I14)
             };
@@ -2543,7 +2545,7 @@ procedure P4606;
 }; (* P4606 *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-procedure P4621(reg: integer);
+procedure setAddrTo(reg: integer);
 label
     4650, 4654;
 var
@@ -2560,7 +2562,7 @@ procedure P4613;
 }; (* P4613 *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-{ (* P4621 *)
+{ (* setAddrTo *)
     with insnList@ do {
         l4int2z := ilf7;
         opCode := insnTemp[VTM];
@@ -2615,7 +2617,7 @@ procedure P4613;
     insnList@.ilf7 := reg;
     insnList@.ilf6 := 0;
     insnList@.ilf5.i := 0;
-}; (* P4621 *)
+}; (* setAddrTo *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure prepStore;
@@ -2644,7 +2646,7 @@ var
         if (l4bool4z) then {
             addInsnAndOffset(insnList@.ilf5.i + insnTemp[UTC],
                              insnList@.ilf6);
-            addToInsnList(macro+19);
+            addToInsnList(macro+mcPOP2ADDR);
         } else {
             addInsnAndOffset(insnList@.ilf5.i, insnList@.ilf6);
         }
@@ -2684,16 +2686,16 @@ var
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure P5117(op: operator);
 {
-    addInsnAndOffset(curFrameRegTemplate, l2int20z);
+    addInsnAndOffset(curFrameRegTemplate, localSize);
     new(curExpr);
     with curExpr@ do
         typ := insnList@.typ;
     genOneOp;
     curExpr@.op := op;
-    curExpr@.num1 := l2int20z;
-    l2int20z := l2int20z + 1;
-    if (l2int21z < l2int20z) then
-        l2int21z := l2int20z;
+    curExpr@.num1 := localSize;
+    localSize := localSize + 1;
+    if (l2int21z < localSize) then
+        l2int21z := localSize;
 }; (* P5117 *)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2802,19 +2804,19 @@ var
     l5var2z: @insnltyp;
 {
     l5var1z := 12 in otherIns@.regsused;
-    P4621(12);
+    setAddrTo(12);
     if (l5var1z) then {
         addToInsnList(KITA+12);
         addToInsnList(macro + mcPUSH);
     };
     l5var2z := insnList;
     insnList := otherIns;
-    P4621(14);
+    setAddrTo(14);
     if (l5var1z) then {
         addToInsnList(macro + mcPOP);
         addToInsnList(KATI+12);
     };
-    l5var2z@.regsused := (insnList@.regsused + l5var2z@.regsused);
+    l5var2z@.regsused := insnList@.regsused + l5var2z@.regsused;
     l5var2z@.next@.next := insnList@.next2;
     l5var2z@.next := insnList@.next;
     insnList := l5var2z;
@@ -3189,7 +3191,7 @@ function myminel(l6arg1z: bitset): integer;
                         addToInsnList(macro + mcPUSH);
                     saved := insnList;
                     insnList := copyPtr;
-                    P4621(14);
+                    setAddrTo(14);
                     if (l5var24z) then
                         addToInsnList(macro + mcPOP);
                     l5var23z.m := l5var23z.m + [0, 10, 11, 13, 14];
@@ -3377,7 +3379,7 @@ procedure traceEntry(isEntry: boolean);
                (l5idr6z@.cl <> VARID)) then
             l5idc22z := VARID;
 (loop)      if (l5idc22z = FORMALID) or (l5bool11z) then {
-            P4621(14);
+            setAddrTo(14);
             addToInsnList(KITA+14);
         } else if (l5idc22z = VARID) then {
             if (insnList@.typ@.size <> 1) then {
@@ -3922,7 +3924,7 @@ var
                     fnASIN:  arg1Val.r := arcsin(arg1Val.r);
                     fnLN:    arg1Val.r := ln(arg1Val.r);
                     fnEXP:   arg1Val.r := exp(arg1Val.r);
-                    fnABSR:  arg1Val.r := abs(arg1Val.r);
+                    fnABS:   arg1Val.r := abs(arg1Val.r);
                     fnTRUNC: arg1Val.i := trunc(arg1Val.r);
                     fnODD:   arg1Val.b := odd(arg1Val.i);
                     fnORD:   arg1Val.i := ord(arg1Val.c);
@@ -3930,7 +3932,7 @@ var
                     fnSUCC:  arg1Val.c := succ(arg1Val.c);
                     fnPRED:  arg1Val.c := pred(arg1Val.c);
                     fnPTR:   arg1Val.c := chr(arg1Val.i);
-                    fnSQRR:  arg1Val.r := arg1Val.r*arg1Val.r;
+                    fnSQR:   arg1Val.r := arg1Val.r*arg1Val.r;
                     fnROUND: arg1Val.i := round(arg1Val.r);
                     fnCARD:  arg1Val.i := card(arg1Val.m);
                     fnMINEL: arg1Val.i := minel(arg1Val.m);
@@ -3943,12 +3945,12 @@ var
                     end; (* 10546 *)
                     insnList@.ilf5 := arg1Val;
                 } else (* 10550 *)
-                if (work >= 14) and (16 >= work) then {
-                    if (work = 15) then {
-                        P4621(14);
+                if (work >= fnEOF) and (fnEOLN >= work) then {
+                    if (work = fnREF) then {
+                        setAddrTo(14);
                         addToInsnList(KITA+14);
                     } else {
-                        P4621(12);
+                        setAddrTo(12);
                         addToInsnList(getHelperProc(work - 6));
                     };
                     with insnList@ do {
@@ -3957,15 +3959,15 @@ var
                     }
                 } else {
                     prepLoad;
-                    if (work = 8) then {
+                    if (work = fnTRUNC) then {
                         l3int3z := 2;
                         addToInsnList(getHelperProc(58)); (*"P/TR"*)
                         goto 10122;
                     };
-                    if (work IN [0, 1, 2, 3, 4, 5, 6,
-                                      9, 10, 11, 12, 19, 21]) then {
+                    if (work IN [fnSQRT:fnEXP,
+                                 fnODD:fnSUCC, fnCARD, fnPTR]) then {
                         l3int3z := 0;
-                    } else if (work IN [7, 17]) then
+                    } else if (work IN [fnABS, fnSQR]) then
                         l3int3z := 3
                     else {
                         l3int3z := 1;
@@ -4082,11 +4084,11 @@ var l4exf1z: @extfilerec;
                         l3int2z := 14;
                     };
                     if (l3int3z <> 1) then {
-                        P4621(l3int2z);
+                        setAddrTo(l3int2z);
                         addToInsnList(KITA + l3int2z);
                         P5117(op37);
                     } else if (l3int2z <> 14) then {
-                        P4621(l3int2z);
+                        setAddrTo(l3int2z);
                         genOneOp;
                     };
                     l3var11z.m := [l3int2z] - [14];
@@ -4124,7 +4126,7 @@ var l4exf1z: @extfilerec;
     gen5: {
         if (insnList@.st <> st0) then
             error(errVarTooComplex);
-        P4621(9);
+        setAddrTo(9);
         genOneOp;
     };
     gen6: {
@@ -4137,7 +4139,7 @@ var l4exf1z: @extfilerec;
         form1Insn(KATX+I9 + l3int1z);
     };
     gen8: {
-        P4621(12);
+        setAddrTo(12);
         genOneOp
     };
     gen9: {
@@ -4150,14 +4152,14 @@ var l4exf1z: @extfilerec;
         genOneOp;
     };
     gen11, gen12: {
-        P4621(11);
+        setAddrTo(11);
         if (l3arg1z = gen12) then
             addxToInsnList(macro + mcPUSH);
         genOneOp;
         set145z := set145z + [12];
     };
     FILEACCESS: {
-        P4621(12);
+        setAddrTo(12);
         genOneOp;
         formAndAlign(jumpTarget);
     };
@@ -4229,7 +4231,7 @@ var l4exf1z: @extfilerec;
         genFullExpr(l3var5z@.expr2);
         if (11 IN insnList@.regsused) then
             error(44); (* errIncorrectUsageOfStandProcOrFunc *)
-        P4621(12);
+        setAddrTo(12);
         genOneOp;
         arg1Type := l3var5z@.expr2@.typ;
         with arg1Type@.range@ do
@@ -4728,9 +4730,9 @@ var
                 } else { (* 12633 *)
                     size := span * base@.size;
                     curVal.i := base@.size;
-                    curVal.m := ((curVal.m * [7:47]) + [0]);
+                    curVal.m := curVal.m * [7:47] + [0];
                     if (range@.base <> integerType) then
-                        curVal.m := (curVal.m + [1, 3]);
+                        curVal.m := curVal.m + [1, 3];
                     l3typ26z@.perword := KMUL+ I8 + getFCSToffset;
                 }; (* 12652 *)
                 l3typ26z@.pck := isPacked;
@@ -4747,7 +4749,7 @@ var
                 error(errTypeMustNotBeFile);
             if (isPacked) then {
                 l3int22z := nestedType@.bits;
-                if ((24) < l3int22z) then
+                if (24 < l3int22z) then
                     isPacked := false;
             };
             new(curType, kindFile);
@@ -4850,8 +4852,8 @@ var
             curVal.i := lineCnt;
             toFCST;
         }; (* 13063 *)
-        for l2int22z := 0 to 127 do {
-            curIdRec := symHashTabBase[l2int22z];
+        for jj := 0 to 127 do {
+            curIdRec := symHashTabBase[jj];
             (*13066*)
             while (curIdRec <> NIL) and
                   (l2idr2z < curIdRec) do with curIdRec@ do {
@@ -4907,7 +4909,7 @@ var
 procedure parseDecls(l3arg1z: integer);
 var
     l3int1z: integer;
-    l3var2z: word;
+    frame:   word;
     l3var3z: boolean;
 {
     case l3arg1z of
@@ -4929,30 +4931,30 @@ var
         padToLeft;
         l3var3z := 22 IN l2idr2z@.flags;
         l3arg1z := l2idr2z@.pos;
-        l3var2z.i := moduleOffset - 40000B;
-        if (l3arg1z <> (0)) then
-            symTab[l3arg1z] := [24, 29] + l3var2z.m * halfWord;
+        frame.i := moduleOffset - 40000B;
+        if (l3arg1z <> 0) then
+            symTab[l3arg1z] := [24, 29] + frame.m * halfWord;
         l2idr2z@.pos := moduleOffset;
         l3arg1z := F3307(l2idr2z);
         if l3var3z then {
             if (41 >= entryPtCnt) then {
                 curVal := l2idr2z@.id;
                 entryPtTable[entryPtCnt] := makeNameWithStars(true);
-                entryPtTable[entryPtCnt+1] := [1] + l3var2z.m - [0, 3];
+                entryPtTable[entryPtCnt+1] := [1] + frame.m - [0, 3];
                 entryPtCnt := entryPtCnt + 2;
             } else
                 error(87); (* errTooManyEntryProcs *)
         };
         if (l2idr2z@.typ = NIL) then {
-            l3var2z.i := 3;
+            frame.i := 3;
         } else {
-            l3var2z.i := 4;
+            frame.i := 4;
         };
         if l3var3z then
-            form2Insn((KVTM+I14) + l3arg1z + (l3var2z.i - 3) * 1000B,
+            form2Insn((KVTM+I14) + l3arg1z + (frame.i - 3) * 1000B,
                       getHelperProc(94 (*"P/NN"*)) - 10000000B);
         if 1 < l3arg1z then {
-            l3var2z.i := getValueOrAllocSymtab(-(l3var2z.i+l3arg1z));
+            frame.i := getValueOrAllocSymtab(-(frame.i+l3arg1z));
         };
         if (S5 IN optSflags.m) and
            (curProcNesting = 1) then
@@ -4961,9 +4963,9 @@ var
             l3int1z := curProcNesting;
         l3int1z := getHelperProc(l3int1z) - (-4000000B);
         if l3arg1z = 1 then {
-            form1Insn((KATX+SP) + l3var2z.i);
+            form1Insn((KATX+SP) + frame.i);
         } else if (l3arg1z <> 0) then {
-            form2Insn(KATX+SP, (KUTM+SP) + l3var2z.i);
+            form2Insn(KATX+SP, (KUTM+SP) + frame.i);
         } (*=z-*)else(*=z+*) ;
         formAndAlign(l3int1z);
         savedObjIdx := objBufIdx;
@@ -5264,8 +5266,10 @@ var
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 procedure stdCall;
+const chkREAL = 0;  chkINT    = 1;  chkCHAR = 2;    chkSCALAR = 3;
+      chkPTR  = 4;  chkFILE   = 5;  chkSET  = 6;    chkOTHER  = 7;
 var
-    l5var1z: operator;
+    l5op1z: operator;
     l5var2z: tptr;
     argKind: kind;
     asBitset: bitset;
@@ -5278,8 +5282,8 @@ var
         goto 8888;
     };
     expression;
-    if (stProcNo >= 14) and
-       (16 >= stProcNo) and
+    if (stProcNo >= fnEOF) and
+       (fnEOLN >= stProcNo) and
        not (curExpr@.op IN [GETELT..FILEPTR]) then {
         error(27); (* errExpressionWhereVariableExpected *)
         exit;
@@ -5289,60 +5293,66 @@ var
         arg1Type := arg1Type@.base;
     argKind := arg1Type@.k;
     if (arg1Type = realType) then
-        checkMode := 0
+        checkMode := chkREAL
     else if (arg1Type = integerType) then
-        checkMode := 1
+        checkMode := chkINT
     else if (arg1Type = charType) then
-        checkMode := 2
+        checkMode := chkCHAR
     else if (argKind = kindScalar) then
-        checkMode := 3
+        checkMode := chkSCALAR
     else if (argKind = kindPtr) then
-        checkMode := 4
+        checkMode := chkPTR
     else if (argKind = kindFile) then
-        checkMode := 5
+        checkMode := chkFILE
     else if (argKind = kindSet) then
-        checkMode := 6
+        checkMode := chkSET
     else {
-        checkMode := 7;
+        checkMode := chkOTHER;
         (*=z-*)(q) exit q(*=z+*)
     };
     asBitset := [stProcNo];
-    if not ((checkMode = 0) and (asBitset <= [0:8, 15, 17, 18, 29]) or
-           ((checkMode = 1) and (asBitset <= [0:7, 9, 11, 15, 17, 21])) or
-           ((checkMode IN [2, 3, 4]) and (asBitset <= [10, 12, 13, 15])) or
-           ((checkMode = 5) and (asBitset <= [14, 15, 16])) or
-           ((checkMode = 6) and (asBitset <= [15, 19, 20])) or
-           ((checkMode = 7) and (stProcNo = 15))) then
+    if not ((checkMode = chkREAL) and
+            (asBitset <= [fnSQRT:fnTRUNC, fnREF, fnSQR, fnROUND, fn29])
+           or ((checkMode = chkINT) and
+            (asBitset <= [fnSQRT:fnABS, fnODD, fnCHR, fnREF, fnSQR, fnPTR]))
+           or ((checkMode IN [chkCHAR, chkSCALAR, chkPTR]) and
+            (asBitset <= [fnORD, fnSUCC, fnPRED, fnREF]))
+           or ((checkMode = chkFILE) and
+            (asBitset <= [fnEOF, fnREF, fnEOLN]))
+           or ((checkMode = chkSET) and
+            (asBitset <= [fnREF, fnCARD, fnMINEL]))
+           or ((checkMode = chkOTHER) and
+            (stProcNo = fnREF))) then
         error(errNeedOtherTypesOfOperands);
-    if not (asBitset <= [7, 12, 13, 17]) then {
+    if not (asBitset <= [fnABS, fnSUCC, fnPRED, fnSQR]) then {
         arg1Type := routine@.typ;
-    } else if (checkMode = 1) and (asBitset <= [7, 17]) then {
-        if stProcNo = 7 then
-            stProcNo := 22
+    } else if (checkMode = chkINT) and (asBitset <= [fnABS, fnSQR]) then {
+        if stProcNo = fnABS then
+            stProcNo := fnABSI
         else
-            stProcNo := 23;
+            stProcNo := fnSQRI;
     };
     new(l4exp6z);
     l4exp6z@.op := STANDPROC;
     l4exp6z@.expr1 := curExpr;
     l4exp6z@.num2 := stProcNo;
-    if stProcNo = 24 then {
+    if stProcNo = fn24 then {
         if SY <> COMMA then {
             requiredSymErr(COMMA);
             goto 8888;
         };
         expression;
         l5var2z := curExpr@.typ;
-        l5var1z := badop27;
+        l5op1z := badop27;
         if (l5var2z <> realType) and
             not typeCheck(l5var2z, integerType) then
             error(errNeedOtherTypesOfOperands);
         if (l5var2z = realType) then
-            l5var1z := badop30
-        else if (checkMode = 0) then
-            l5var1z := badop31;
+            l5op1z := badop30
+        else if (checkMode = chkREAL) then
+            l5op1z := badop31;
         l4exp6z@.expr2 := curExpr;
-        l4exp6z@.op := l5var1z;
+        l4exp6z@.op := l5op1z;
     };
     curExpr := l4exp6z;
     curExpr@.typ := arg1Type;
@@ -5850,7 +5860,7 @@ var
     l4var4z: integer;
 {
     l4exp1z := expr63z;
-    l4var4z := l2int20z;
+    l4var4z := localSize;
     l4var2z := set147z;
     l4var3z := [];
     repeat
@@ -5871,7 +5881,7 @@ var
     checkSymAndRead(DOSY);
     statement;
     expr63z := l4exp1z;
-    l2int20z := l4var4z;
+    localSize := l4var4z;
     set147z := l4var2z;
     set145z := set145z + l4var3z;
 }; (* withStatement *)
@@ -7276,7 +7286,7 @@ var
     set145z := [1:15] - set147z;
     if (curProcNesting <> 1) then
         parseDecls(2);
-    l2int21z := l2int20z;
+    l2int21z := localSize;
     if (SY <> BEGINSY) then
         requiredSymErr(BEGINSY);
     if 23 IN l2idr2z@.flags then {
@@ -7346,12 +7356,12 @@ var
         }
     } else (* 21220 *) {
         if (l2int11z = 0) then
-            l2int22z := 27
+            jj := 27    (* P/E *)
         else
-            l2int22z := 28;
-        form1Insn(getHelperProc(l2int22z) + (-I13-100000B));
+            jj := 28;   (* P/EF *)
+        form1Insn(getHelperProc(jj) + (-I13-100000B));
         if (curProcNesting = 1) then {
-            parseDecls((2));
+            parseDecls(2);
             if S3 IN optSflags.m then
                 formAndAlign(getHelperProc(78)); (* "P/PMDSET" *)
             form1Insn(insnTemp[UJ] + l3var1z.i);
@@ -7851,8 +7861,8 @@ procedure exitScope(var arg: array [0..127] of irptr);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 { (* programme *)
-    l2int20z := l2arg1z;
-    if (l2int20z = 0) then {
+    localSize := l2arg1z;
+    if (localSize = 0) then {
         inSymbol;
         initScalars;
         exit;
@@ -8023,7 +8033,7 @@ procedure exitScope(var arg: array [0..127] of irptr);
             (* 22663 -> 22620 *) until l2bool8z;
             checkSymAndRead(COLON);
             parseTypeRef(l2typ13z, skipToSet + [IDENT,SEMICOLON]);
-            l2int22z := l2typ13z@.size;
+            jj := l2typ13z@.size;
             while workidr <> NIL do with workidr@ do {
                 curIdRec := list;
                 typ := l2typ13z;
@@ -8032,7 +8042,7 @@ procedure exitScope(var arg: array [0..127] of irptr);
                 if (curProcNesting = 1) then {
                     curExternFile := externFileList;
                     l2var12z := id;
-                    curVal.i := l2int22z;
+                    curVal.i := jj;
                     toAlloc := curVal.m * halfWord + [24,27,28,29];
                     while l2bool8z and (curExternFile <> NIL) do {
                         if (curExternFile@.id = l2var12z) then {
@@ -8048,15 +8058,15 @@ procedure exitScope(var arg: array [0..127] of irptr);
                     }
                 }; (* 22731 *)
                 if (l2bool8z) then {
-                    workidr@.value := l2int20z;
+                    workidr@.value := localSize;
                     if (PASINFOR.listMode = 3) then {
                         write('VARIABLE ':25);
                         printTextWord(workidr@.id);
                         writeln(' OFFSET (', curProcNesting:0, ') ',
-                                l2int20z:5 oct, 'B. WORDS=',
-                                l2int22z:5 oct, 'B');
+                                localSize:5 oct, 'B. WORDS=',
+                                jj:5 oct, 'B');
                     };
-                    l2int20z := l2int20z + l2int22z;
+                    localSize := localSize + jj;
                     curExternFile := NIL;
                 }; (*22764*)
                 if isFileType(l2typ13z) then
@@ -8602,14 +8612,14 @@ procedure initOptions;
     chrClassTabBase['A'] := ALNUM:26;
     charSymTabBase['Ю'] := IDENT:31;
     chrClassTabBase['Ю'] := ALNUM:31;
-    funcInsn[fnABSR] := KAMX;
+    funcInsn[fnABS] := KAMX;
     funcInsn[fnTRUNC] := KADD+ZERO;
     funcInsn[fnODD] := KAAX+E1;
     funcInsn[fnORD] := KAOX+ZERO;
     funcInsn[fnCHR] := KAAX+MANTISSA;
     funcInsn[fnSUCC] := KARX+E1;
     funcInsn[fnPRED] := KSUB+E1;
-    funcInsn[fnSQRR] := macro + mcSQRR;
+    funcInsn[fnSQR] := macro + mcSQRR;
     funcInsn[fnROUND] := macro + mcROUND;
     funcInsn[fnCARD] := macro + mcCARD;
     funcInsn[fnMINEL] := macro + mcMINEL;
