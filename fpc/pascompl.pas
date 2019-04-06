@@ -611,8 +611,8 @@ begin
     if maxSmallString >= strLen then
         res := smallStringType[strLen]
     else begin
-        new(span = 7);
-        new(res, kindArray);
+        new(span);
+        new(res);
         with span^ do begin
             size := 1;
             checker := 0;
@@ -644,7 +644,7 @@ end; (* makeStringType *)
 procedure addToHashTab(arg: irptr);
 begin
     curVal.m := arg^.id.m * hashMask.m;
-    mapai(curval.a, curval.i);
+    curval.i := curval.i mod 127;
     arg^.next := symHashTabBase[curval.i];
     symHashTabBase[curval.i] := arg;
 end; (* addToHashTab *)
@@ -685,11 +685,11 @@ begin
             if objBuffer[pos] * [0..8] = [0, 1, 3..5, 8] then begin
                 prevOpcode := opcode.i;
                 half1 := insn.m * [33..47];
-                besm(ASN64-24);
-                half1 :=;
+                // besm(ASN64-24);
+                // half1 :=;
                 half2 := objBuffer[pos] * [9..23];
-                besm(ASN64+24);
-                half2 :=;
+                // besm(ASN64+24);
+                // half2 :=;
                 objBuffer[pos] := [0, 1, 3, 4, 6, 28, 29] +
                     half1 + half2;
                 exit;
@@ -699,8 +699,8 @@ begin
     prevOpcode := opcode.i;
     if (putLeft) then begin
         leftInsn := insn.m * halfWord;
-        besm(ASN64-24);
-        leftInsn :=;
+        // besm(ASN64-24);
+        // leftInsn :=;
         putLeft := false
     end else begin
         putLeft := true;
@@ -776,9 +776,9 @@ end; (* formAndAlign *)
 procedure putToSymTab(arg: bitset);
 begin
     symTab[symTabPos] := arg;
-    if symTabPos = 75500B then begin
+    if symTabPos = &75500 then begin
         error(50); (* errSymbolTableOverflow *)
-        symTabPos := 74000B;
+        symTabPos := &74000;
     end else
         symTabPos := symTabPos + 1;
 end; (* putToSymTab *)
@@ -791,7 +791,7 @@ var
 begin
     allocExtSymbol := symTabPos;
     if (curVal.m * halfWord <> []) then begin
-        for l3var2z to longSymCnt do
+        for l3var2z := 1 to longSymCnt do
             if (curVal.m = longSyms[l3var2z]) then begin
                 allocExtSymbol := longSymTabBase[l3var2z];
                 exit
@@ -887,7 +887,7 @@ begin
         high := symTabCnt;
         repeat
             mid := (low + high) div 2;
-            if (value = symTabArray[mid]) then begin
+            if (value.i = symTabArray[mid].i) then begin
                 allocSymtab := symtbidx[mid];
                 exit
             end;
@@ -920,14 +920,14 @@ function getFCSToffset: integer;
 var
     offset: word;
 begin
-    getFCSToffset := addCurValToFCST;
-    offset :=;
+    offset.i := addCurValToFCST;
+    getFCSToffset := offset.i;
     if (offset.i < 2048) then begin
         (* empty *)
     end else if (offset.i >= 4096) then
         error(204)
     else begin
-        getFCSToffset := allocSymtab(offset.m + [24]) - 70000B;
+        getFCSToffset := allocSymtab(offset.m + [24]) - &70000;
         exit
     end
 end; (* getFCSToffset *)
@@ -946,7 +946,7 @@ var
     temp: tptr;
     dummyloc: word;
 begin
-    new(temp=7);
+    new(temp);
     with temp^ do begin
         size := 1;
         bits := 48;
@@ -970,7 +970,7 @@ function getValueOrAllocSymtab(value: integer): integer;
 begin
     curVal.i := value;
     curVal.i := curVal.i MOD 32768;
-    if (40000B >= curVal.i) then
+    if (&40000 >= curVal.i) then
         getValueOrAllocSymtab := curVal.i
     else
         getValueOrAllocSymtab :=
@@ -1023,7 +1023,7 @@ begin
         arg := arg - curVal.i;
         offset := getFCSToffset;
         if mode = 1 then
-            work := getHelperProc(68) + (-64200000B) (* P/DA *)
+            work := getHelperProc(68) + (-&64200000) (* P/DA *)
         else
             work := -mode;
         curVal.i := arg;
@@ -1298,7 +1298,6 @@ begin
                         exit lexer;
                     end;
                     keywordHashPtr := keywordHashPtr^.next;
-                    (*=z-*)besm(2200000B);(*=z+*)
                 end;
                 isDefined := false;
                 SY := IDENT;
@@ -1341,7 +1340,6 @@ begin
                                 and (hashTravPtr^.value = l3int162z) then
                                     exit lexer;
                                 hashTravPtr := hashTravPtr^.next;
-                                (*=z-*)besm(2200000B);(*=z+*)
                             end;
                             expr62z := expr62z^.expr1;
                         end;
@@ -1829,7 +1827,6 @@ begin
                 exit
             end;
             rec := rec^.next;
-            (*=z-*)besm(2200000B);(*=z+*)
         end
     end;
     knownInType := false;
@@ -2536,7 +2533,7 @@ begin
         il3: begin (* 4555 *)
             if bool49z then
                 addInsnAndOffset(macro+20,
-                    ord(16 in insnList^.regsused)*10000B + insnList^.ilf5.i);
+                    ord(16 in insnList^.regsused)*&10000 + insnList^.ilf5.i);
         end;
         end; (* case *)
 4602:
@@ -2972,7 +2969,7 @@ begin
                     l5ins8z := insnList;
                     insnList := otherIns;
                     addInsnAndOffset(macro + 2,
-                                     10000B * l5var5z + l5var4z);
+                                     &10000 * l5var5z + l5var4z);
                 end else begin
                     addInsnAndOffset(l5var6z, l5var4z);
                     l5var5z := l5var4z;
@@ -2984,7 +2981,7 @@ begin
             if (l5var4z = (0)) then begin
                 if (l5var1z) then begin
                     addInsnAndOffset(macro + 2,
-                                     10000B * l5var5z + l5var3z);
+                                     &10000 * l5var5z + l5var3z);
                     l5ins8z := insnList;
                     insnList := otherIns;
                     prepLoad;
@@ -3000,14 +2997,14 @@ begin
                 if (l5var1z) then begin
                     if (l5var2z) then begin
                         addInsnAndOffset(macro + 2,
-                                         10000B * l5var5z + l5var3z);
+                                         &10000 * l5var5z + l5var3z);
                         l5ins8z := insnList;
                         insnList := otherIns;
                         addInsnAndOffset(macro + 2,
-                                         10000B * l5var5z + l5var4z);
+                                         &10000 * l5var5z + l5var4z);
                     end else begin
                         addInsnAndOffset(macro + 2,
-                                         10000B * l5var4z + l5var3z);
+                                         &10000 * l5var4z + l5var3z);
                         l5ins8z := insnList;
                         insnList := otherIns;
                         l5var5z := l5var4z;
@@ -3018,10 +3015,10 @@ begin
                     l5var5z := l5var3z;
                     if (l5var2z) then
                         addInsnAndOffset(macro + 2,
-                                         10000B * l5var3z + l5var4z)
+                                         &10000 * l5var3z + l5var4z)
                     else
                         addInsnAndOffset(macro + 3,
-                                         10000B * l5var3z + l5var4z);
+                                         &10000 * l5var3z + l5var4z);
                 end
             end
         end;
@@ -3425,7 +3422,7 @@ begin (* genEntry *)
         if (20 in l5idr5z^.flags) then begin
             l5var17z.i := 1;
         end else begin
-            l5var17z.i := l5idr5z^.offset div 4000000B;
+            l5var17z.i := l5idr5z^.offset div &4000000;
         end (* 7102 *)
     end else begin (* 7103 *)
         l5var15z := 0;
@@ -3815,7 +3812,7 @@ begin (* genFullExpr *);
                 end else if (curIdRec^.cl = ROUTINEID) then begin
                     insnList^.ilf6 := 3;
                     insnList^.ilf5.i := (insnList^.ilf5.i + frameRegTemplate);
-                end else if (insnList^.ilf6 >= 74000B) then begin
+                end else if (insnList^.ilf6 >= &74000) then begin
                     addToInsnList(insnTemp[UTC] + insnList^.ilf6);
                     insnList^.ilf6 := 0;
                     insnList^.ilf7 := 17;
@@ -4038,7 +4035,7 @@ begin
         l4int4z := l4var3z^.value;
         l4var2z := l4var3z^.typ^.base;
         l4int5z := l4var3z^.typ^.elsize;
-        if (l4int4z < 74000B) then begin
+        if (l4int4z < &74000) then begin
             form1Insn(getValueOrAllocSymtab(l4int4z) +
                       insnTemp[UTC] + I7);
             l4int4z := 0;
@@ -4062,7 +4059,7 @@ begin
             form2Insn(KXTA+ZERO, KATX+I12+25);
         curExpr := curExpr^.expr1;
     end;
-    form1Insn(getHelperProc(70)(*"P/IT"*) + (-I13-100000B));
+    form1Insn(getHelperProc(70)(*"P/IT"*) + (-I13-&100000));
     padToLeft;
 end; (* formFileInit *)
 
@@ -4869,7 +4866,7 @@ begin
                   (l2idr2z < curIdRec) do with curIdRec^ do begin
                 l3var2z.i := typ^.size;
                 if (cl IN [VARID, FORMALID]) and
-                  (value < 74000B) then begin
+                  (value < &74000) then begin
                     curVal := id;
                     if (l3var4z) then
                         toFCST;
@@ -4884,24 +4881,23 @@ begin
                     if (l3typ1z = realType) then
                         curVal.i := 0
                     else if typeCheck(l3typ1z, integerType) then
-                        curVal.i := 100000B
+                        curVal.i := &100000
                     else if typeCheck(l3typ1z, charType) then
-                        curVal.i := 200000B
+                        curVal.i := &200000
                     else if (l3var5z = kindArray) then
-                        curVal.i := 400000B
+                        curVal.i := &400000
                     else if (l3var5z = kindScalar) then begin
                         dumpEnumNames(l3typ1z);
-                        curVal.i := 1000000B * l3typ1z^.start + 300000B;
+                        curVal.i := &1000000 * l3typ1z^.start + &300000;
                     end else if (l3var5z = kindFile) then
-                        curVal.i := 600000B
+                        curVal.i := &600000
                     else begin
-                        curVal.i := 500000B;
-                        (*=z-*)(q) exit q(*=z+*)
+                        curVal.i := &500000;
                     end;
                     curVal.i := curVal.i + curIdRec^.value;
                     l3var2z := l3var2z;
-                    besm(ASN64-33);
-                    l3var2z := ;
+                    // besm(ASN64-33);
+                    // l3var2z := ;
                     curVal.m := curVal.m * [15:47] + l3var2z.m + l3var3z;
                     if (l3var4z) then
                         toFCST;
@@ -4941,7 +4937,7 @@ begin
         padToLeft;
         l3var3z := 22 IN l2idr2z^.flags;
         l3arg1z := l2idr2z^.pos;
-        frame.i := moduleOffset - 40000B;
+        frame.i := moduleOffset - &40000;
         if (l3arg1z <> 0) then
             symTab[l3arg1z] := [24, 29] + frame.m * halfWord;
         l2idr2z^.pos := moduleOffset;
@@ -4961,8 +4957,8 @@ begin
             frame.i := 4;
         end;
         if l3var3z then
-            form2Insn((KVTM+I14) + l3arg1z + (frame.i - 3) * 1000B,
-                      getHelperProc(94 (*"P/NN"*)) - 10000000B);
+            form2Insn((KVTM+I14) + l3arg1z + (frame.i - 3) * &1000,
+                      getHelperProc(94 (*"P/NN"*)) - &10000000);
         if 1 < l3arg1z then begin
             frame.i := getValueOrAllocSymtab(-(frame.i+l3arg1z));
         end;
@@ -4971,7 +4967,7 @@ begin
             l3int1z := 59  (* P/LV *)
         else
             l3int1z := curProcNesting;
-        l3int1z := getHelperProc(l3int1z) - (-4000000B);
+        l3int1z := getHelperProc(l3int1z) - (-&4000000);
         if l3arg1z = 1 then begin
             form1Insn((KATX+SP) + frame.i);
         end else if (l3arg1z <> 0) then begin
@@ -4998,7 +4994,7 @@ begin
             if (heapSize = 100) then
                 heapSize := 4;
             if (not l3var3z) then begin
-                form2Insn(KVTM+I14+getValueOrAllocSymtab(heapSize*2000B),
+                form2Insn(KVTM+I14+getValueOrAllocSymtab(heapSize*&2000),
                           getHelperProc(26 (*"P/GD"*)));
                 padToLeft;
             end
@@ -5750,9 +5746,8 @@ begin
                ((arg1Type^.k <> kindSet) or
                not (arg2Type^.k IN [kindScalar, kindRange]) or
                (oper <> INOP)) then begin
-                (*=z-*)besm(2200000B); besm(2200000B);(*=z+*)
                 error(errNeedOtherTypesOfOperands);
-            end (*=z-*)else;(*=z+*)
+            end
         end; (* 15167 *)
         new(l4var2z);
         if (arg2Type^.k = kindSet) and
@@ -6142,8 +6137,8 @@ begin (* caseStatement *)
         curVal.m := (curVal.m + intZero);
         form1Insn(KATI+14);
         curVal.i := ((moduleOffset + (1)) - curVal.i);
-        if (curVal.i < 40000B) then begin
-            curVal.i := (curVal.i - 40000B);
+        if (curVal.i < &40000) then begin
+            curVal.i := (curVal.i - &40000);
             curVal.i := allocSymtab([24, 29] +
                         (curVal.m * O77777));
         end;
@@ -7027,8 +7022,8 @@ begin (* statement *)
                         padToLeft;
                         if l3var2z^.offset = 0 then begin
                             (* empty *)
-                        end else if (l3var2z^.offset >= 74000B) then begin
-                            curVal.i := (moduleOffset - 40000B);
+                        end else if (l3var2z^.offset >= &74000) then begin
+                            curVal.i := (moduleOffset - &40000);
                             symTab[l3var2z^.offset] := [24,29] +
                                                          curVal.m * O77777;
                         end else (q) begin
@@ -7140,7 +7135,7 @@ begin (* statement *)
                     l3var2z := next;
                 end else begin
                     if (curFrameRegTemplate = frame) then begin
-                        if (offset >= 40000B) then begin
+                        if (offset >= &40000) then begin
                             form1Insn(insnTemp[UJ] + offset);
                         end else begin
                             formJump(offset);
@@ -7151,7 +7146,7 @@ begin (* statement *)
                             putToSymTab([]);
                         end;
                         form3Insn(frame + (KMTJ + 13), KVTM+I14 + offset,
-                                  getHelperProc(18(*"P/RC"*)) + (-64100000B));
+                                  getHelperProc(18(*"P/RC"*)) + (-&64100000));
                     end;
                     exit loop;
                 end;
@@ -7369,14 +7364,14 @@ begin
             jj := 27    (* P/E *)
         else
             jj := 28;   (* P/EF *)
-        form1Insn(getHelperProc(jj) + (-I13-100000B));
+        form1Insn(getHelperProc(jj) + (-I13-&100000));
         if (curProcNesting = 1) then begin
             parseDecls(2);
             if S3 IN optSflags.m then
                 formAndAlign(getHelperProc(78)); (* "P/PMDSET" *)
             form1Insn(insnTemp[UJ] + l3var1z.i);
-            curVal.i := l2idr2z^.pos - 40000B;
-            symTab[74002B] := [24,29] + (curVal.m * halfWord);
+            curVal.i := l2idr2z^.pos - &40000;
+            symTab[&74002] := [24,29] + (curVal.m * halfWord);
         end;
         curVal.i := l2int21z;
         if (curProcNesting <> 1) then begin
@@ -7557,35 +7552,35 @@ begin (* initScalars *)
     regSysProc(63654343C(*"    SUCC"*));
     regSysProc(60624544C(*"    PRED"*));
     temptype := booleanType;
-    regSysProc(455746C(*"     EOF"*));
+    regSysProc(&455746(*"     EOF"*));
     temptype := pointerType;
-    regSysProc(624546C(*"     REF"*));
+    regSysProc(&624546(*"     REF"*));
     temptype := booleanType;
-    regSysProc(45575456C(*"    EOLN"*));
+    regSysProc(&45575456(*"    EOLN"*));
     temptype := integerType;
-    regSysProc(636162C(*"     SQR"*));
-    regSysProc(6257655644C(*"   ROUND"*));
-    regSysProc(43416244C(*"    CARD"*));
-    regSysProc(5551564554C(*"   MINEL"*));
+    regSysProc(&636162(*"     SQR"*));
+    regSysProc(&6257655644(*"   ROUND"*));
+    regSysProc(&43416244(*"    CARD"*));
+    regSysProc(&5551564554(*"   MINEL"*));
     temptype := pointerType;
-    regSysProc(606462C(*"     PTR"*));
+    regSysProc(&606462(*"     PTR"*));
     l3var11z.i := 30;
     l3var11z.m := l3var11z.m * halfWord + [24,27,28,29];
     new(programObj, 12);
-    curVal.i := 576564606564C(*"  OUTPUT"*);
+    curVal.i := &576564606564(*"  OUTPUT"*);
     l3var3z := curVal;
-    curVal.i := 5156606564C(*"   INPUT"*);
+    curVal.i := &5156606564(*"   INPUT"*);
     l3var4z := curVal;
-    curVal.i := 5657606257476241C(*"NOPROGRA"*);
+    curVal.i := &5657606257476241(*"NOPROGRA"*);
     noProgram := curVal;
     test1(PROGRAMSY, (skipToSet + [IDENT,LPAREN]));
-    symTabPos := 74004B;
+    symTabPos := &74004;
     with programObj^ do begin
         if (SY = IDENT) then begin
             curVal := curIdent;
             id := ;
             pos := 0;
-            symTab[74000B] := makeNameWithStars(true);
+            symTab[&74000] := makeNameWithStars(true);
         end else begin
             id.m := [3];
             error(errNoIdent);
