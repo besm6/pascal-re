@@ -1,42 +1,43 @@
-(*=p-,t-,y+*)
+(*=p-,t-*)
 program prettypr(output, input, result);
 label 3575;
 const boilerplate = '*** VERSION 25.02.82 ***';
 type
-    bool3=record f0, f1, expand: boolean end;
-keyword=(k0, k1, kif, kthen, kelse, kcase, kof, krepeat, kuntil, kwhile,
-kdo,kfor,kbegin, kend, kwith, kselect, kgoto, kexit, kconst,kvar,
+    bool3=record indent, breakLines, expand: boolean end;
+keyword=(knum, k1, kif, kthen, kelse, kcase, kof, krepeat, kuntil,
+kwhile,kdo,kfor,kbegin, kend, kwith, kselect, kgoto, kexit, kconst,kvar,
 ktype,krecord,klabel,karray,kset,kfile,kpacked,kfunct,kproced, kfortran,
-kextern, kforward, kprogram, klast);
+kextern, kforward, kprogram, kident);
 var result:text;
 line:array [1..84] of char;
-errline:array [1..80] of char;
-varskip:array[204..261] of char;
-errpos, errlnum:integer;
-varskip2:array[264..270] of char;
-longLines:boolean; glob272z, glob273z:alfa;
-garr273z:array[1..72] of char;
-glob346z,
-glob347z, glob348z:integer;
-glob349z:char;
+inpline:array [1..80] of char;
+unused1:array[204..261] of char;
+inppos, inplnum:integer;
+unused2:array[264..270] of char;
+longLines:boolean;
+dummy6, dummy7:alfa;
+forming:array[1..72] of char;
+margSaved, margRight, margLeft:integer;
+checkQuote:char;
 initMode,curmode:bool3;
-glob356z:boolean; glob357z, glob358z, glob359z:integer;
-glob360z:boolean;
-garr360z:array [1..50] of integer;
-pos, glob412z:integer;
+wasSpace:boolean;
+neededPos, indAmount, curLinePos:integer;
+atStart:boolean;
+stack:array [1..50] of integer;
+stackpos, offset:integer;
 ch, nextch:char;
 unp: array [1..12] of char;
 pck1, pck2: alfa;
-keywrd1:array [kif..klast] of alfa;
+keywrd1:array [kif..kident] of alfa;
 keywrd2:array [kfunct..kprogram] of alfa;
 SY:keyword;
-inComment, glob469z:boolean;
-glob470z, glob471z:integer; glob472z: boolean;
-vartail:array [473..486] of char;
-glob487z, glob488z:integer;
-glob489z, atEOF, eol:boolean;
+inComment, inQuoteOrComm:boolean;
+dummy5, dummy4:integer; illSpec: boolean;
+unused3:array [473..486] of char;
+dummy3, dummy2:integer;
+dummy1, atEOF, eol:boolean;
 comMeta,meta:char;
-glob494z:integer; first: boolean;
+idx:integer; first: boolean;
 
 procedure PASENDED(var f: text); external;
 (*line 145*) function isdigit(c:char):boolean; {
@@ -49,196 +50,195 @@ procedure PASENDED(var f: text); external;
 procedure setMode(i:integer; var l:bool3);
 (*line 153*) {
   case i of
-  0: { l.f0 := false;
-       l.f1 := false;
+  0: { l.indent := false;
+       l.breakLines := false;
      };
-  1: l.f0 := true;
-  2: { l.f0 := true;
-       l.f1 := true
+  1: l.indent := true;
+  2: { l.indent := true;
+       l.breakLines := true
      };
   3: l.expand := true;
   4: l.expand := false
   end
 };
 procedure outLine;
-var l1, l2: integer;
-    l3: char;
-procedure P0104;
+var i, nsp: integer; c: char;
+procedure spaces;
 (*line 170*) { 
-  if l2 <> 0 then {
-  write(result, chr(128+l2)); l2 := 0
+  if nsp <> 0 then {
+     write(result, chr(128+nsp)); nsp := 0
   }
 };
 (*line 172, outLine*) {
- for l1 := 73 to 83 do line[l1] := ' ';
- l1 := 1; l2 := 0;
+ for i := 73 to 83 do line[i] := ' ';
+ i := 1; nsp := 0;
  repeat
-   l3 := line[l1];
-   if (l3  = ' ') then l2 := l2 + 1
+   c := line[i];
+   if (c  = ' ') then nsp := nsp + 1
    else {
-     P0104; write(result, l3);
+     spaces; write(result, c);
    };
-   l1 := l1 + 1;
- until l1 >= 84;
- P0104;
+   i := i + 1;
+ until i >= 84;
+ spaces;
  writeLN(result); PASENDED(RESULT);
 };
 procedure printErr;
 var l2var1z:integer;
 (*line 183*) {
  write( ' ' );
- for l2var1z := 1 to errpos do 
-    write( errline[l2var1z] );
+ for l2var1z := 1 to inppos do 
+    write( inpline[l2var1z] );
  write( '<--' );
- for l2var1z := errpos + 1 to 80 do
+ for l2var1z := inppos + 1 to 80 do
     write( ' ' );
- write(' ***LINE', errlnum:4, '*** ');
+ write(' ***LINE', inplnum:4, '*** ');
 };
-procedure P0301;
-var l2var1z:integer; l2var2z:boolean; l2var3z:integer;
+procedure finishLine;
+var l2var1z:integer; done:boolean; len:integer;
 procedure P0203;
-var l3var1z, l3var2z, l3var3z:integer;
+var p, r, s:integer;
 {
-  if curmode.f1 and (72 - glob348z + 1 < glob359z) then {
-     glob359z := 72 - glob348z + 1;
-     if glob357z < glob359z then glob359z := glob357z;
+  if curmode.breakLines and (72 - margLeft + 1 < curLinePos) then {
+     curLinePos := 72 - margLeft + 1;
+     if neededPos < curLinePos then curLinePos := neededPos;
   };
-  l3var2z := glob359z - 1;
-  for l3var1z := 1 to l3var2z do {
-    line[l3var1z] := ' ';
+  r := curLinePos - 1;
+  for p := 1 to r do {
+    line[p] := ' ';
   };
-  l3var3z := glob359z + glob348z - 1;
-  for l3var1z := glob359z to l3var3z do {
-     line[l3var1z] := garr273z[l3var1z-glob359z+1];
+  s := curLinePos + margLeft - 1;
+  for p := curLinePos to s do {
+     line[p] := forming[p-curLinePos+1];
   };
-  for l3var1z := glob359z + glob348z to 72 do 
-     line[l3var1z] := ' ';
+  for p := curLinePos + margLeft to 72 do 
+     line[p] := ' ';
   outLine;
-  glob359z := glob358z;
-  glob357z := glob359z;
-  errlnum := errlnum + 1;
+  curLinePos := indAmount;
+  neededPos := curLinePos;
+  inplnum := inplnum + 1;
 };
-procedure P0253;
+procedure badLiteral;
 {
  if not inComment then {
    printErr;
    writeln('SYNT. UNIT OVER EOLN');
  }
 };
-procedure P0265(var a:integer);
+procedure decrByMargin(var a:integer);
 var i:integer;
 {
- i := a - glob348z;
+ i := a - margLeft;
  if i > 0 then
     a := i
  else a := 0;
 };
 
-{ (* P0301 *)
- if (glob348z > 0) then {
-   if glob469z and (glob348z = glob347z) then P0253;
+{ (* finishLine *)
+ if margLeft > 0 then {
+   if inQuoteOrComm and (margLeft = margRight) then badLiteral;
    P0203;
    repeat 
-     l2var2z := true;
-     if (glob348z < glob347z) and
-      (garr273z[glob348z+1] = ' ') then {
-      glob348z := glob348z + 1;
-      l2var2z := false;
+     done := true;
+     if (margLeft < margRight) and
+      (forming[margLeft+1] = ' ') then {
+      margLeft := margLeft + 1;
+      done := false;
      }
-   until l2var2z;
-   l2var3z := glob347z - glob348z;
-   for l2var1z := 1 to l2var3z do {
-     garr273z[l2var1z] := garr273z[glob348z+l2var1z];
+   until done;
+   len := margRight - margLeft;
+   for l2var1z := 1 to len do {
+     forming[l2var1z] := forming[margLeft+l2var1z];
    };
-   P0265( glob347z );
-   P0265( glob346z );
-   glob348z := -73;
-   glob360z := true;
+   decrByMargin( margRight );
+   decrByMargin( margSaved );
+   margLeft := -73;
+   atStart := true;
  }
 };
 
-procedure P0344;
-var l2var1z:integer;
+procedure WriteACharacter;
+var i:integer;
 {
- if (glob347z <= 0) and (ch = ' ') and curmode.f0 then exit;
- glob347z := glob347z + 1;
- garr273z[glob347z] := ch;
- (L0357) if 72 - glob359z < glob347z then {
-   if curmode.f1 then {
-   if (0 < glob346z) and (glob346z < glob348z) then
-    glob348z := glob346z;
-   if 50 - glob357z < glob348z then {
-    P0301;
+ if (margRight <= 0) and (ch = ' ') and curmode.indent then exit;
+ margRight := margRight + 1;
+ forming[margRight] := ch;
+ (L0357) if 72 - curLinePos < margRight then {
+   if curmode.breakLines then {
+   if (0 < margSaved) and (margSaved < margLeft) then
+    margLeft := margSaved;
+   if 50 - neededPos < margLeft then {
+    finishLine;
     goto L0357;
    };
-   if 1 < glob359z then {
-    glob359z := glob359z - 1;
+   if 1 < curLinePos then {
+    curLinePos := curLinePos - 1;
     goto L0357;
    };
- if 0 >= glob348z then {
+ if margLeft <= 0 then {
    if not inComment then {
      printErr;
      writeln('TOO LONG SYNT. UNIT');
    };
-   glob348z := glob347z;
+   margLeft := margRight;
  };
- P0301;
+ finishLine;
 } else {
- for l2var1z := 1 to errpos do 
-   garr273z[l2var1z] := errline[l2var1z];
- glob347z := errpos;
- glob348z := glob347z;
- glob359z := 1;
+ for i := 1 to inppos do 
+   forming[i] := inpline[i];
+ margRight := inppos;
+ margLeft := margRight;
+ curLinePos := 1;
  }
  }
 };
-procedure getch(var l2arg1z:char);
-var l2var1z, l2var2z: integer;
+procedure getch(var out:char);
+var i, l2var2z: integer;
 {
   if atEOF then {
     writeln('0***** EOF BEFORE END OF PROGRAM');
     GOTO 3575;
   };
-  l2arg1z := INPUT@;
+  out := INPUT@;
  if eol then
- errpos := 1
+ inppos := 1
 else
- errpos := errpos + 1;
+ inppos := inppos + 1;
 
  eol := eoln(INPUT );
  atEOF := eof(INPUT );
 if not atEOF then get(INPUT );
 
- if (l2arg1z = '''') then {
- if (l2arg1z = glob349z) then {
- l2arg1z := '''';
+ if out = '''' then {
+ if out = checkQuote then {
+ out := '''';
  } else {
- glob349z := l2arg1z;
- l2arg1z := '''';
+ checkQuote := out;
+ out := '''';
  };
  } else {
- if (eol ) then  l2arg1z := ' ';
+ if eol then  out := ' ';
  };
- errline[errpos] := l2arg1z;
+ inpline[inppos] := out;
 };
-procedure P0503;
+procedure CopyACharacter;
 var l2var1z:integer;
 procedure P0470;
 {
-  if not curmode.f1 and (glob347z = 0) then {
-   glob347z := 1;
-   garr273z[1] := ' ';
+  if not curmode.breakLines and (margRight = 0) then {
+   margRight := 1;
+   forming[1] := ' ';
   };
-  glob348z := glob347z;
-  P0301;
+  margLeft := margRight;
+  finishLine;
 };
-{ (* P0503 *)
+{ (* CopyACharacter *)
 if longLines then {
  if eol then {
    P0470;
    getch( nextch );
  };
- } else  if 72 < errpos then {
+ } else  if 72 < inppos then {
    line[73] := nextch;
    for l2var1z := 74 to 80 do
      getch( line[l2var1z] );
@@ -247,40 +247,40 @@ if longLines then {
    getch( nextch );
  };
  ch := nextch;
- P0344;
+ WriteACharacter;
  getch( nextch );
 };
-procedure P0543;
+procedure optNewLine;
 {
-if (curmode.f1 and not glob360z) then P0301
+if (curmode.breakLines and not atStart) then finishLine
 };
 procedure Indent;
 var i: integer;
 {
-  i := glob357z + glob347z - glob412z;
+  i := neededPos + margRight - offset;
  if 50 >= i then {
-   glob358z := i;
+   indAmount := i;
  } else {
-   glob358z := 50;
+   indAmount := 50;
  };
- garr360z[pos] := glob358z;
- pos := pos + 1;
- glob412z := 0;
+ stack[stackpos] := indAmount;
+ stackpos := stackpos + 1;
+ offset := 0;
 };
 procedure Dindent;
 {
- pos := pos - 1;
- glob358z := garr360z[pos-1];
- if glob360z then {
- glob357z := glob358z;
- glob359z := glob357z;
+ stackpos := stackpos - 1;
+ indAmount := stack[stackpos-1];
+ if atStart then {
+ neededPos := indAmount;
+ curLinePos := neededPos;
  }
 };
 procedure P0605;
 {
-if 0 < glob347z then {
- glob347z := glob347z - 1;
- if glob347z < glob348z then  glob348z := glob347z;
+if 0 < margRight then {
+ margRight := margRight - 1;
+ if margRight < margLeft then  margLeft := margRight;
 }
 };
 procedure token;
@@ -288,7 +288,7 @@ label 1322;
 var l2var1z:boolean;
 procedure P0617;
 {
-if glob347z = 0 then {
+if margRight = 0 then {
  printErr;
  writeln('F3 OR =U- ERROR');
  } else 
@@ -298,52 +298,52 @@ procedure doBegin;
 {
 if curmode.expand and (ch = '(') then {
  P0617; P0617;
- ch := 'B'; P0344;
- ch := 'E'; P0344;
- ch := 'G'; P0344;
- ch := 'I'; P0344;
- ch := 'N'; P0344;
- ch := ' '; P0344;
+ ch := 'B'; WriteACharacter;
+ ch := 'E'; WriteACharacter;
+ ch := 'G'; WriteACharacter;
+ ch := 'I'; WriteACharacter;
+ ch := 'N'; WriteACharacter;
+ ch := ' '; WriteACharacter;
  }
 };
 procedure doEnd;
 {
 if curmode.expand and (ch = ')') then {
  P0617; P0617;
- ch := ' '; P0344;
- ch := 'E'; P0344;
- ch := 'N'; P0344;
- ch := 'D'; P0344;
- P0543;
- glob348z := glob347z;
+ ch := ' '; WriteACharacter;
+ ch := 'E'; WriteACharacter;
+ ch := 'N'; WriteACharacter;
+ ch := 'D'; WriteACharacter;
+ optNewLine;
+ margLeft := margRight;
 }
 };
 procedure matchKeyword;
-var l3var1z:boolean;
+var done:boolean;
 {
 pck(unp[1], pck1);
 pck(unp[7], pck2);
 repeat
 SY := succ(SY);
- l3var1z := keywrd1[SY] = pck1;
- if l3var1z and (ord(SY) >= 27) then 
-  l3var1z := keywrd2[SY] = pck2;
-until l3var1z or (SY = klast);
+ done := keywrd1[SY] = pck1;
+ if done and (ord(SY) >= 27) then 
+  done := keywrd2[SY] = pck2;
+until done or (SY = kident);
 };
 procedure getIdent;
-var l3var1z:integer;
+var i:integer;
 {
 if ord(ch) = 88 then ch := 'X';
  unp[1] := ch;
- for l3var1z := 2 to 8 do 
-    unp[l3var1z] := ' ';
- l3var1z := 1;
+ for i := 2 to 8 do 
+    unp[i] := ' ';
+ i := 1;
  while isLetter (nextch) or isDigit (nextch) do {
-   P0503;
-   if l3var1z < 8 then {
-     l3var1z := l3var1z + 1;
+   CopyACharacter;
+   if i < 8 then {
+     i := i + 1;
      if ord(ch) = 88 then  ch := 'X';
-     unp[l3var1z] := ch;
+     unp[i] := ch;
    }
  }
 };
@@ -351,28 +351,28 @@ procedure doComment;
 var l3var1z:integer; good:boolean;
 procedure getAttr(var l4arg1z:integer; l4arg2z: char);
 {
- P0503;
+ CopyACharacter;
  if (ch >= '0') and (ch <= l4arg2z) then {
   l4arg1z := ord(ch) - ord('0');
   good := true;
  }
 };
-procedure P1026(var l4arg1z:boolean);
+procedure getFlag(var l4arg1z:boolean);
 {
- P0503;
+ CopyACharacter;
  if (ch = '-') or (ch = '+') then {
  l4arg1z := ch = '+';
  good := true;
 }
 };
 { (* doComment *) 
- glob469z := true; inComment := true;
- P0503; P0503;
+ inQuoteOrComm := true; inComment := true;
+ CopyACharacter; CopyACharacter;
  if (ch = comMeta) or (ch = '=') then repeat
- P0503;
+ CopyACharacter;
  good := false;
  case (ch) of
- (* 1067*) 'F': {
+ 'F': {
    getAttr(l3var1z, '4');
    if (good) then setMode(l3var1z, curmode)
    else if (ch = 'S') then {
@@ -380,77 +380,78 @@ procedure P1026(var l4arg1z:boolean);
    curmode := initMode;
    }
  };
- (* 1107 *) 'U': {
-   P1026( longLines );
+ 'U': {
+   getFlag( longLines );
    longLines := not longLines;
    if longLines then {
      setMode (2, curmode );
      P0617;
      ch := '+';
-     P0344;
+     WriteACharacter;
    }
  };
- (* 1124*) 'A': {
+ 'A': {
    getAttr(l3var1z, '3' );
    printErr;
    writeln('PSEUDOCOMM. A', ch);
  };
- (* 1135 *) 'J': {
-   P0503;
+ 'J': {
+   CopyACharacter;
    meta := ch;
    good := true;
  };
- (* 1142*)'B','C','E','I','K','L','M','N',
-          'P','R','S','T','Y','Z','Г': {
-   P0503;
+ 'B','C','E','I','K','L','M','N',
+ 'P','R','S','T','Y','Z','Г': {
+   CopyACharacter;
    good := true;
  }
  end;
- if good then P0503
+ if good then CopyACharacter
  else {
    printErr;
    writeln('ERROR IN PSEUDOCOMMENT');
  };
  until ch <> ',';
- repeat while ch <> '*' do P0503; P0503 until ch = ')';
- glob469z := false;
+ repeat while ch <> '*' do CopyACharacter;
+    CopyACharacter until ch = ')';
+ inQuoteOrComm := false;
  inComment := false;
- glob348z := glob347z;
- glob360z := false;
+ margLeft := margRight;
+ atStart := false;
  l2var1z := true;
 };
-procedure P1220;
+procedure CopyANumber;
 {
- while isDigit (nextch) do P0503;
- if isLetter (nextch) or (nextch = '.') then  P0503;
- SY := k0;
+ while isDigit (nextch) do CopyACharacter;
+ if isLetter (nextch) or (nextch = '.') then  CopyACharacter;
+ SY := knum;
 };
 procedure doChar;
 {
- glob469z := true;
+ inQuoteOrComm := true;
  (loop) repeat
- P0503;
+ CopyACharacter;
  if (ch = '''') and (nextch = '''') then {
-   P0503;
+   CopyACharacter;
    ch := ' ';
    if (nextch = ']') or (nextch = ';') then exit loop;
  }
  until ch = '''';
- glob349z := '_000';
- glob469z := false;
+ checkQuote := '_000';
+ inQuoteOrComm := false;
 };
 { (* token *)
- glob360z := false;
- glob348z := glob347z;
+ atStart := false;
+ margLeft := margRight;
  l2var1z := true;
  while l2var1z do {
- P0503;
+ CopyACharacter;
  l2var1z := ch = ' ';
- if l2var1z and curmode.f0 then {
- if glob356z then 
+ if l2var1z and curmode.indent then {
+ if wasSpace then 
     P0605
   else
-   glob356z := true;
+   wasSpace := true;
  } else if (ch = '(') and (nextch = '*') then {
    doComment;
  } else {
@@ -460,7 +461,7 @@ procedure doChar;
     getIdent;
     matchKeyword;
    } else if ch = meta then {
-     P0503;
+     CopyACharacter;
      if isLetter( ch) then goto 1322;
      if ch = '(' then {
        SY := kbegin;
@@ -469,46 +470,44 @@ procedure doChar;
        SY := kend;
        doEnd; (q) exit q;
      }; 
-   }  else if isDigit( ch) then P1220
+   }  else if isDigit( ch) then CopyANumber
      else if (ch = '''') then { doChar; (q) exit q }
  };
 }; (* while *)
- glob356z := false;
+ wasSpace := false;
  if ch = ';' then {
- glob348z := glob347z;
- glob346z := glob347z;
+ margLeft := margRight;
+ margSaved := margRight;
  } else if (SY = kend) and (ch <> ')') then {
-   P0543;
-   glob348z := glob347z;
+   optNewLine;
+   margLeft := margRight;
  } else if ch = ',' then {
-   glob348z := glob347z;
+   margLeft := margRight;
  }
 };
-procedure P1405;
+procedure terminate;
 var l2var1z:integer;
 function atEOL:boolean;
 {
  if longLines then atEOL := eol else
- if errpos > 72 then atEOL := true else atEOL := false;
+ if inppos > 72 then atEOL := true else atEOL := false;
 };
-{ (* 1405 *)
+{ (* terminate *)
  setMode(0, curmode );
- glob359z := 1;
- glob348z := glob347z;
+ curLinePos := 1;
+ margLeft := margRight;
  while not atEOL do {
-   glob348z := glob347z;
-   P0503;
+   margLeft := margRight;
+   CopyACharacter;
  };
  if longLines then {
-   P0301;
+   finishLine;
  } else {
  line[73] := nextch;
  for l2var1z := 74 to 80 do 
    getch( line[l2var1z] );
- P0301;
- repeat 
-   getch( nextch );
- until eol;
+ finishLine;
+ repeat getch(nextch) until eol;
  }
 };
 procedure synterr;
@@ -518,89 +517,89 @@ var l2var1z:keyword; l2var2z:boolean;
  writeln(' SYNT. ERROR ');
  setMode(0, curmode );
  comMeta := '_012';
- pos := 1;
- glob359z := 1;
- glob357z := 1;
- glob412z := glob347z;
+ stackpos := 1;
+ curLinePos := 1;
+ neededPos := 1;
+ offset := margRight;
  Indent;
  repeat
    l2var1z := SY;
    token;
    l2var2z := (l2var1z = kend) and (ch = '.') and (nextch <> '.');
  until l2var2z;
- P1405;
+ terminate;
  GOTO 3575;
 };
-procedure P1504;
+procedure toParen;
 {
  Indent;
  repeat token until ch = ')';
  token;
  Dindent;
 };
-procedure P3077;
-procedure P1517;
-var l3var1z: char;
+procedure run;
+procedure addSpace;
+var tmp: char;
 {
- if curmode.f0 then {
-   l3var1z := ch;
+ if curmode.indent then {
+   tmp := ch;
    ch := ' ';
-   P0344;
-   ch := l3var1z;
-   glob356z := true;
+   WriteACharacter;
+   ch := tmp;
+   wasSpace := true;
  }
 };
-procedure P1532;
+procedure tabulate;
 {
- if (0 < glob347z) and curmode.f0 then 
- while glob347z < 8 do P1517;
+ if (0 < margRight) and curmode.indent then 
+ while margRight < 8 do addSpace;
 
 };
-procedure P1544;
-var l3var1z:boolean;
+procedure alignItem;
+var done:boolean;
 {
-if curmode.f0 then {
+if curmode.indent then {
 repeat
  P0605;
- if 0 < glob347z then 
-   l3var1z := garr273z[glob347z] <> ' '
+ if 0 < margRight then 
+   done := forming[margRight] <> ' '
  else
-   l3var1z := true;
- until l3var1z;
- P1532;
- P0344;
+   done := true;
+ until done;
+ tabulate;
+ WriteACharacter;
  }
 };
 procedure getDigits;
 {
   token;
-  if SY <> k0 then synterr;
+  if SY <> knum then synterr;
 };
 procedure getNumber;
 {
- if (ch = '.') and (isDigit (nextch)) then
+ if (ch = '.') and isDigit(nextch) then
    getDigits;
- if (ch = 'E') then {
-   if (nextch IN ['+','-']) then  token;
+ if ch = 'E' then {
+   if nextch IN ['+','-'] then  token;
    getDigits;
  };
- if (ch <> '.') then  token;
+ if ch <> '.' then token;
 };
 procedure getAtom;
 {
- if (ch IN ['+','-']) then token;
- if (SY = k0) then {
+ if ch IN ['+','-'] then token;
+ if SY = knum then {
    getNumber;
  } else {
-   if not (SY IN [k1,klast]) then synterr;
+   if not (SY IN [k1,kident]) then synterr;
    token;
  }
 };
-procedure P1646;
+procedure spacify;
 {
- P1517; token; getAtom
+ addSpace; token; getAtom
 };
-procedure P1656;
+procedure doExpression;
 {
  Indent;
  repeat
@@ -608,15 +607,15 @@ procedure P1656;
  until (ch = ';') or (SY IN [kthen,kelse,kof,kuntil,kdo,kend]);
  Dindent;
 };
-procedure P1673;
+procedure toColon;
 {
-repeat token until ch = ':'; P1544
+repeat token until ch = ':'; alignItem
 };
 procedure doTypeDecl;
-procedure P1703;
+procedure doRangeType;
 {
- if (ch = '(') then {
- P1504;
+ if ch = '(' then {
+ toParen;
  } else {
    getAtom;
    if (ch = '.') and (nextch = '.') then {
@@ -624,7 +623,7 @@ procedure P1703;
    }
  }
 };
-procedure P1725; { token; token };
+procedure doPointer; { token; token };
 procedure doArray; {
   repeat token until SY = kof;
   doTypeDecl
@@ -632,291 +631,291 @@ procedure doArray; {
 procedure doFile; { doArray };
 procedure doSet; { doArray };
 procedure doRecord;
-procedure doFields(l5arg1z:boolean);
+procedure doFields(fixed:boolean);
 procedure doRecCase;
 {
- P1517;  P0543;
- glob412z := 4;
- Indent;  P1656;
- if (SY <> kof) then synterr;
+ addSpace;  optNewLine;
+ offset := 4;
+ Indent;  doExpression;
+ if SY <> kof then synterr;
  repeat token until ch <> ';';
  while (SY <> kend) and (ch <> ')') do {
- P0543;
+ optNewLine;
  getAtom;
- while (ch <> ':') do  P1646;
- P1544;
- P1517;
- glob412z := glob347z - 10;
+ while ch <> ':' do  spacify;
+ alignItem;
+ addSpace;
+ offset := margRight - 10;
  Indent;
  token;
- if (ch <> '(') then synterr;
+ if ch <> '(' then synterr;
  Indent;
- P1517;
+ addSpace;
  doFields (false);
  Dindent;
- if (ch <> ')') then synterr;
+ if ch <> ')' then synterr;
  repeat token until ch <> ';';
  Dindent;
  };
  Dindent;
 };
 { (* doFields *)
- if l5arg1z then glob412z := 5;
+ if fixed then offset := 5;
  Indent; token;
- while (SY = klast) do {
-   if l5arg1z then  P0543;
-   l5arg1z := true;
+ while SY = kident do {
+   if fixed then  optNewLine;
+   fixed := true;
    repeat token until ch = ':';
-   P1544;
+   alignItem;
    doTypeDecl;
-   while (ch = ';') do token;
+   while ch = ';' do token;
  };
  Dindent;
- if (SY = kcase) then doRecCase;
+ if SY = kcase then doRecCase;
 };
 { (* doRecord *)
  doFields(true);
- if (SY <> kend) then synterr;
+ if SY <> kend then synterr;
  token;
 };
 { (* 2120 *)
- P1517;  Indent;  token;
- if (SY = kpacked) then token;
- if (ch = '^') or (ch = '_026') or (ch = '@') then P1725
- else if (SY = karray) then doArray
- else if (SY = kfile) then doFile
- else if (SY = kset) then doSet
- else if (SY = krecord) then doRecord
- else P1703;
+ addSpace;  Indent;  token;
+ if SY = kpacked then token;
+ if (ch = '^') or (ch = '_026') or (ch = '@') then doPointer
+ else if SY = karray then doArray
+ else if SY = kfile then doFile
+ else if SY = kset then doSet
+ else if SY = krecord then doRecord
+ else doRangeType;
  Dindent;
 };
 procedure doLabel;
 {
- P1517; Indent;
+ addSpace; Indent;
  repeat token until ch = ';';
- token; P0543; Dindent;
+ token; optNewLine; Dindent;
 };
 procedure doConst;
 {
- P1517; Indent; token;
- if (SY <> klast) then synterr;
+ addSpace; Indent; token;
+ if (SY <> kident) then synterr;
  repeat 
- P1532; token;
+ tabulate; token;
  if (ch <> '=') then synterr;
- P1646;
+ spacify;
  if (ch <> ';') then synterr;
- P1517; token;
- until (SY <> klast);
- P0543; Dindent;
+ addSpace; token;
+ until (SY <> kident);
+ optNewLine; Dindent;
 };
 procedure doType;
 {
- P1517; P1517; Indent; token;
- if (SY <> klast) then synterr;
+ addSpace; addSpace; Indent; token;
+ if (SY <> kident) then synterr;
  repeat
- P1532; token;
+ tabulate; token;
  if (ch <> '=') then synterr;
  doTypeDecl;
  if (ch <> ';') then synterr;
- P1517; token;
- until (SY <> klast);
- P0543; Dindent;
+ addSpace; token;
+ until (SY <> kident);
+ optNewLine; Dindent;
 };
 procedure doVar;
 {
- P1517; P1517; P1517; Indent; token;
- if (SY <> klast) then synterr;
+ addSpace; addSpace; addSpace; Indent; token;
+ if (SY <> kident) then synterr;
 repeat
  token;
  while (ch <> ':') do token;
- P1544; doTypeDecl;
+ alignItem; doTypeDecl;
  if (ch <> ';') then synterr;
- P1517; token;
- until (SY <> klast);
- P0543; Dindent;
+ addSpace; token;
+ until (SY <> kident);
+ optNewLine; Dindent;
 };
-procedure P2334;
+procedure doArgs;
 {
  Indent;
  repeat 
    token;
-   if (ch = ':') or (ch = ';') then P1517;
+   if (ch = ':') or (ch = ';') then addSpace;
  until (ch = ')');
  token; Dindent;
 };
-procedure P2356;
+procedure doProc;
 {
- glob412z := 8;
+ offset := 8;
  Indent; token;
- if (SY <> klast) and (SY <> kexit) then synterr;
+ if (SY <> kident) and (SY <> kexit) then synterr;
  token;
- if (ch = '(') then P2334;
+ if (ch = '(') then doArgs;
  if (ch <> ';') then synterr;
- P3077;
+ run;
 };
-procedure P2405;
+procedure doFunc;
 {
- glob412z := 7;
+ offset := 7;
  Indent; token;
- if (SY <> klast) then synterr;
+ if (SY <> kident) then synterr;
  token;
- if (ch = '(') then P2334;
+ if (ch = '(') then doArgs;
  if (ch <> ':') then synterr;
- P1517; token; token;
+ addSpace; token; token;
  if (ch <> ';') then synterr;
- P3077;
+ run;
 };
-procedure P3070;
-function F2442:boolean;
+procedure doStatement;
+function atStmtEnd:boolean;
 {
-  F2442 := (SY in [kelse,kuntil,kend]) or (ch = ';');
+  atStmtEnd := (SY in [kelse,kuntil,kend]) or (ch = ';');
 };
-procedure P2454;
+procedure doBlock;
 {
- if (ch <> '(') then glob412z := (2);
+ if (ch <> '(') then offset := 2;
  Indent;
- repeat P3070 until SY = kend;
+ repeat doStatement until SY = kend;
  Dindent;
  token;
 };
 procedure doWhile;
 {
- glob412z := (4);
- Indent; P1656;
+ offset := 4;
+ Indent; doExpression;
  if (SY <> kdo) then  synterr;
- P3070; Dindent;
+ doStatement; Dindent;
 };
 procedure doRepeat;
 {
- glob412z := (5);
+ offset := 5;
  Indent;
- repeat P3070 until SY = kuntil;
- Dindent; P1656;
+ repeat doStatement until SY = kuntil;
+ Dindent; doExpression;
 };
 procedure doFor;
 {
- glob412z := (2);
- Indent; P1656;
+ offset := 2;
+ Indent; doExpression;
  if SY <> kdo then synterr;
- P3070; Dindent;
+ doStatement; Dindent;
 };
 procedure doWith;
 {
- glob412z := (3);
- Indent; P1656;
+ offset := 3;
+ Indent; doExpression;
  if SY <> kdo then synterr;
- P3070; Dindent;
+ doStatement; Dindent;
 };
 procedure doSelect;
 {
- glob412z := (5);
+ offset := 5;
  Indent; token;
  while (SY <> kend) do {
- P0543; P1673;
- glob412z := glob347z - 8;
- Indent; P3070; Dindent;
+ optNewLine; toColon;
+ offset := margRight - 8;
+ Indent; doStatement; Dindent;
  if (ch = ';') then token;
  };
  Dindent; token;
 };
-procedure P2621;
+procedure doExit;
 {
  token;
- if (SY = klast) then token;
+ if (SY = kident) then token;
 };
-procedure P2632;
+procedure doGoto;
 {
   token; token;
 };
 procedure doIf;
-procedure P2641;
+procedure doBranch;
 {
- P0543;
- glob412z := (3);
- Indent; P3070; Dindent;
+ optNewLine;
+ offset := 3;
+ Indent; doStatement; Dindent;
 };
 { (* doIf *)
- P1517; P1656;
- if (SY <> kthen) then synterr;
- P2641;
- if (SY = kelse) then P2641;
+ addSpace; doExpression;
+ if SY <> kthen then synterr;
+ doBranch;
+ if SY = kelse then doBranch;
 };
 procedure doCase;
 {
- P1517; Indent; P1656;
+ addSpace; Indent; doExpression;
  if SY <> kof then  synterr;
  token;
  while SY <> kend do {
- P0543; getAtom;
- while ch <> ':' do P1646;
- P1544;
- glob412z := (glob347z - (8));
- Indent; P3070; Dindent;
- if (ch = ';') then token;
+ optNewLine; getAtom;
+ while ch <> ':' do spacify;
+ alignItem;
+ offset := margRight - 8;
+ Indent; doStatement; Dindent;
+ if ch = ';' then token;
  };
  Dindent; token;
 };
-procedure P2742;
-var l4var1z, l4var2z:integer;
+procedure doGotoTarget;
+var i, upto:integer;
 {
- P0543; token;
- if curmode.f0 then {
-   glob359z := 1;
-   l4var2z := glob357z - 2;
-   for l4var1z := glob347z to l4var2z do P1517;
-   glob357z := 1;
+ optNewLine; token;
+ if curmode.indent then {
+   curLinePos := 1;
+   upto := neededPos - 2;
+   for i := margRight to upto do addSpace;
+   neededPos := 1;
  };
  token;
 };
-procedure P2766;
+procedure doStmt;
 {
- if (SY = k0) then P2742;
+ if (SY = knum) then doGotoTarget;
  while (SY = k1) and (ch = '(') do {
  token; token;
  if (SY = k1) and (ch = ')') then {
-   P1517; token;
+   addSpace; token;
  } else synterr;
  };
- if (SY = klast) then P1656
- else if (SY = kexit) then P2621
- else if (SY = kgoto) then P2632
- else if (ch <> ';') then {
-   if (ch <> ':') then P0543;
-   if (SY = kbegin) then P2454
-   else if (SY = kif) then doIf
-   else if (SY = kcase) then doCase
-   else if (SY = kwhile) then doWhile
-   else if (SY = krepeat) then doRepeat
-   else if (SY = kfor) then doFor
-   else if (SY = kwith) then doWith
-   else if (SY = kselect) then doSelect;
+ if (SY = kident) then doExpression
+ else if SY = kexit then doExit
+ else if SY = kgoto then doGoto
+ else if ch <> ';' then {
+   if ch <> ':' then optNewLine;
+   if SY = kbegin then doBlock
+   else if SY = kif then doIf
+   else if SY = kcase then doCase
+   else if SY = kwhile then doWhile
+   else if SY = krepeat then doRepeat
+   else if SY = kfor then doFor
+   else if SY = kwith then doWith
+   else if SY = kselect then doSelect;
  };
- if not F2442 then synterr;
+ if not atStmtEnd then synterr;
 };
-{ (* P3070 *)
-  P1517; token; P2766
+{ (* doStatement *)
+  addSpace; token; doStmt
 };
-{ (* P3077 *)
- token; P0543;
+{ (* run *)
+ token; optNewLine;
  if not (SY IN [kfortran,kextern,kforward]) then {
- if (SY = klabel) then doLabel;
- if (SY = kconst) then doConst;
- if (SY = ktype) then doType;
- if (SY = kvar) then doVar;
- while (SY IN [kfunct,kproced]) do {
-   P0543;
- if (SY = kproced) then P2356 else P2405;
+ if SY = klabel then doLabel;
+ if SY = kconst then doConst;
+ if SY = ktype then doType;
+ if SY = kvar then doVar;
+ while SY IN [kfunct,kproced] do {
+   optNewLine;
+ if SY = kproced then doProc else doFunc;
  };
- if (SY <> kbegin) then synterr;
- P0543;
- if (ch <> '(') then glob412z := 2;
+ if SY <> kbegin then synterr;
+ optNewLine;
+ if ch <> '(' then offset := 2;
  Indent;
- repeat P3070 until (SY = kend);
+ repeat doStatement until SY = kend;
  Dindent;
  };
  token;
  if (ch <> '.') then { Dindent; token;}
- else P1405;
+ else terminate;
 };
 procedure init;
 {
@@ -957,19 +956,18 @@ procedure init;
  keywrd2[kFORWARD] := 'D     ';
  keywrd1[kPROGRAM] := 'PROGRA';
  keywrd2[kPROGRAM] := 'M     ';
- keywrd1[kLAST] := '      ';
- for glob494z := 9 to 12 do 
-    unp[glob494z] := ' ';
- glob471z := 1;
- glob470z := 0;
- glob472z := false;
+ keywrd1[kident] := '      ';
+ for idx := 9 to 12 do unp[idx] := ' ';
+ dummy4 := 1;
+ dummy5 := 0;
+ illSpec := false;
  setMode( 2, initMode );
  setMode( 4, initMode );
- glob488z := 50;
+ dummy2 := 50;
  atEOF := false;
  first := true;
 };
-procedure P3312;
+procedure readSpec;
 label 3354;
 var l2var1z, l2var2z:integer; mask, word: array[1..6] of char;
 procedure P3250;
@@ -979,34 +977,34 @@ procedure P3250;
  GOTO 3354;
 };
 function readInt:integer;
-var l3var1z:integer;
+var v:integer;
 {
-l3var1z := (0);
- while (isDigit (nextch)) do {
-   l3var1z := l3var1z*10 + ord(nextch)-ord('0');
+v := 0;
+ while isDigit (nextch) do {
+   v := v*10 + ord(nextch)-ord('0');
    getch (nextch );
  };
- readInt := l3var1z;
+ readInt := v;
  while not eol and not isDigit (nextch) and (nextch <> '<') do
    getch (nextch );
 };
-{ (* P3312 *)
- glob347z := 0;
- glob346z := 0;
- glob348z := -73;
+{ (* readSpec *)
+ margRight := 0;
+ margSaved := 0;
+ margLeft := -73;
  inComment := false;
- glob469z := false;
- glob356z := true;
+ inQuoteOrComm := false;
+ wasSpace := true;
  comMeta := '/';
  meta := '_';
- glob349z := '_000';
- glob359z := 1;
- glob357z := 1;
- glob412z := 0;
- pos := 1;
+ checkQuote := '_000';
+ curLinePos := 1;
+ neededPos := 1;
+ offset := 0;
+ stackpos := 1;
  Indent;
  eol := true;
- errlnum := 1;
+ inplnum := 1;
  for l2var1z := 73 to 80 do line[l2var1z] := '*';
  for l2var1z := 81 to 83 do line[l2var1z] := ' ';
  line[84] := '_012';
@@ -1016,13 +1014,13 @@ l3var1z := (0);
  getch( nextch );
  if atEOF then GOTO 3575;
  if (nextch = 'W') then {
-   if glob472z then {
+   if illSpec then {
     writeln('0*** ILLEGAL W-SPECIFICATION. STOP. ***');
     halt
    } else {
-     glob471z :=   readInt;
-     glob471z :=   readInt;
-     glob470z :=   readInt;
+     dummy4 :=   readInt;
+     dummy4 :=   readInt;
+     dummy5 :=   readInt;
      goto 3354
    }
  };
@@ -1036,20 +1034,14 @@ l3var1z := (0);
  if nextch = 'R' then {
  l2var1z := readInt;
  l2var1z := readInt;
- glob487z := readInt * 2000B;
- word[1] := '*';
- mask[1] := '_377';
- word[2] := 'R';
- mask[2] := '_377';
- word[3] := 'E';
- mask[3] := '_377';
- word[4] := 'A';
- mask[4] := '_377';
- word[5] := 'D';
- mask[5] := '_377';
- word[6] := '_000';
- mask[6] := '_000';
- if (nextch = '<') then {
+ dummy3 := readInt * 2000B;
+ word[1]:='*';mask[1]:='_377';
+ word[2]:='R';mask[2]:='_377';
+ word[3]:='E';mask[3]:='_377';
+ word[4]:='A';mask[4]:='_377';
+ word[5]:='D';mask[5]:='_377';
+ word[6]:='_000';mask[6]:='_000';
+ if nextch = '<' then {
  l2var2z := 1;
  (read) {
  getch( word[l2var2z] );
@@ -1063,16 +1055,16 @@ l3var1z := (0);
    mask[l2var2z] := '_000';
    }
  }; (* 3471 *)
- pck(word[1], glob272z);
- pck(mask[1], glob273z);
+ pck(word[1], dummy6);
+ pck(mask[1], dummy7);
  while not eol do getch( nextch );
- glob489z := atEOF;
+ dummy1 := atEOF;
  atEOF := false;
- glob488z := l2var1z;
+ dummy2 := l2var1z;
  getch( nextch );
  if atEOF then GOTO 3575;
  }; (* 3512 *)
- glob472z := true;
+ illSpec := true;
 };
 {
   rewrite(result);
@@ -1080,17 +1072,17 @@ l3var1z := (0);
   pasended(result);
   init;
   (loop) { (* 3525 *)
-  P3312; token;
-  if (errline[1] = '*') or (errline[1] = '+') then 
-    P1405
+  readSpec; token;
+  if (inpline[1] = '*') or (inpline[1] = '+') then 
+    terminate
   else {
    if SY <> kPROGRAM then synterr;
-   P0543; token;
-   if SY <> klast then synterr;
+   optNewLine; token;
+   if SY <> kident then synterr;
    write( ' ' );
-   for glob494z := 1 to 8 do {
-     if (unp[glob494z] = 'X') then write( 'X' )
-     else write( unp[glob494z] );
+   for idx := 1 to 8 do {
+     if (unp[idx] = 'X') then write( 'X' )
+     else write( unp[idx] );
    };
  if first then {
    first := false;
@@ -1100,9 +1092,9 @@ l3var1z := (0);
  };
  writeln;
  token;
- if ch = '(' then P1504;
+ if ch = '(' then toParen;
  if ch <> ';' then synterr;
- P3077;
+ run;
  };
 3575:
  if not atEOF then goto loop;
