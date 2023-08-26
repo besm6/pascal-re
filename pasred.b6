@@ -1,0 +1,36 @@
+шифр 419900зс5^
+теле^
+еев1а3
+*name
+*call yesmemory
+*pascal
+program main(input, output);
+type arg=record 
+   buflen: integer; (* вход: исходная длина буфера *)
+   inplen: integer; (* выход: кол-во введенных символов *)
+   dummy1, dummy2: integer; (* не используются, но нужны *)
+   a: packed array[1..140] of char
+   end;
+var buf:arg;i:integer;f:text;r:real;
+procedure pasred(var data:arg); external;
+_(
+buf.buflen := 140; (* длина arg.a *)
+buf.inplen := 0; (* очистка *)
+writeln; (* нужно для работы приглашения *)
+writeln('Введите число: _000'); (* _000 чтобы не переводило строку *)
+pasred(buf);
+writeln (' Read ', buf.inplen, ' chars'); (* для контроля *)
+rewrite(f);
+(* пишем введенное в f *)
+for i := 1 to buf.inplen do write(f, buf.a[i]);
+writeln(f); (* для правильного завершения файла *)
+reset(f);
+read(f, r); (* читаем из файла *)
+writeln(r*100:0:21);
+_).
+*libra:13
+*execute
+*end file
+``````
+ЕКОНЕЦ
+
