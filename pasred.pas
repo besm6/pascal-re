@@ -1,4 +1,4 @@
-(*=p-,t-,s5,s8*)program noprog(output);
+(*=p-,t-,s5,s8*)program noprogram(output);
 type arg=record 
    buflen, inplen: integer;
    dummy1, dummy2: integer;
@@ -20,7 +20,7 @@ var i, dest, ch, words:integer;
         else if ch = 010B then {
             if dest > 0 then dest := dest - 1;
         } else if ch = 030B then dest := dest + 1
-        else if ch = 3 then { 
+        else if (ch = 3) or (ch = 0) or (ch = 10) then { 
             data.inplen := dest;
             doit := false;
         } else if ch >= 040B then {
