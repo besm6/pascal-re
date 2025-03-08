@@ -1,0 +1,198 @@
+
+Compiler components, runtime tune-up
+
+   *PASCAL
+   *PASCOM
+   PASCOMPL  - the compiler proper
+   OBPROG    - used by the compiler to print *FULL LIST
+   PASDD1    - interactive debugger
+   PASHELP   - setup of external files *
+   PASPMD    - post-mortem dump
+   PASMITXT  - error messages in TEXT encoding
+
+Masks for operations with packed arrays
+
+   P/00
+   P/01
+   P/02
+   P/03
+   P/04
+   P/06
+   P/07
+   P/08
+   P/0П
+
+Main program setup
+
+   P/1
+
+Entering subroutines of various nesting levels
+
+   P/2
+   P/3
+   P/4
+   P/5
+   P/6
+
+Return from subroutine
+
+   P/E
+
+Restoring registers after a return from a higher level subroutine
+
+   P/31
+   P/41
+   P/42
+   P/51
+   P/52
+   P/53
+   P/61
+   P/62
+   P/63
+   P/64
+
+Other runtime subroutines
+
+   P/6A         - write(alfa)
+   P/7A         - write('long string or packed array of char')
+   P/7AD        - helper for P/7A and P/A7
+   P/A6         - write(alfa : width)
+   P/A7         - write('long string ... ' : width)
+   P/AB         - fuzzy comparison of reals (lt)
+   P/B6         - for formal routines
+   P/B7         - for formal routines
+   P/BEXF
+   P/BP         - for formal routines
+   P/BX         - entering main program
+   P/CA         - pointer overrange check, turned off by (*=s7*)
+   P/CE         - call trace (exit)
+   P/CI         - call trace (entry)
+   P/CK         - pack(unpacked_array, idx, packed_word)
+   P/CO         - file setup
+   P/CP         - fuzzy comparison of reals (eq)
+   P/CW         - write(char)
+   P/D1
+   P/DA         - print "overange in ...", halt
+   P/DD         - per-line debugger invocation (*=D8*)
+   P/DI         - int DIV int
+   P/DIV        - DIV with zero exp
+   P/DS         - display stack for PMD?
+   P/EA         - check compatibility of formal procedure
+   P/EDIH
+   P/EF         - close files at end of program?
+   P/EL         - eoln(f)
+   P/EN         - entering main program
+   P/EO         - eof(f)
+   P/EQ         - equality comparison of muti-word types
+   P/ER         - print error, halt
+   P/FM
+   P/GD
+   P/GE         - lexicographic comparison of multi-word packed char arrays
+   P/GF         - get(f)
+   P/HIDE
+   P/HT         - halt
+   P/IN         - val IN set
+   P/IS         - int / int
+   P/IT         - file init
+   P/KC         - unpack(packed_word, unpacked_array, idx)
+   P/LDAR       - load from packed array
+   P/LDARIN
+   P/LNGPAR     - for multi-word formal parameters
+   P/LV
+   P/MD         - int MOD int
+   P/MF
+   P/MI         - integer multiplication
+   P/MOD        - MOD with zero exp
+   P/NN         - entering procedure declared (*=e+*)
+   P/NW         - new
+   P/PA         - pck(array_of_char[idx], alfa)
+   P/PAGES
+   P/PAMPAM     - used by *pascal
+   P/PB         - for formal routines
+   P/PF         - put(f)
+   P/PI         - construct [a..b]
+   P/PMDSET
+   P/PRINT
+   P/RA         - read(unpacked array of char)
+   P/RA7        - read(packed array of char)
+   P/RACPAK
+   P/RC         - non-local jump
+   P/RDI        - read(int)
+   P/RDR        - read(real)
+   P/RE         - reset(f, pos)
+   P/RE1
+   P/RE2
+   P/RF         - reset(f)
+   P/RI         - ???
+   P/RILN       - readln(input)
+   P/RL         - readln(f)
+   P/RR         - ???
+   P/RSR
+   P/SC         - stack check
+   P/SETEXF
+   P/SP         - print -n spaces
+   P/SS         - construct [var]
+   P/STAR       - store to packed array
+   P/SYS        - container of various subroutines
+   P/TF         - rewrite(f)
+   P/TR         - trunc
+   P/TRPAGE
+   P/TXGOST
+   P/UN         - unpck(array_of_char[idx], alfa)
+   P/WA         - write(unpacked array of char)
+   P/WC         - write(char:width)
+   P/WI         - write(int)
+   P/WL         - writeln(f)
+   P/WO         - write(... oct)
+   P/WOLN       - writeln(output)
+   P/WR         - write(real)
+   P/WX         - write(enum)
+   P/WXD        - write(ТЕХТ word)
+
+Tools, utility subroutines
+
+   LIBSUB       - subtract contents of perso from the temporary library *
+   PASCODAD     - execute an instruction, typically an extracode, with a given ACC
+   PASCONTR     - empty by default
+   PASCTRP      - ??? (inside P/SYS)
+   PASDIH
+   PASDIV       - correction for division by a constant (not right)
+   PASENDED     - align output in a text file to a word boundary for compatibility
+   PASEOF
+   PASEVN
+   PASGIVEP
+   PASGOST
+   PASGOST7     - transcode drum 27 from GOST to ISO
+   PASGVNF
+   PASHID
+   PASINBUF
+   PASISOCD     - setup tables for encoding conversions
+   PASISOXT
+   PASLIST      - query listing verbosity mode *
+   PASMON2      - setup returning to the monitor at end of program
+   PASNB8
+   PASTENS
+   PASTIME      - print elapsed/remaining CPU time (also TIME) *
+   PASTPR       - write(word in TEXT encoding)
+   PULT         - exit to PULT (if called from PULT)
+
+Console I/O *
+
+   PASADD       - add terminal input to a file
+   PASBIND      - terminal input with a prompt *
+   PASINP       - write terminal input to a file *
+   PASOUT       - output to a terminal *
+   PASRED       - edit terminal input *
+   PASTN
+   PASWHT
+
+MARS database system interface
+
+   PAIB      - facilitator of PUTD, GETD, etc.
+   PASACD    - DB init *
+   PASBD     - DB call *
+   PASBDE    - DB error handler *
+   PASBDI    - initializes DB interface area *
+   PASSETAR  - setup DB location *
+
+*) described in the instruction
