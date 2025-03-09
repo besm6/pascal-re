@@ -355,7 +355,9 @@ struct BESM6Obj {
         return besm6_alloc(s);
     }
 
-    void operator delete(void *); // deliberately undefined
+    void operator delete(void *) {
+        assert(!"Must not delete BESM6 objects");
+    }
 };
 
 template<class T> void setup(T * &p)
@@ -767,7 +769,7 @@ struct IdentRec : public BESM6Obj {
         assert(cl == ROUTINEID);
         return flags_;
     }
-    
+
     std::string p(bool verbose = false) const {
         std::string ret;
         char * strp;
@@ -856,6 +858,8 @@ int64_t debugLine,
         prevOpcode,
         charEncoding,
         int97z;
+
+bool stdArrayFmt;
 
 bool atEOL,
     checkTypes,
@@ -4382,7 +4386,7 @@ genFullExpr::genFullExpr(ExprPtr exprToGen_)
 
     static int level;
     Level l(level);
-    
+
     super.push_back(this);
 
     if (exprToGen == NULL)
@@ -6943,7 +6947,7 @@ void ifWhileStatement(Symbol delim)
 
 struct ParseData {
     struct DATAREC {
-        int64_t b;
+        int64_t b = 0;
         unsigned operator[](int i) {
             return (b >> (12*(3-i))) & 4095;
         }
@@ -9074,10 +9078,17 @@ void finalize()
     sizes[10] = int93z;
     curVal.i = moduleOffset - 040000;
     symTab[074001] = 041000000 | curVal.i;
-    // Forming the compact form of the module header.
-    CHILD[7] = sizes[1] | (sizes[2] << 12);
-    CHILD[8] = sizes[5] << 30 | sizes[9] << 15 | sizes[10];
-    CHILD[9] = sizes[8] << 30 | sizes[7] << 15 | sizes[6];
+    if (stdArrayFmt) {
+        // Copying the sizes array to the output literally.
+        for (size_t i = 0; i < 10; ++i) {
+            CHILD[i] = sizes[i+1];
+        }
+    } else {
+        // Forming the compact form of the module header.
+        CHILD[7] = sizes[1] | (sizes[2] << 12);
+        CHILD[8] = sizes[5] << 30 | sizes[9] << 15 | sizes[10];
+        CHILD[9] = sizes[8] << 30 | sizes[7] << 15 | sizes[6];
+    }
     /*
     reset(FCST);
     while not eof(FCST) do {
@@ -9106,6 +9117,13 @@ void finalize()
     entryPtTable[entryPtCnt] = 0;
 
 } /* finalize */
+
+void write_stdarray_word(FILE* f, int& count, int64_t word) {
+    if (count++ % 16 == 0) {
+        fprintf(f, "`77761 PROGRAM  %d\n", count / 16 + 1);
+    }
+    fprintf(f, "`%016lo\n", word);
+}
 
 void usage ()
 {
@@ -9148,6 +9166,7 @@ void usage ()
     printf("    -t+ -t-             Enable/disable range checks\n");
     printf("    -u- -u+             Set length of source lines: 120 or 72 columns\n");
     printf("    -y- -y+             Disable/enable non-standard syntax\n");
+    printf("    -P                  Write 'dubna'-compatible object file\n");
     printf("    -v                  Output version information and exit\n");
     printf("    -h                  Display this help and exit\n");
     exit(0);
@@ -9191,13 +9210,14 @@ void initOptions(int argc, char **argv)
     longSymCnt = 0;
     extSymAdornment = 0;
     symTabCnt = 0;
+    stdArrayFmt = false;
 
     // Get base name of the program.
     progname = strrchr(argv[0], '/');
     progname = progname ? progname+1 : argv[0];
 
     for (;;) {
-        switch (getopt(argc, argv, "vVhe:p:t:c:r:m:y:u:f:a:d:k:b:s:l:")) {
+        switch (getopt(argc, argv, "vVhPe:p:t:c:r:m:y:u:f:a:d:k:b:s:l:")) {
         case EOF:
             break;
         case 'a':
@@ -9247,6 +9267,9 @@ void initOptions(int argc, char **argv)
             continue;
         case 'm':
             fixMult = (optarg[0] == '+');
+            continue;
+        case 'P':
+            stdArrayFmt = true;
             continue;
         case 'p':
             doPMD = (optarg[0] == '+');
@@ -9423,10 +9446,22 @@ L9999:  printf(" IN %ld LINES %ld ERRORS\n", lineCnt-1, totalErrors);
             perror(outFileName);
             exit(-1);
         }
-        fwrite("BESM6\0", 6, 1, f);
-        for (size_t i = 7; i < CHILD.size(); ++i) {
-            for (int j = 40; j >= 0; j -= 8)
-                fputc((CHILD[i] >> j) & 0xFF, f);
+        if (stdArrayFmt) {
+            int words = 0;
+            for (int i = 1; i < entryPtCnt; ++i) {
+                write_stdarray_word(f, words, entryPtTable[i]);
+            }
+            for (size_t i = 0; i < CHILD.size(); ++i) {
+                write_stdarray_word(f, words, CHILD[i]);
+            }
+            while (words++ % 16 != 0)
+                fprintf(f, "`%016lo\n", 0l);
+        } else {
+            fwrite("BESM6\0", 6, 1, f);
+            for (size_t i = 7; i < CHILD.size(); ++i) {
+                for (int j = 40; j >= 0; j -= 8)
+                    fputc((CHILD[i] >> j) & 0xFF, f);
+            }
         }
         fclose(f);
         exit(0);
