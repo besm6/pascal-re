@@ -1228,7 +1228,8 @@ void printErrMsg(int64_t errNo)
 
 void printTextWord(int64_t val)
 {
-    const char *s = toAscii(val).c_str();
+    std::string str = toAscii(val);
+    const char *s = str.c_str();
     while (*s == ' ')
         s++;
     fputs(s, stdout);
@@ -2147,11 +2148,11 @@ L2:                 hashTravPtr = symHashTabBase[bucket];
                     nextCH();
                 } while (charSymTabBase[CH] == INTCONST);
                 {
-                    if (CH == 'B' || CH == 'b')
+                    if (koi8_to_koi7(CH) == 'B' || koi8_to_koi7(CH) == 'w')
                         suffix = suffixB;
-                    else if (CH == 'C' || CH == 'c')
+                    else if (koi8_to_koi7(CH) == 'C' || koi8_to_koi7(CH) == 's')
                         suffix = suffixC;
-                    else if (CH == 'T' || CH == 't')
+                    else if (koi8_to_koi7(CH) == 'T' || koi8_to_koi7(CH) == 't')
                         suffix = suffixT;
                     else {
                         suffix = noSuffix;
@@ -3444,7 +3445,7 @@ struct genFullExpr {
     genFullExpr(ExprPtr exprToGen_);
     ~genFullExpr() { super.pop_back(); }
 
-    ExprPtr & exprToGen;
+    ExprPtr exprToGen;
     bool arg1Const, arg2Const;
     InsnList * otherIns;
     Word arg1Val, arg2Val;
@@ -9371,6 +9372,13 @@ int main(int argc, char **argv)
         chrClassTabBase[i+'a'] = ALNUM;
     }
 
+    // Allow Cyrillics except Ъ which does not have a TEXT code
+    for (int i = 0; i < 31; ++i) {
+        charSymTabBase[i+0300] = IDENT;
+        chrClassTabBase[i+0300] = ALNUM;
+        charSymTabBase[i+0340] = IDENT;
+        chrClassTabBase[i+0340] = ALNUM;
+    }
     charSymTabBase['\''] = CHARCONST;
     charSymTabBase['_'] = REALCONST;
     charSymTabBase['<'] = LTSY;
@@ -9501,10 +9509,6 @@ int64_t resWordNameBase[30] = {
         0576450456263L           /*"  OTHERS"*/};
 #if 0
 // Non-ASCII chars ignored so far
-    charSymTabBase['Ю'] := IDENT:31;
-    chrClassTabBase['Ю'] := ALNUM:31;
-    charSymTabBase['ю'] := IDENT:31;
-    chrClassTabBase['ю'] := ALNUM:31;
     charSymTabBase[chr(27)] := CHARCONST;
     charSymTabBase[chr(22)] := ARROW;
     chrClassTabBase['÷'] := IDIVOP;
