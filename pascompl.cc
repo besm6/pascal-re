@@ -3625,7 +3625,7 @@ L33:        prepLoad();
     }; /* tryFlip */
 
     void genBoolAnd() {
-        bool l5var1z, l5var2z;
+        bool arg1Neg, arg2Neg;
         int64_t l5var3z, l5var4z, l5var5z, l5var6z, l5var7z;
         InsnList * l5ins8z;
         Word l5var9z;
@@ -3637,13 +3637,13 @@ L33:        prepLoad();
             if (not arg2Val.ii)
                 insnList = otherIns;
         } else {
-            l5var1z = insnList->regsused.has(16);
-            l5var2z = otherIns->regsused.has(16);
+            arg1Neg = insnList->regsused.has(16);
+            arg2Neg = otherIns->regsused.has(16);
             l5var5z = int94z;
             int94z = int94z + 1;
             bool49z = false;
-            l5var6z = l5var1z + macro;
-            l5var7z = l5var2z + macro;
+            l5var6z = arg1Neg + macro;
+            l5var7z = arg2Neg + macro;
             if (insnList->ilm == il3) {
                 l5var3z = insnList->ilf5.i;
             } else {
@@ -3664,7 +3664,7 @@ L33:        prepLoad();
                     prepLoad();
                     addInsnAndOffset(l5var7z, l5var5z);
                 } else {
-                    if (l5var2z) {
+                    if (arg2Neg) {
                         addInsnAndOffset(l5var6z, l5var5z);
                         l5ins8z = insnList;
                         insnList = otherIns;
@@ -3679,7 +3679,7 @@ L33:        prepLoad();
                 }
             } else {
                 if (l5var4z == 0) {
-                    if (l5var1z) {
+                    if (arg1Neg) {
                         addInsnAndOffset(macro + 2,
                                          010000 * l5var5z + l5var3z);
                         l5ins8z = insnList;
@@ -3694,8 +3694,8 @@ L33:        prepLoad();
                         l5var5z = l5var3z;
                     }
                 } else {
-                    if (l5var1z) {
-                        if (l5var2z) {
+                    if (arg1Neg) {
+                        if (arg2Neg) {
                             addInsnAndOffset(macro + 2,
                                              010000 * l5var5z + l5var3z);
                             l5ins8z = insnList;
@@ -3713,7 +3713,7 @@ L33:        prepLoad();
                         l5ins8z = insnList;
                         insnList = otherIns;
                         l5var5z = l5var3z;
-                        if (l5var2z)
+                        if (arg2Neg)
                             addInsnAndOffset(macro + 2,
                                              010000 * l5var3z + l5var4z);
                         else
@@ -4484,9 +4484,13 @@ L7760:              tryFlip(curOP==MUL||curOP==PLUSOP||curOP==SETAND||curOP==INT
                 }
                 case opfOR: {
                     negateCond();
+                    // OK to negate arg?Val unconditionally: they are unused
+                    // in genBoolAnd() if arg?Const is false.
+                    arg1Val.ii = not arg1Val.ii;
                     saved = insnList;
                     insnList = otherIns;
                     negateCond();
+                    arg2Val.ii = not arg2Val.ii;
                     otherIns = insnList;
                     insnList = saved;
                     genBoolAnd();
