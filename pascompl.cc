@@ -810,7 +810,7 @@ numberSuffix suffix;
 SetOfSYs   bigSkipSet, statEndSys, blockBegSys, statBegSys,
            skipToSet, lvalOpSet;
 
-bool   bool47z, bool48z, bool49z;
+bool   parsingParam, bool48z, bool49z;
 bool   dataCheck;
 
 int64_t jumpType, jumpTarget, int53z;
@@ -5938,7 +5938,7 @@ void parseCallArgs(IdentRecPtr l4arg1z)
                 error(errTooManyArguments);
                 throw 8888;
             }
-            bool47z = true;
+            parsingParam = true;
             expression();
             l4op6z = curExpr->op;
             /* (a) */
@@ -6001,12 +6001,12 @@ L13736:
 
 struct Factor {
     Word l4var1z;
-    bool l4var2z;
+    bool inParam;
     Word l4var3z, l4var4z;
     ExprPtr l4exp5z, l4exp6z, l4var7z, l4var8z;
     IdentRecPtr routine;
-    Operator l4op10z;
-    TypesPtr l4typ11z;
+    Operator curOp;
+    TypesPtr curType;
     bool l4var12z;
 
     void stdCall() {
@@ -6105,8 +6105,8 @@ struct Factor {
     }; /* stdCall */
 
     Factor() {
-        l4var2z = bool47z;
-        bool47z = false;
+        inParam = parsingParam;
+        parsingParam = false;
         if (SY < MULOP) {
             switch (SY) {
             case IDENT: {
@@ -6137,8 +6137,8 @@ struct Factor {
                             }
                             error(44); /* errIncorrectUsageOfStandProcOrFunc */
                         } else if (routine->typ == NULL) {
-                            if (l4var2z) {
-                                l4op10z = PCALL;
+                            if (inParam) {
+                                curOp = PCALL;
                             } else {
                                 error(68); /* errUsingProcedureInExpression */
                             }
@@ -6147,8 +6147,8 @@ struct Factor {
                                 parseCallArgs(routine);
                                 return;
                             }
-                            if (l4var2z) {
-                                l4op10z = FCALL;
+                            if (inParam && (SY == COMMA || (SY == RPAREN))) {
+                                curOp = FCALL;
                             } else {
                                 parseCallArgs(routine);
                                 return;
@@ -6160,7 +6160,7 @@ struct Factor {
                             throw 8888;
                         }
                         curExpr->typ = routine->typ;
-                        curExpr->op = l4op10z;
+                        curExpr->op = curOp;
                         curExpr->expr1 = NULL;
                         curExpr->id2 = routine;
                     } break;
@@ -6203,18 +6203,18 @@ struct Factor {
                         l4exp6z = curExpr;
                         expression();
                         if (l4var12z) {
-                            l4typ11z = curExpr->typ;
-                            if (not (Bits(l4typ11z->k) <= Bits(kindScalar, kindRange)))
+                            curType = curExpr->typ;
+                            if (not (Bits(curType->k) <= Bits(kindScalar, kindRange)))
                                 error(23); /* errTypeIdInsteadOfVar */
                         } else {
-                            if (not typeCheck(l4typ11z, curExpr->typ))
+                            if (not typeCheck(curType, curExpr->typ))
                                 error(24); /*errIncompatibleExprsInSetCtor*/
                         }
                         l4var12z = false;
                         l4exp5z = curExpr;
                         if (SY == COLON) {
                             expression();
-                            if (not typeCheck(l4typ11z, curExpr->typ))
+                            if (not typeCheck(curType, curExpr->typ))
                                 error(24); /*errIncompatibleExprsInSetCtor*/
                             if (l4exp5z->op == GETENUM and
                                 curExpr->op == GETENUM) {
@@ -9195,7 +9195,7 @@ void initOptions(int argc, char **argv)
     moduleOffset = 16384;
     lineStartOffset = 16384;
     int94z = 1;
-    bool47z = false;
+    parsingParam = false;
     dataCheck = false;
     heapSize = 100;
     bool49z = true;
