@@ -1,0 +1,613 @@
+================================================================================
+                    ANALYSIS OF pascompl.pas
+                    A Pascal Compiler for the BESM-6
+================================================================================
+
+1. WHAT THIS PROGRAM IS
+================================================================================
+
+This is a single-pass Pascal compiler ("PASCAL COMPILER 15.0") originally dated
+15.02.82 (February 1982), later annotated "PASCAL BACK TO LIFE (15.08.2017)"
+indicating a revival/reconstruction effort. It targets the BESM-6, a Soviet
+mainframe computer from the late 1960s.
+
+The program is itself written in an extended dialect of Pascal and compiles
+Pascal source into BESM-6 machine code. At ~8790 lines it is a complete
+compiler in a single file: lexer, parser, type system, expression evaluator,
+code generator, symbol table manager, and driver — all in one monolithic unit.
+
+The program header is:
+    program pascompl(output, child, pasinput, pasinfor);
+where:
+  - output    : listing/diagnostics
+  - child     : output file for the generated object code (file of bitset)
+  - pasinput  : the Pascal source being compiled (text)
+  - pasinfor  : a control record passed in by the environment (flags, tables,
+                 character maps, entry points, etc.)
+
+
+2. NON-STANDARD SYNTAX EXTENSIONS
+================================================================================
+
+The code uses several non-standard Pascal extensions that are critical to
+understanding the source:
+
+2.1  _( and _) as BEGIN/END
+----------------------------
+Throughout the entire program, _( is used in place of "begin" and _) in place
+of "end". Every compound statement, procedure body, record constructor, and
+block is delimited this way. For example:
+
+    procedure foo;
+    _(
+        x := 1;
+        y := 2;
+    _);
+
+This is equivalent to:
+    procedure foo;
+    begin
+        x := 1;
+        y := 2;
+    end;
+
+The standard BEGIN and BEGINSY/ENDSY still exist as *tokens* recognized by the
+lexer (the compiler compiles standard Pascal that uses begin/end), but the
+compiler's own source uses _( and _) exclusively for its own block structure.
+
+The lexer (inSymbol, around line 1353) maps _( to BEGINSY and _) to ENDSY:
+    if CH = '(' then SY := BEGINSY
+    else if CH = ')' then SY := ENDSY
+
+2.2  Lines starting with % as comments
+----------------------------------------
+Any line whose first non-whitespace character is % is treated as a comment line.
+This is used extensively:
+  - Single % lines serve as blank separators between declarations
+  - Lines of %%%...%%% serve as section banners between procedures
+  - Commented-out code uses % at the start of the line (e.g., the original
+    boilerplate string on line 7)
+
+The lexer handles this at line 1248:
+    if CH = '%' then while not atEOL do nextCH;
+
+2.3  Named blocks and structured exits
+----------------------------------------
+The code uses named statement labels in parentheses as targets for structured
+"exit" statements:
+
+    (loop) _(
+        ...
+        if done then exit loop;
+        ...
+        goto loop;
+    _);
+
+    (q) _(
+        ...
+        if bad then exit q;
+        ...
+    _);
+
+Common names: (loop), (q), (a), (blk), (iter), (stmt), (ident), (minus),
+(todownto), (again), (lexer), (octdec), (indices), (identif), (rep), (skip),
+(chain).
+
+This is a structured alternative to goto that provides named break-out from
+nested blocks — a feature not present in standard Pascal.
+
+2.4  (*=z-*) and (*=z+*) conditional compilation
+--------------------------------------------------
+Regions bracketed by (*=z-*) ... (*=z+*) appear to be conditional compilation
+markers. They wrap code that should be included or excluded depending on a
+build variant (possibly "z" for a specific target or optimization level).
+Typical patterns:
+
+    (*=z-*)else(*=z+*) ;           -- conditional empty else branch
+    (*=z-*)exit q(*=z+*)           -- conditional exit
+    (*=z-*)besm(2200000B);(*=z+*)  -- conditional machine instruction
+    (*=z-*)(q) exit q(*=z+*)       -- conditional block exit
+
+2.5  besm() intrinsic
+----------------------
+The besm() call is a compiler intrinsic that inserts a raw BESM-6 machine
+instruction into the generated code stream. It is used for bit manipulation
+that cannot be expressed in standard Pascal:
+
+    besm(ASN64-24);    -- arithmetic shift
+    besm(ASN64-6);     -- shift by 6 bits
+    besm(2200000B);    -- UTC instruction (used as a NOP/barrier)
+
+2.6  The ":=;" empty assignment pattern
+-----------------------------------------
+Assignments with no right-hand side expression:
+
+    curVal := ;
+    l3var2z := ;
+    leftInsn := ;
+
+This is a BESM-6 Pascal extension that reads the current value of the
+accumulator register into the named variable. It is always preceded by a
+besm() call that leaves a computed result in the accumulator. The pattern is:
+
+    curVal := curVal;       -- load curVal into accumulator
+    besm(ASN64-24);         -- shift accumulator left by 24 bits
+    curVal := ;             -- store accumulator back to curVal
+
+This is how the compiler performs bit-field extraction and manipulation on the
+48-bit BESM-6 word.
+
+2.7  Octal and character literals
+----------------------------------
+  - Numbers ending in B are octal: 74000B, 4000027B, 0170000B
+  - Numbers ending in C are BESM-6 "short address" format: 74000C, 2200000C
+  - Numbers ending in T are octal "text" format
+  - Character literals like '_000', '_176', '_200' represent octal character
+    codes (the BESM-6 uses a non-ASCII character set)
+
+2.8  Other extensions
+----------------------
+  - "fortran" linkage: declares external Fortran-callable procedures
+  - "external" linkage: declares externally linked procedures
+  - setup()/rollup(): scope management primitives
+  - mapai()/mapAI(): name-to-integer hash mapping intrinsic
+  - pck()/unpck(): pack/unpack intrinsics for character arrays
+  - The "forward" declaration for mutual recursion
+
+
+3. OVERALL PROGRAM STRUCTURE
+================================================================================
+
+The program has a deeply nested structure typical of single-pass compilers of
+the era. The outermost procedure "programme" contains nearly all other
+procedures as nested declarations:
+
+    program pascompl
+    |
+    +-- Global constants (lines 6-127)
+    |     BESM-6 instruction opcodes (KATX, KXTS, KADD, etc.)
+    |     Index register templates (I7=frame, I8=const, I9-I14=temp, SP=stack)
+    |     Standard function numbers (fnSQRT..fnSQRI)
+    |     Macro operation codes (mcPUSH, mcPOP, mcMULTI, etc.)
+    |     Error message numbers
+    |     Well-known memory addresses (ASCII0, ZERO, HEAPPTR, etc.)
+    |
+    +-- Types (lines 129-346)
+    |     symbol     - lexer token types (IDENT, INTCONST, BEGINSY, etc.)
+    |     idclass    - identifier categories (TYPEID, VARID, ROUTINEID, etc.)
+    |     insn       - BESM-6 instruction mnemonics
+    |     operator   - expression operator types (MUL, PLUSOP, GETELT, etc.)
+    |     opgen      - code generation operation classes
+    |     kind       - type descriptor kinds (kindReal, kindArray, etc.)
+    |     types      - the central type descriptor (variant record)
+    |     identrec   - symbol table entry (variant record by idclass)
+    |     expr       - expression tree node (variant record)
+    |     oneinsn    - instruction list node
+    |     insnltyp   - instruction list entry with type/mode info
+    |     Various auxiliary records (kword, strLabel, numLabel, etc.)
+    |
+    +-- Variables (lines 348-504)
+    |     ~4791 words of global state including:
+    |     - Scanner state (CH, SY, linePos, lineBufBase, etc.)
+    |     - Parser state (curToken, curIdent, hashTravPtr, etc.)
+    |     - Code generator state (objBuffer, moduleOffset, putLeft, etc.)
+    |     - Symbol tables (symHashTabBase, typeHashTabBase, etc.)
+    |     - Constant pool (constVals, constNums, FcstCnt)
+    |     - Type pointers (integerType, realType, charType, etc.)
+    |     - pasinfor control record
+    |
+    +-- procedure programme (line 510)
+        |
+        +-- printErrMsg (527)        - Format and print error messages
+        +-- printTextWord (577)      - Print a text word via PASTPR
+        +-- makeStringType (590)     - Create array-of-char type descriptor
+        +-- addToHashTab (626)       - Insert identifier into hash table
+        +-- storeObjWord (640)       - Emit one word to object buffer
+        +-- form1Insn (654)          - Emit one BESM-6 instruction (with
+        |                              left/right half-word packing)
+        +-- form2Insn, form3Insn     - Emit 2 or 3 instructions
+        +-- disableNorm (708)        - Disable normalization mode
+        +-- getObjBufIdxPlus (717)   - Get current code position
+        +-- formJump (726)           - Emit a conditional/unconditional jump
+        +-- padToLeft (742)          - Align to left instruction half
+        +-- formAndAlign (750)       - Emit instruction and align
+        +-- putToSymTab (758)        - Add entry to symbol table
+        +-- allocExtSymbol (769)     - Allocate external symbol reference
+        +-- getHelperProc (795)      - Get address of runtime helper routine
+        +-- toFCST (805)             - Write to floating constant segment
+        +-- addCurValToFCST (812)    - Add constant with dedup (binary search)
+        +-- allocSymtab (856)        - Allocate symbol table entry (dedup)
+        +-- getFCSToffset (901)      - Get FCST offset for current value
+        +-- nrOfBits (918)           - Count significant bits
+        +-- defineRange (926)        - Create a range type descriptor
+        +-- getValueOrAllocSymtab (951) - Small value or symtab entry
+        +-- P0715 (963)              - Jump target resolution / fixup
+        +-- endOfLine (1026)         - End-of-line processing and listing
+        +-- requiredSymErr (1090)    - Error for missing expected symbol
+        +-- readToPos80 (1097)       - Read input to column 80
+        +-- inSymbol (1108)          - THE LEXER: main tokenizer
+        |   +-- nextCH (1126)        - Read next character
+        |   +-- parseComment (1138)  - Parse (* ... *) comments with options
+        |       +-- readOptVal       - Read numeric option from comment
+        |       +-- readOptFlag      - Read +/- flag from comment
+        +-- error (1644)             - Central error reporting
+        |   +-- skipToEnd            - Error recovery: skip to end of program
+        +-- skip (1686)              - Skip tokens until set member found
+        +-- test1 (1693)             - Check for expected symbol, skip on error
+        +-- errAndSkip (1703)        - Report error and skip
+        +-- parseLiteral (1710)      - Parse a constant literal
+        +-- P2672 (1761)             - Remove identifier from hash chain
+        +-- isFileType (1797)        - Check if type involves files
+        +-- knownInType (1804)       - Check if name is in current type list
+        +-- checkSymAndRead (1821)   - Verify symbol and advance
+        +-- typeCheck (1830)         - Deep structural type compatibility
+        |   +-- allocWithTypeCheck   - Recursive pointer type checking
+        |   +-- checkRecord          - Recursive record type checking
+        +-- F3307 (1970)             - Count formal parameters
+        +-- makeNameWithStars (1986) - Adorn external symbol names
+        +-- formOperator (2016)      - THE CODE GENERATOR
+        |   +-- genOneOp (2030)      - Expand pseudo-ops to real instructions
+        |   +-- addToInsnList (2372) - Build instruction list
+        |   +-- prepLoad (2417)      - Prepare value load sequence
+        |   +-- P4621 (2540)         - Prepare index register load
+        |   +-- prepStore (2615)     - Prepare value store sequence
+        |   +-- P5117 (2679)         - Allocate frame temp + generate code
+        |   +-- genFullExpr (2709)   - EXPRESSION CODE GENERATOR
+        |       +-- genDeref (2731)  - Pointer dereference codegen
+        |       +-- genHelper (2780) - Call runtime helper
+        |       +-- prepMultiWord (2793) - Multi-word operand handling
+        |       +-- genCheckBounds (2818) - Array bounds checking
+        |       +-- negateCond (2845)    - Negate boolean condition
+        |       +-- tryFlip (2855)       - Commutative operand reordering
+        |       +-- genBoolAnd (2911)    - Short-circuit AND codegen
+        |       +-- genGetElt (3021)     - Array indexing codegen
+        |       +-- allocGlobalObject (3229) - Global symbol allocation
+        |       +-- traceEntry (3245)    - Debug trace for calls
+        |       +-- genEntry (3256)      - Procedure/function call codegen
+        |       +-- startInsnList (3474) - Initialize instruction list
+        |       +-- genCopy (3494)       - Assignment copy codegen
+        |       +-- genConstDiv (3521)   - Constant division optimization
+        |       +-- genComparison (3530) - Comparison operator codegen
+        +-- formFileInit (4005)      - File variable initialization codegen
+        +-- parseTypeRef (4259)      - TYPE PARSER
+        |   +-- definePtrType (4284) - Pointer type creation
+        |   +-- parseRecordDecl (4293) - Record type parsing
+        |       +-- addFieldToHash   - Field hash insertion
+        |       +-- packFields       - Packed record field layout
+        +-- dumpEnumNames (4813)     - Dump enum names to FCST
+        +-- formPMD (4829)           - Post-mortem dump table generation
+        +-- parseDecls (4901)        - Declaration section handler
+        +-- statement (4995)         - THE STATEMENT PARSER
+        |   +-- isCharArray (5011)
+        |   +-- parseLval (5022)     - L-value (variable reference) parser
+        |   +-- castToReal (5113)    - Integer-to-real promotion
+        |   +-- areTypesCompatible (5126)
+        |   +-- parseCallArgs (5144) - Actual parameter list parser
+        |   +-- factor (5248)        - Factor in expression grammar
+        |   |   +-- stdCall (5260)   - Standard function call handling
+        |   +-- term (5531)          - Term (multiplicative) parser
+        |   +-- simpleExpression (5613) - Additive expression parser
+        |   +-- expression (5698)    - Full expression parser (with relops)
+        |   +-- forStatement (5756)  - FOR loop codegen
+        |   +-- withStatement (5840) - WITH statement codegen
+        |   +-- reportStmtType (5874)
+        |   +-- structBranch (5880)  - Structured goto/exit handling
+        |   +-- caseStatement (5933) - CASE statement parser/codegen
+        |   +-- assignStatement (6139) - Assignment statement
+        |   +-- compoundStatement (6229)
+        |   +-- ifWhileStatement (6241)
+        |   +-- parseData (6257)     - DATA initializer section
+        |   +-- standProc (6398)     - STANDARD PROCEDURE DISPATCHER
+        |       +-- verifyType       - Type verification for std procs
+        |       +-- startReadOrWrite - Read/write statement setup
+        |       +-- writeProc (6558) - Write statement codegen
+        |       +-- readProc (6645)  - Read statement codegen
+        |       +-- doPackUnpack     - Pack/unpack intrinsics
+        +-- outputObjFile (7236)     - Flush object code to output
+        +-- defineRoutine (7249)     - Complete routine body compilation
+        +-- initScalars (7369)       - Bootstrap types and system identifiers
+        |   +-- regSysType (7379)    - Register built-in type
+        |   +-- regSysEnum (7387)    - Register built-in enum
+        |   +-- regSysProc (7395)    - Register built-in procedure
+        +-- makeExtFile (7707)       - External file linkage
+        +-- parseParameters (7719)   - Formal parameter list parser
+        +-- exitScope (7834)         - Scope cleanup
+        +-- programme body (7847)    - Main compilation: declarations + body
+    |
+    +-- initTables (8262)            - Initialize compiler tables
+    |   +-- initInsnTemplates (8268) - BESM-6 instruction encoding tables
+    |   +-- regKeywords (8364)       - Register reserved words
+    |   +-- initArrays (8388)
+    |   +-- initSets (8404)
+    +-- finalize (8435)              - Write output, statistics
+    +-- initOptions (8480)           - Parse compiler options from pasinfor
+    +-- Main body (8529)             - Entry point: init, compile, finalize
+    +-- Data section (8544-8790)     - Static initialized tables
+
+
+4. THE TYPE SYSTEM
+================================================================================
+
+Types are represented by variant records keyed on the "kind" discriminant:
+
+  kindReal    - Real (floating point) type
+  kindScalar  - Enumeration types (with linked list of enum values)
+  kindRange   - Subrange types (base type + left/right bounds + bit width)
+  kindPtr     - Pointer types (base type)
+  kindSet     - Set types (base type)
+  kindArray   - Array types (base type + range type + packed info)
+  kindRecord  - Record types (field lists, variant parts)
+  kindFile    - File types (element type + buffer size)
+  kindCases   - Variant record case descriptors
+
+Built-in types are pre-registered in initScalars:
+  integerType, realType, charType, booleanType, alfaType (packed array[1..6]
+  of char), textType, pointerType, setType.
+
+The compiler tracks packed field layout explicitly: perword (elements per word),
+pcksize (bits per element), width and shift for field access in packed records.
+
+Type compatibility checking (typeCheck, line 1830) is structural, not nominal:
+two types are compatible if they have the same structure, not just the same
+name. This includes recursive checking for pointer types (with cycle detection
+via a chain of typechain records) and deep comparison of record fields.
+
+
+5. THE LEXER (inSymbol)
+================================================================================
+
+The lexer (line 1108) is a large procedure with several notable features:
+
+- Character classification via charSymTabBase[] and chrClassTabBase[] tables
+  that map characters to token types and operator classes.
+
+- Identifier hashing: identifiers are packed into 48-bit words (up to 8
+  characters of 6-bit encoded text), then hashed via multiplication by
+  hashMask and the mapAI intrinsic. Keywords are checked by walking a hash
+  chain of kword records.
+
+- The lexer handles identifier lookup during scanning (not just in the parser).
+  The int93z variable selects different lookup modes:
+    0 = normal scope-aware lookup
+    1 = unscoped (find anywhere)
+    2 = record field lookup (walks type hash tables)
+    3 = field lookup within a specific record type
+
+- Number parsing handles decimal integers, reals (with optional exponent),
+  and octal/text literals (suffixes B, C, T).
+
+- String literal parsing handles escape sequences via octal character codes
+  (using the # or _ prefix), character encoding translation (multiple
+  encodings supported via pasinfor tables), and multi-word string constants
+  stored in FCST.
+
+- Compiler option comments (*=...*) inside (* *) comments set flags for
+  listing mode, bounds checking, type checking, real fuzzing, etc.
+
+
+6. THE CODE GENERATOR
+================================================================================
+
+Code generation is centered on formOperator (line 2016) and its nested
+procedures, particularly genFullExpr (line 2709).
+
+6.1  BESM-6 Instruction Format
+--------------------------------
+The BESM-6 has a 48-bit word. Instructions are packed two per word (24 bits
+each: left half and right half). The compiler tracks this via:
+  - putLeft: boolean indicating which half-word is next
+  - leftInsn: saved left-half instruction waiting for its right-half partner
+  - form1Insn: the core instruction emitter that handles half-word packing
+
+Instructions use:
+  - 15 index registers (I7=frame pointer, I8=constant base, I9-I14=temps,
+    I15/SP=stack pointer, I13=link register)
+  - Opcodes encoded as octal constants (KATX, KXTA, KADD, etc.)
+  - A simple peephole optimizer in form1Insn that combines certain UJ (jump)
+    instructions with preceding instructions
+
+6.2  Instruction List (IL) Intermediate Representation
+-------------------------------------------------------
+Between parsing and final code emission, the compiler builds linked lists of
+"insnltyp" records that describe operations in a semi-abstract form:
+  - ilm field: ilCONST (constant), il1 (loaded in accumulator), il2 (address
+    computed), il3 (conditional)
+  - Tracks which registers are in use (regsused bitset)
+  - Tracks packed field width/shift for packed access
+
+The genOneOp procedure (line 2030) expands these IL nodes into actual BESM-6
+instructions, with an intermediate buffer for local optimization.
+
+6.3  Runtime Helpers
+---------------------
+The compiler calls numerous runtime helper routines (P/DA, P/CA, P/CO, P/IT,
+P/GD, P/LV, P/NN, P/ZAM, P/STAR, P/C(E|I), P/00C, etc.) for operations too
+complex to inline: multi-word operations, file I/O, heap management, bounds
+checking, set operations, etc.
+
+Helper names are stored in helperNames[] and lazily linked via
+getHelperProc(), which allocates external symbol references on first use.
+
+6.4  Code Emission
+-------------------
+Generated code accumulates in objBuffer (1024 words). When a routine is
+complete, outputObjFile writes the buffer to the "child" output file via
+the external OBPROG procedure. The object format appears to be a BESM-6
+relocatable object with symbol table entries in symTab[].
+
+6.5  Constant Pool (FCST)
+---------------------------
+Constants are written to the "fcst" file (file of bitset). The compiler
+maintains a sorted cache (constVals/constNums, up to 500 entries) for
+deduplication using binary search, so identical constants share storage.
+
+
+7. THE PARSER AND STATEMENT COMPILER
+================================================================================
+
+The parser follows a recursive-descent structure with the expression grammar:
+
+    expression -> simpleExpression [ relop simpleExpression ]
+    simpleExpression -> [+|-] term { addop term }
+    term -> factor { mulop factor }
+    factor -> ident | literal | (expr) | NOT factor | [set] | funcall
+
+Expression parsing builds a tree of "expr" records, then genFullExpr walks
+the tree to generate code. This two-pass approach (parse to tree, then
+generate) allows the code generator to make optimization decisions like
+operand reordering for commutative operations (tryFlip) and constant folding.
+
+Statements are compiled directly:
+  - assignStatement: l-value + expression + store
+  - compoundStatement: begin...end sequence
+  - ifWhileStatement: shared logic for if and while
+  - forStatement: loop variable, bounds, body, increment
+  - caseStatement: builds jump tables (dense or sparse)
+  - withStatement: record access shorthand
+  - standProc: dispatches ~30 standard procedures (read, write, new, dispose,
+    put, get, pack, unpack, halt, mark, release, besm, MARS/mapai/mapia, etc.)
+
+The parser uses skip sets for error recovery (bigSkipSet, statEndSys,
+blockBegSys, statBegSys) and reports errors by number with messages fetched
+from the external pasmitxt function.
+
+
+8. SYMBOL TABLE
+================================================================================
+
+The symbol table uses hash tables with chaining:
+  - symHashTabBase[0..127]: main identifier hash table
+  - typeHashTabBase[0..127]: record field hash table
+  - kwordHashTabBase[0..127]: keyword hash table
+
+Identifiers are stored as "identrec" variant records with fields depending
+on the idclass:
+  - TYPEID: just a type reference
+  - VARID: location (offset from frame)
+  - ENUMID: enumeration value + linked list
+  - FORMALID: formal parameter (with value flag)
+  - FIELDID: record field (with packed field info: shift, width, uptype)
+  - ROUTINEID: procedure/function (argument list, nesting level, flags,
+    forward/external/Fortran linkage)
+
+Scope is managed by the offset field: all identifiers at the current nesting
+level share curFrameRegTemplate as their offset. exitScope (line 7834) removes
+identifiers that belong to the scope being exited.
+
+
+9. INTERESTING DETAILS AND OBSERVATIONS
+================================================================================
+
+9.1  This compiler compiles itself
+------------------------------------
+The source is written in the same extended Pascal dialect it compiles. The
+non-standard extensions (_( _), %, named exits, besm(), :=;) must all be
+supported by whatever compiler bootstraps this one. This is a classic
+self-hosting compiler.
+
+9.2  BESM-6 word size
+-----------------------
+The BESM-6 has 48-bit words. This pervades the design:
+  - "bitset" is "set of 0..47" (one machine word)
+  - Character packing: 6 characters per word (8 bits each, using 48 bits)
+  - "alfa" is a 6-character packed string = one machine word
+  - Integer, real, pointer, and set all fit in one 48-bit word
+  - Instructions are 24 bits, packed two per word
+
+9.3  Instruction packing
+--------------------------
+The half-word instruction packing in form1Insn is one of the trickiest parts.
+The compiler maintains a "left/right" toggle and attempts peephole optimization:
+if a UJ (unconditional jump) follows certain instructions, it tries to merge
+them into a single word using the BESM-6's "long transfer" format.
+
+9.4  Character encoding
+-------------------------
+The compiler supports multiple character encodings selected at compile time
+via the A option. Character translation tables (a0, a1, a4) are provided in
+the pasinfor record. There's also an ISO-to-text mapping (iso2text) for
+internal 6-bit encoding.
+
+9.5  Error messages
+--------------------
+Error messages are fetched from an external table via pasmitxt() (a Fortran-
+linked function), then unpacked character by character and translated via
+pasisoxt(). Messages are terminated by '*'. Error numbers are used throughout:
+symbolic names like errBooleanNeeded (0), errIdentAlreadyDefined (2), etc.
+are defined as constants.
+
+9.6  Listing and debugging
+----------------------------
+The compiler can produce various listing modes (controlled by the L option):
+  0 = no listing
+  1 = source listing with error flags
+  2 = source + generated code (via OBPROG)
+The D option controls debug features: entry/exit tracing (DebugEntry),
+code-level debugging (DebugCode), debug printing (DebugPrint), and
+interactive debugging (DebugInteractive).
+
+Post-mortem dump (PMD) tables are generated by formPMD when the P option
+is enabled, recording variable names and types for runtime debugging.
+
+9.7  The "word" variant record
+-------------------------------
+The central "word" type is a variant record that overlays integer, real,
+boolean, alfa (6-char string), char, idclass, and bitset on the same 48-bit
+storage. This is used pervasively for type punning — converting between
+representations by assigning to one variant and reading from another.
+
+9.8  Standard procedures
+--------------------------
+The standProc dispatcher (line 6398) handles a remarkably complete set of
+built-in operations, including:
+  - I/O: read, readln, write, writeln, put, get, reset, rewrite
+  - Memory: new, dispose, mark, release
+  - Type conversion: pack, unpack
+  - Bit manipulation: BESM intrinsic, MARS (mapai/mapia)
+  - Control: halt, exit, message
+  - Special: setup/rollup (scope), trunc, iand/ior/inot (bitwise)
+
+9.9  Data initialization
+--------------------------
+There is a "data" statement facility (parseData, line 6257) that allows
+initialized global variables — not part of standard Pascal but common in
+system programming. It writes initialization data to a temporary file that
+gets merged into the FCST output.
+
+9.10  The programme procedure
+-------------------------------
+The outermost "programme" procedure (line 510) is where the entire compilation
+happens. It processes label, const, type, var, and procedure/function
+declarations, then compiles the main body. For nested procedures, it calls
+itself recursively — the deeply nested structure means that local variables
+of the outer procedure are accessible to all inner procedures (Pascal's
+lexical scoping), which is how the compiler shares state between its many
+phases without using global variables for everything.
+
+9.11  Jump fixup
+------------------
+Forward references in jumps are resolved by P0715 (line 963), which patches
+object code in-place. Jump targets are threaded through the code buffer:
+each unresolved jump contains the address of the previous unresolved jump
+to the same target, forming a linked list that gets patched when the target
+address becomes known.
+
+9.12  Packed field access
+---------------------------
+The compiler has elaborate support for packed records and packed arrays. Packed
+fields have explicit width (in bits) and shift (position within a word).
+Access to packed fields requires shift-and-mask sequences generated by
+prepLoad and prepStore, using BESM-6 shift instructions (ASN) and logical
+operations (AAX for AND).
+
+9.13  Historical note
+-----------------------
+The BESM-6 (БЭСМ-6) was the most widely used Soviet scientific computer,
+produced from 1968 to the mid-1980s. It had a 48-bit word, 15 index registers,
+and a clock speed of ~10 MHz. This Pascal compiler was clearly a production
+tool — the code quality, error handling, optimization, and completeness of
+the standard library support all indicate a mature, well-tested system.
+
+The 2017 "back to life" date suggests this is a reconstruction or revival
+project, likely running on a BESM-6 emulator, preserving an important piece
+of Soviet computing history.
