@@ -86,7 +86,7 @@ Other runtime subroutines
    P/EQ         - equality comparison of muti-word types
    P/ER         - print error, halt
    P/FM
-   P/GD
+   P/GD         - set up heap for (*=Kn*)
    P/GE         - lexicographic comparison of multi-word packed char arrays
    P/GF         - get(f)
    P/HIDE
@@ -95,12 +95,12 @@ Other runtime subroutines
    P/IS         - int / int
    P/IT         - file init
    P/KC         - unpack(packed_word, unpacked_array, idx)
-   P/LDAR       - load from packed array
-   P/LDARIN
+   P/LDAR       - load scalar from packed array
+   P/LDARIN     - load integer from packed array with exponent correction 
    P/LNGPAR     - for multi-word formal parameters
-   P/LV
+   P/LV         - entering main program
    P/MD         - int MOD int
-   P/MF
+   P/MF         - interfacing with Fortran
    P/MI         - integer multiplication
    P/MOD        - MOD with zero exp
    P/NN         - entering procedure declared (*=e+*)
@@ -126,8 +126,9 @@ Other runtime subroutines
    P/RI         - ???
    P/RILN       - readln(input)
    P/RL         - readln(f)
-   P/RR         - ???
+   P/RR         - read left-aligned record from packed array
    P/RSR
+   P/RX         - read(enum), not implemented
    P/SC         - stack check
    P/SETEXF
    P/SP         - print -n spaces
